@@ -10,8 +10,9 @@ import type { ComposeDSL, JsonBuilder, TextBuilder } from '@/types/dsl'
 import type { TemplateError } from '@/types/error'
 import type { JsonTask, Plan, Task, TextTask } from '@/types/task'
 import * as path from 'node:path'
-import { Effect, Schema } from 'effect'
+import { Effect, Exit, Ref, Schema, Scope } from 'effect'
 import { produce } from 'immer'
+import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig as AppConfigService } from '@/config/app-config'
 import { FileIOError } from '@/types/error'
@@ -257,7 +258,34 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         })),
       )
 
-    const runTask = (task: Task, baseDir: TargetDir, config: ProjectConfig) =>
+    const trackCreatedPath = (writtenPaths: Ref.Ref<TargetDir[]>, absPath: string) =>
+      Ref.update(writtenPaths, paths => [...paths, makeTargetDir(absPath)])
+
+    const cleanupCreatedPaths = (writtenPaths: Ref.Ref<TargetDir[]>) =>
+      Ref.get(writtenPaths).pipe(
+        Effect.flatMap(paths =>
+          Effect.forEach(
+            [...paths].reverse(),
+            createdPath =>
+              fs.remove(createdPath, { force: true, recursive: true }).pipe(
+                Effect.catchAll(error =>
+                  Effect.logWarning(`Failed to clean up generated path ${createdPath}: ${error.message}`),
+                ),
+              ),
+            { concurrency: 1, discard: true },
+          ),
+        ),
+      )
+
+    const registerRollbackFinalizer = (writtenPaths: Ref.Ref<TargetDir[]>) =>
+      Effect.scopeWith((scope) => {
+        const rollbackOnFailure = (exit: Exit.Exit<unknown, unknown>) =>
+          Exit.isFailure(exit) ? cleanupCreatedPaths(writtenPaths) : Effect.void
+
+        return Scope.addFinalizerExit(scope, rollbackOnFailure)
+      })
+
+    const runTask = (task: Task, baseDir: TargetDir, config: ProjectConfig, writtenPaths: Ref.Ref<TargetDir[]>) =>
       Effect.gen(function* () {
         switch (task.kind) {
           // 复制文件
@@ -267,18 +295,24 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
               return
             }
             yield* fs.ensureDir(path.dirname(abs))
-            return yield* fs.copyFile(task.src, abs)
+            yield* fs.copyFile(task.src, abs)
+            yield* trackCreatedPath(writtenPaths, abs)
+            return
           }
           // 模板渲染，直接 write
           case 'render': {
             const content = yield* templates.render(makeTemplatePath(task.src), task.data, config)
             const abs = path.resolve(baseDir, task.path)
+            const existed = yield* fs.exists(abs)
             yield* writeText(abs, content)
+            if (!existed)
+              yield* trackCreatedPath(writtenPaths, abs)
             return
           }
           // 组合 Json 文件
           case 'json': {
             const abs = path.resolve(baseDir, task.path)
+            const existed = yield* fs.exists(abs)
             // 对 draft 产生副作用
             let draft: Record<string, unknown> = {}
             // render + modify
@@ -311,11 +345,14 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             }
             const content = `${yield* encodeJson(out)}\n`
             yield* writeText(abs, content)
+            if (!existed)
+              yield* trackCreatedPath(writtenPaths, abs)
             return
           }
           // 基础文本变换
           case 'text': {
             const abs = path.resolve(baseDir, task.path)
+            const existed = yield* fs.exists(abs)
             let current = ''
             const shouldRead = task.readExisting !== false
             if (shouldRead && (yield* fs.exists(abs))) {
@@ -327,21 +364,26 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             for (const tr of task.transforms) current = tr(current)
 
             yield* writeText(abs, current)
+            if (!existed)
+              yield* trackCreatedPath(writtenPaths, abs)
           }
         }
       }).pipe(withProjectAnnotations(config, `plan.task.${task.kind}`, task.path))
 
     const apply: PlanServiceShape['apply'] = (p, baseDir, config) =>
-      Effect.gen(function* () {
+      Effect.scoped(Effect.gen(function* () {
+        const writtenPaths = yield* Ref.make<TargetDir[]>([])
+        yield* registerRollbackFinalizer(writtenPaths)
+
         const generate = p.tasks.filter(t => t.kind === 'copy' || t.kind === 'render')
         const modify = p.tasks.filter(t => t.kind === 'json' || t.kind === 'text')
 
         // 1：并发执行生成类任务（copy/render）
-        yield* Effect.forEach(generate, t => runTask(t, baseDir, config), { concurrency: appConfig.defaultConcurrency })
+        yield* Effect.forEach(generate, t => runTask(t, baseDir, config, writtenPaths), { concurrency: appConfig.defaultConcurrency })
 
         // 2：并发执行修改类任务（json/text）
-        yield* Effect.forEach(modify, t => runTask(t, baseDir, config), { concurrency: appConfig.defaultConcurrency })
-      }).pipe(
+        yield* Effect.forEach(modify, t => runTask(t, baseDir, config, writtenPaths), { concurrency: appConfig.defaultConcurrency })
+      })).pipe(
         Effect.withSpan('plan.apply'),
         withProjectAnnotations(config, 'plan.apply', baseDir),
       )
