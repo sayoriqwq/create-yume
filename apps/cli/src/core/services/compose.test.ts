@@ -1,8 +1,13 @@
+import type { StandardCommand } from '@effect/platform/Command'
 import path from 'node:path'
+import { Command } from '@effect/platform'
+import { Effect, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
+import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
-import { collectPartialEntries } from './compose'
+import { makeCommandMockLayer } from '../../../tests/support/mock-layers'
+import { collectPartialEntries, executeAllCommandsInDir, withWorkingDirectory } from './compose'
 
 describe('collectPartialEntries', () => {
   const partialRoot = makeTemplatePath('/tmp/create-yume/templates/partials')
@@ -58,6 +63,52 @@ describe('collectPartialEntries', () => {
         dir: makeTemplatePath(path.join(partialRoot, 'global')),
         namespace: 'global',
       },
+    ])
+  })
+})
+
+describe('command working directory helpers', () => {
+  it('applies the target directory through Command.workingDirectory', () => {
+    const command = Command.make('pnpm', 'install') as StandardCommand
+    const targetDir = makeTargetDir('/tmp/create-yume-working-dir')
+
+    const located = withWorkingDirectory(command, targetDir)
+
+    expect(Option.isSome(located.cwd)).toBe(true)
+    if (Option.isSome(located.cwd)) {
+      expect(located.cwd.value).toBe(targetDir)
+    }
+  })
+
+  it('executes every command with the provided working directory', async () => {
+    const commands = [
+      Command.make('pnpm', 'install') as StandardCommand,
+      Command.make('git', 'status') as StandardCommand,
+    ]
+    const targetDir = makeTargetDir('/tmp/create-yume-execute-dir')
+    const executed: Array<{ command: string, cwd?: string }> = []
+
+    await Effect.runPromise(
+      executeAllCommandsInDir(commands, targetDir).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            makeCommandMockLayer({
+              execute: (command) => {
+                executed.push({
+                  command: `${command.command} ${command.args.join(' ')}`,
+                  ...(Option.isSome(command.cwd) ? { cwd: command.cwd.value } : {}),
+                })
+                return Effect.succeed('')
+              },
+            }),
+          ),
+        ),
+      ),
+    )
+
+    expect(executed).toEqual([
+      { command: 'pnpm install', cwd: targetDir },
+      { command: 'git status', cwd: targetDir },
     ])
   })
 })
