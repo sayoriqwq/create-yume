@@ -155,4 +155,8 @@ export const collectQuestions = Effect.gen(function* () {
     default:
       return yield* Effect.dieMessage('Unsupported create mode')
   }
-})
+}).pipe(
+  Effect.withSpan('questions.collect'),
+  Effect.annotateLogs({ taskKind: 'questions.collect' }),
+  Effect.annotateSpans({ taskKind: 'questions.collect' }),
+)

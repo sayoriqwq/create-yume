@@ -5,7 +5,7 @@ import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import type { TemplateRegistry } from '@/types/template'
 import path from 'node:path'
-import process from 'node:process'
+import { Command } from '@effect/platform'
 import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
@@ -14,6 +14,7 @@ import { buildCommands } from '../commands'
 import { ReactTemplates } from '../template-registry/react'
 import { VueTemplates } from '../template-registry/vue'
 import { CommandService } from './command'
+import { withProjectAnnotations } from './observability'
 import { OrchestratorService } from './orchestrator'
 
 // 纯函数：直接把符合条件的模板注册到 DSL（不依赖环境）
@@ -50,7 +51,10 @@ export function generateProject(projectConfig: ProjectConfig) {
     const orchestrator = yield* OrchestratorService
     const targetDir = makeTargetDir(`./${projectConfig.name}`)
     yield* orchestrator.execute(targetDir, projectConfig)
-  })
+  }).pipe(
+    Effect.withSpan('generate.project'),
+    withProjectAnnotations(projectConfig, 'generate.project', `./${projectConfig.name}`),
+  )
 }
 
 export function executeAllCommands(commands: StandardCommand[]) {
@@ -61,19 +65,15 @@ export function executeAllCommands(commands: StandardCommand[]) {
   })
 }
 
-// 在指定目录下执行所有命令（临时 chdir，执行完恢复）
+export function withWorkingDirectory(command: StandardCommand, dir: TargetDir): StandardCommand {
+  return Command.workingDirectory(command, dir) as StandardCommand
+}
+
 export function executeAllCommandsInDir(commands: StandardCommand[], dir: TargetDir) {
   return Effect.gen(function* () {
     const commandSvc = yield* CommandService
-    const previousCwd = process.cwd()
-    yield* Effect.try(() => process.chdir(dir))
-    try {
-      for (const command of commands)
-        yield* commandSvc.execute(command)
-    }
-    finally {
-      process.chdir(previousCwd)
-    }
+    for (const command of commands)
+      yield* commandSvc.execute(withWorkingDirectory(command, dir))
   })
 }
 
@@ -83,5 +83,8 @@ export function finishProject(config: ProjectConfig) {
     const targetDir = makeTargetDir(`./${config.name}`)
     yield* executeAllCommandsInDir(commands, targetDir)
     yield* Effect.logInfo('🎉 Project generated successfully!')
-  })
+  }).pipe(
+    Effect.withSpan('finish.project'),
+    withProjectAnnotations(config, 'command.execute', `./${config.name}`),
+  )
 }

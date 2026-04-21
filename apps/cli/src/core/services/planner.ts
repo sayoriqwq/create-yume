@@ -10,15 +10,16 @@ import type { ComposeDSL, JsonBuilder, TextBuilder } from '@/types/dsl'
 import type { TemplateError } from '@/types/error'
 import type { JsonTask, Plan, Task, TextTask } from '@/types/task'
 import * as path from 'node:path'
-import { Context, Effect, Layer, Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 import { produce } from 'immer'
 import { makeTemplatePath } from '@/brand/template-path'
-import { DEFAULT_CONCURRENCY } from '@/constants/effect'
+import { AppConfig as AppConfigService } from '@/config/app-config'
 import { FileIOError } from '@/types/error'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
 import { safeParseJson } from '../adapters/json'
+import { withProjectAnnotations } from './observability'
 
 const planOperationSpecSymbol = Symbol('planOperationSpec')
 
@@ -136,7 +137,7 @@ export function toPlanSpec(plan: Plan): PlanSpec {
   }
 }
 
-interface PlanService {
+interface PlanServiceShape {
   // 组合 tasks 但是不触发
   readonly build: (
     program: (dsl: ComposeDSL) => void,
@@ -149,18 +150,13 @@ interface PlanService {
   ) => Effect.Effect<void, FileIOError | TemplateError>
 }
 
-class PlanTag extends Context.Tag('Plan')<
-  PlanTag,
-  PlanService
->() {}
-
-export const PlanLive = Layer.effect(
-  PlanTag,
-  Effect.gen(function* () {
+export class PlanService extends Effect.Service<PlanService>()('PlanService', {
+  effect: Effect.gen(function* () {
     const fs = yield* FsService
     const templates = yield* TemplateEngineService
+    const appConfig = yield* AppConfigService
 
-    const build: PlanService['build'] = program =>
+    const build: PlanServiceShape['build'] = program =>
       Effect.sync<Plan>(() => {
         const tasks: Task[] = []
 
@@ -243,7 +239,7 @@ export const PlanLive = Layer.effect(
 
         program({ json, text, render, copy })
         return { tasks }
-      })
+      }).pipe(Effect.withSpan('plan.build'))
 
     const writeText = (absPath: string, content: string) =>
       fs.ensureDir(path.dirname(absPath)).pipe(Effect.zipRight(fs.writeFileString(absPath, content)))
@@ -298,9 +294,9 @@ export const PlanLive = Layer.effect(
             }
             // 收尾工作
             if (task.finalize) {
+              const finalize = task.finalize
               draft = produce(draft, (d) => {
-                // 这里是 bug 吗，为什么判断了还是会 ts 报错
-                task.finalize!(d)
+                finalize(d)
               })
             }
 
@@ -329,22 +325,26 @@ export const PlanLive = Layer.effect(
             yield* writeText(abs, current)
           }
         }
-      })
+      }).pipe(withProjectAnnotations(config, `plan.task.${task.kind}`, task.path))
 
-    const apply: PlanService['apply'] = (p, baseDir, config) =>
+    const apply: PlanServiceShape['apply'] = (p, baseDir, config) =>
       Effect.gen(function* () {
         const generate = p.tasks.filter(t => t.kind === 'copy' || t.kind === 'render')
         const modify = p.tasks.filter(t => t.kind === 'json' || t.kind === 'text')
 
         // 1：并发执行生成类任务（copy/render）
-        yield* Effect.forEach(generate, t => runTask(t, baseDir, config), { concurrency: DEFAULT_CONCURRENCY })
+        yield* Effect.forEach(generate, t => runTask(t, baseDir, config), { concurrency: appConfig.defaultConcurrency })
 
         // 2：并发执行修改类任务（json/text）
-        yield* Effect.forEach(modify, t => runTask(t, baseDir, config), { concurrency: DEFAULT_CONCURRENCY })
-      })
+        yield* Effect.forEach(modify, t => runTask(t, baseDir, config), { concurrency: appConfig.defaultConcurrency })
+      }).pipe(
+        Effect.withSpan('plan.apply'),
+        withProjectAnnotations(config, 'plan.apply', baseDir),
+      )
 
-    return PlanTag.of({ build, apply })
+    return { build, apply } satisfies PlanServiceShape
   }),
-)
+  dependencies: [FsService.Default, TemplateEngineService.Default, AppConfigService.Default],
+}) {}
 
-export { PlanTag as PlanService }
+export const PlanLive = PlanService.Default

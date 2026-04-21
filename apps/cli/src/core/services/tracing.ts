@@ -1,14 +1,17 @@
 import * as NodeSdk from '@effect/opentelemetry/NodeSdk'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
-import { Config, Effect, Layer } from 'effect'
+import { Effect, Layer, Option, Redacted } from 'effect'
+import { AppConfig } from '@/config/app-config'
 
 export const TracingLive = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const endpoint = yield* Config.option(Config.string('OTEL_EXPORTER_OTLP_ENDPOINT'))
+    const config = yield* AppConfig
 
-    if (endpoint._tag === 'None')
+    if (Option.isNone(config.tracingEndpoint))
       return Layer.empty
+
+    const endpoint = Redacted.value(config.tracingEndpoint.value)
 
     return NodeSdk.layer(() => ({
       resource: {
@@ -16,7 +19,7 @@ export const TracingLive = Layer.unwrapEffect(
       },
       spanProcessor: new BatchSpanProcessor(
         new OTLPTraceExporter({
-          url: `${endpoint.value.replace(/\/$/, '')}/v1/traces`,
+          url: `${endpoint.replace(/\/$/, '')}/v1/traces`,
         }),
       ),
     }))

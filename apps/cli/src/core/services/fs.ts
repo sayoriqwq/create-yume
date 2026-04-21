@@ -1,9 +1,9 @@
 import { FileSystem } from '@effect/platform'
-import { Context, Effect, Layer, pipe } from 'effect'
+import { Effect, pipe } from 'effect'
 import { FileIOError } from '@/types/error'
 
 // 借助平台能力，但转化为领域错误
-interface FsService {
+interface FsServiceShape {
   readonly exists: (path: string) => Effect.Effect<boolean, FileIOError>
   readonly readFileString: (path: string) => Effect.Effect<string, FileIOError>
   readonly writeFileString: (path: string, content: string) => Effect.Effect<void, FileIOError>
@@ -22,11 +22,8 @@ interface FsService {
   readonly copyFile: (src: string, dest: string) => Effect.Effect<void, FileIOError>
 }
 
-class FsServiceTag extends Context.Tag('Fs')<FsServiceTag, FsService>() {}
-
-export const FsLive = Layer.effect(
-  FsServiceTag,
-  Effect.gen(function* () {
+export class FsService extends Effect.Service<FsService>()('FsService', {
+  effect: Effect.gen(function* () {
     const platformFs = yield* FileSystem.FileSystem
 
     const mapErr = (
@@ -39,74 +36,74 @@ export const FsLive = Layer.effect(
         message: `${op} failed: \n path: ${path} \n ${String(e)}`,
       })
 
-    const exists: FsService['exists'] = path =>
+    const exists: FsServiceShape['exists'] = path =>
       pipe(
         platformFs.exists(path),
         Effect.mapError(mapErr('exists', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const readFileString: FsService['readFileString'] = path =>
+    const readFileString: FsServiceShape['readFileString'] = path =>
       pipe(
         platformFs.readFileString(path),
         Effect.mapError(mapErr('read', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const writeFileString: FsService['writeFileString'] = (path, content) =>
+    const writeFileString: FsServiceShape['writeFileString'] = (path, content) =>
       pipe(
         platformFs.writeFileString(path, content),
         Effect.mapError(mapErr('write', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const readFile: FsService['readFile'] = path =>
+    const readFile: FsServiceShape['readFile'] = path =>
       pipe(
         platformFs.readFile(path),
         Effect.mapError(mapErr('read', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const writeFile: FsService['writeFile'] = (path, data) =>
+    const writeFile: FsServiceShape['writeFile'] = (path, data) =>
       pipe(
         platformFs.writeFile(path, data),
         Effect.mapError(mapErr('write', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const readDirectory: FsService['readDirectory'] = path =>
+    const readDirectory: FsServiceShape['readDirectory'] = path =>
       pipe(
         platformFs.readDirectory(path),
         Effect.mapError(mapErr('read', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const makeDirectory: FsService['makeDirectory'] = (path, options) =>
+    const makeDirectory: FsServiceShape['makeDirectory'] = (path, options) =>
       pipe(
         platformFs.makeDirectory(path, options),
         Effect.mapError(mapErr('mkdir', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const ensureDir: FsService['ensureDir'] = path =>
+    const ensureDir: FsServiceShape['ensureDir'] = path =>
       makeDirectory(path, { recursive: true })
 
-    const remove: FsService['remove'] = (path, options) =>
+    const remove: FsServiceShape['remove'] = (path, options) =>
       pipe(
         platformFs.remove(path, options),
         Effect.mapError(mapErr('remove', path)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    const copyFile: FsService['copyFile'] = (src, dest) =>
+    const copyFile: FsServiceShape['copyFile'] = (src, dest) =>
       pipe(
         platformFs.copyFile(src, dest),
-        Effect.mapError(mapErr('write', dest)),
+        Effect.mapError(mapErr('copy', dest)),
         Effect.provideService(FileSystem.FileSystem, platformFs),
       )
 
-    return FsServiceTag.of({ exists, readFileString, writeFileString, readFile, writeFile, readDirectory, makeDirectory, ensureDir, remove, copyFile })
+    return { exists, readFileString, writeFileString, readFile, writeFile, readDirectory, makeDirectory, ensureDir, remove, copyFile } satisfies FsServiceShape
   }),
-)
+}) {}
 
-export { FsServiceTag as FsService }
+export const FsLive = FsService.Default

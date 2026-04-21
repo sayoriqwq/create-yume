@@ -2,7 +2,8 @@
 
 import { DevTools } from '@effect/experimental'
 import { NodeContext, NodeFileSystem, NodeRuntime } from '@effect/platform-node'
-import { Effect, Layer, Logger, LogLevel, pipe } from 'effect'
+import { Effect, Layer, Logger, pipe } from 'effect'
+import { AppConfig } from '@/config/app-config'
 import { OrchestratorLive } from '@/core/services/orchestrator'
 import { TracingLive } from '@/core/services/tracing'
 import { FsLive } from '~/fs'
@@ -23,26 +24,35 @@ const main = pipe(
   Effect.tap(finishProject),
 )
 
-const BaseLayer = Layer.mergeAll(
-  // 如果后续引入 tracing layer，DevTools 需要先于 tracing layer 注入。
-  DevTools.layer(),
-  TracingLive,
-  Logger.minimumLogLevel(LogLevel.Debug),
-  Logger.pretty,
-  CommandLive,
-  // 平台
-  NodeFileSystem.layer,
-  NodeContext.layer,
+const DevToolsLive = Layer.unwrapEffect(
+  Effect.map(AppConfig, config => (config.debug ? DevTools.layer() : Layer.empty)),
 )
 
-const AppLayer = OrchestratorLive.pipe(
+const LoggerLevelLive = Layer.unwrapEffect(
+  Effect.map(AppConfig, config => Logger.minimumLogLevel(config.logLevel)),
+)
+
+const PlatformLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  NodeContext.layer,
+  AppConfig.Default,
+)
+
+const BaseLayer = Layer.mergeAll(
+  DevToolsLive,
+  TracingLive,
+  LoggerLevelLive,
+  Logger.pretty,
+  CommandLive,
+  FsLive,
+).pipe(Layer.provideMerge(PlatformLayer))
+
+const OrchestratorLayer = OrchestratorLive.pipe(
   Layer.provideMerge(
     PlanLive.pipe(
       Layer.provideMerge(
         TemplateEngineLive.pipe(
-          Layer.provideMerge(
-            FsLive.pipe(Layer.provideMerge(BaseLayer)),
-          ),
+          Layer.provideMerge(BaseLayer),
         ),
       ),
     ),
@@ -50,7 +60,7 @@ const AppLayer = OrchestratorLive.pipe(
 )
 
 const program = main.pipe(
-  Effect.provide(AppLayer),
+  Effect.provide(Layer.mergeAll(BaseLayer, OrchestratorLayer)),
 )
 
 // https://effect.website/docs/platform/runtime/#running-your-main-program-with-runmain
