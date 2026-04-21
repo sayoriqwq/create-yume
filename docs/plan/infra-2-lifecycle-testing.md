@@ -6,7 +6,10 @@
 
 把资源型副作用显式化（Scope / `acquireRelease`），把测试统一到 Effect 语义下（TestClock / ConfigProvider / Arbitrary）。这是 Code Tier 的 Phase 4（回滚）和 Phase 5（snapshot）能安全推进的前置。
 
-## 当前缺口（对照代码）
+> 状态：已完成。以下"当前缺口"保留为立项时快照，当前仓库已具备 scoped rollback、
+> `tests/support/`、TestClock / ConfigProvider 示例，以及 Phase 5 直接复用的 fixture。
+
+## 当前缺口（立项时，对照代码）
 
 - `core/services/compose.ts` 的 `executeAllCommandsInDir` 仍用 `process.chdir` + try/finally 切目录。
 - `planner.ts` 里没有 Ref/Scope 来追踪写入路径（Code Phase 4-B 的回滚需要）。

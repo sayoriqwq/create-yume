@@ -53,7 +53,7 @@
 - [ ] 所有文档里的 file path / 行号若还准确一并更新；可用 `rg '\.ts:\d+' docs/` 扫一遍
 - [ ] 所有跨文档链接可用（相对路径对）
 - [ ] 从零读 `lead.md → infra-*.md → phase-*.md → overview.md` 能形成一致心智模型
-- [ ] `pnpm verify:docs` 通过
+- [ ] 人工 review 通过（当前仓库没有 `pnpm verify:docs`）
 
 ## 注意事项
 

@@ -101,7 +101,7 @@ create-yume \
 ## 验证
 
 - [ ] `pnpm --filter create-yume build`
-- [ ] 非交互：`node apps/cli/dist/index.mjs --preset react-app --name nia-react --yes --install` 一路走完，且整个过程 **没有任何** `@clack/prompts` 输出（`intro / outro / note / prompt` 都不触发）
+- [ ] 非交互：`node apps/cli/dist/index.js --preset react-app --name nia-react --yes --install` 一路走完，且整个过程 **没有任何** `@clack/prompts` 输出（`intro / outro / note / prompt` 都不触发）
 - [ ] 非交互失败：人为 break 一个模板让 render 报错，确认 `nia-react/` 目录在命令退出后被清空
 - [ ] `--help` 和 `--version` 输出正确
 - [ ] 交互模式（不带 flag）行为与 Phase 3 结束时完全一致
@@ -111,3 +111,5 @@ create-yume \
 
 - 非交互模式退出码：成功 0、用户取消 1、脚本错误 2，便于 CI 集成
 - 回滚与并发 apply 的顺序：并发写入时 Ref 的 append 顺序不严格 = 写入完成顺序；但对"逆序删文件"足够
+
+Done at commit `f627870`.

@@ -6,12 +6,15 @@
 
 让后续 agent 不需要猜"这个仓库默认怎么做事"。把执行合同、统一验证入口、产物 / 入口一致性固化为仓库自带事实。
 
-## 当前缺口
+> 状态：已完成。当前执行合同以仓库根 `AGENTS.md`、`package.json`、
+> `README.md` 和 `docs/verification-matrix.md` 为准。
 
-- 没有 repo-local `AGENTS.md`。
-- `package.json` 的 `bin` / `main` 声明为 `dist/index.js`，但 `tsdown` 实际产物是 `dist/index.mjs`（仓库内入口仍有漂移）。
-- 根 `package.json` 没有 `pnpm verify` 之类的统一验证入口。
-- lint 作用域已在根 eslint 里排除 docs（`eslint.config.mjs`），但规则没写到 `AGENTS.md` 供 agent 参考。
+## 已落地结果
+
+- repo-local `AGENTS.md` 已建，支持范围、允许修改区域和最小验证集合已固化。
+- `package.json` 的 `bin` / `main` 与 `tsdown` 产物统一为 `dist/index.js`。
+- 根 `package.json` 已提供 `pnpm verify` 与 `pnpm verify:code`。
+- docs-only 改动当前走人工 review；仓库内没有 `pnpm verify:docs`。
 
 ## 交付物
 
@@ -19,7 +22,7 @@
 
 至少覆盖：
 
-- [ ] 当前支持的项目类型（react / vue；node 声明但未实装）。
+- [ ] 当前支持的项目类型（react / vue）。
 - [ ] 当前明确不支持的范围（远程模板、插件化、CLI 增量更新）。
 - [ ] 允许修改的主要区域（`apps/cli/src`、`apps/cli/templates`、`docs/`）。
 - [ ] 高风险区域（`core/services/planner.ts`、`core/services/template-engine.ts`、`modifier/package-json.ts`）。
@@ -51,11 +54,8 @@
 
 - [ ] `verify` 作为 agent 默认的"能不能提交"门。
 - [ ] `verify:code` 作为"只改代码"时的轻量版。
-- [ ] `verify:docs` 必须真的能跑。当前 `eslint.config.mjs` 已把 `docs/**` 全局 ignore（跑 `pnpm lint docs` 会 exit 2：all files ignored）。**三选一并落地**：
-  - **选 A（推荐）**：docs 不用 eslint。`verify:docs` 改为其他检查，如 `pnpm markdownlint-cli2 "docs/**/*.md"`（新增 devDep）或相对链接检查脚本。
-  - **选 B**：放开 docs 的 eslint ignore，但仅对 `docs/**/*.md` 启用受限规则（不扫 `docs/llms/**`），并把 `.lintstagedrc.json` 对应打开。
-  - **选 C**：不做 docs lint，删掉 `verify:docs`，在 `AGENTS.md` 里直接说"docs 只人工 review"。
-- [ ] 选型落地后，同步更新 [lead.md](./lead.md) "贯穿两层的一致性约束" 一段里对 `verify:docs` 的提法。
+- [ ] docs-only 改动按人工 review 执行；不再要求 `verify:docs` 脚本。
+- [ ] 同步更新 [lead.md](./lead.md) 与 `AGENTS.md` 里的 docs 验证口径。
 
 ### D. 验证矩阵（新建 `docs/verification-matrix.md`）
 
@@ -67,7 +67,7 @@
 | `apps/cli/src/core/template-registry/**` | `pnpm --filter create-yume test`（planner snapshot） |
 | `apps/cli/src/index.ts`           | `pnpm build` + 手跑一次 preset             |
 | `apps/cli/src/core/modifier/package-json.ts` | 生成产物 diff                    |
-| `docs/**`                         | `pnpm verify:docs`（以 C 节选型为准）        |
+| `docs/**`                         | 人工 review                                 |
 
 - [ ] 该表需要和 Code Phase 5 的 snapshot 覆盖清单保持一致。
 

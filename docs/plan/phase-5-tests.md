@@ -8,7 +8,7 @@
 
 > **与当前状态的关系**：
 > - vitest 已装（catalog `vitest ^4.1.5`），`apps/cli/package.json` 已有 `"test": "vitest run"`。
-> - `apps/cli/src/core/services/template-helpers.test.ts` 是首个测试；新的 spec 放 `apps/cli/tests/`。
+> - 立项时 `apps/cli/src/core/services/template-helpers.test.ts` 是首个测试；当前 planner / render snapshot 已落地在 `apps/cli/tests/`。
 > - `tests/support/` 下的 fixtures / mock layer 已由 Infra 2 B 铺好，本阶段直接复用。
 
 ## 模块 A · 运行器 & 目录
@@ -90,3 +90,5 @@
 
 - snapshot 文件入 git，但 **review 必须仔细**：一个被意外"接受"的 bad snapshot 就废了
 - 不要对 `apply` 做全量集成测试（涉及真实 fs、易 flaky）；planner.build 才是可重复的纯函数
+
+Done at commit `9c43a5c`.

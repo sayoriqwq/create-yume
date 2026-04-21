@@ -1,9 +1,10 @@
 # Create Yume Agent Contract
 
-This repository currently supports `react` and `vue` project scaffolds. `node` is declared in planning language, but the CLI does not implement a Node project flow yet.
+This repository currently supports `react` and `vue` project scaffolds only.
 
 ## Unsupported Scope
 
+- Node project scaffold flow
 - Remote templates
 - Plugin system / pluggable template sources
 - Incremental CLI updates against an existing project

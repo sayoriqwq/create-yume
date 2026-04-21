@@ -70,3 +70,5 @@
 
 - 凡是 `docs/overview.md §8` 目录结构图里还提到 Node 的话，留到 Phase 6 一起更
 - alias 二选一的决定建议记录在提交信息里，后来人 bisect 时能看到原因
+
+Done at commit `6f2c80d`.

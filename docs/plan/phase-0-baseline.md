@@ -46,5 +46,7 @@ baseline-vue/package.json：1051 bytes
 ## 注意事项
 
 - baseline 产物一定要归档到 **仓库以外** 的目录，避免下一阶段 git 误清
-- 若 Infra 3 的入口选型还未落地，记录实际为 `dist/index.mjs`；不要在本阶段改源
+- 当前 CLI 入口合同已统一为 `dist/index.js`；若后续再次漂移，先修文档与包配置的一致性
 - `pnpm link`（内建）与 `pnpm run link`（脚本）是两回事；基线步骤始终用后者或显式 `link:global`
+
+Done at commit `72896af`.

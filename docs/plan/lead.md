@@ -10,7 +10,7 @@
 - pnpm catalog 作为全仓库版本单一来源（`pnpm-workspace.yaml`）
 - Effect 3.21 / `@effect/platform` 0.96 / `@effect/platform-node` 0.106
 - OTel tracing layer + DevTools + pretty logger（`apps/cli/src/core/services/tracing.ts`、`apps/cli/src/index.ts`）
-- vitest 已装；首个测试 `apps/cli/src/core/services/template-helpers.test.ts`
+- vitest 已装；已落地 compose helper、planner snapshot、template render snapshot 测试
 - docs 已迁到仓库根 `docs/`；根 `eslint.config.mjs` 已排除 docs
 - `@antfu/eslint-config` 解锁至 8.2.0
 - lobe-commit 集成（`pnpm commit`）
@@ -25,33 +25,33 @@
   `@opentelemetry/sdk-trace-node` 的 catalog / CLI dependency / lockfile。
 - Phase 1 清理已完成，产物对比目录：
   `/Users/sayori/Desktop/create-yume-phase1-output-20260422`。
-- 下一轮从 [Phase 2 — 风格 & 正确性](./phase-2-style.md) 或
-  [Phase 3 — 模板版本刷新](./phase-3-deps.md) 开始（二者可并行）。
+- Code Tier Phase 2-5 已在本地 `main` 后续提交中落地。
+- 当前剩余主线为 [Phase 6 — 文档对齐](./phase-6-docs.md)。
 
 下面是剩余工作。
 
 ## Infra Tier（blocking，先全部完成）
 
-| 阶段    | 名称                        | Sub-doc                                                        | 依赖         |
-| ------- | --------------------------- | -------------------------------------------------------------- | ------------ |
-| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](./infra-0-contracts.md)                 | —            |
-| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](./infra-1-runtime.md)              | Infra 0      |
-| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](./infra-2-lifecycle-testing.md) | Infra 1      |
-| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](./infra-3-agent-contract.md)    | 可并行       |
+| 阶段    | 名称                        | Sub-doc                                                        | 依赖         | 状态 |
+| ------- | --------------------------- | -------------------------------------------------------------- | ------------ | ---- |
+| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](./infra-0-contracts.md)                 | —            | done |
+| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](./infra-1-runtime.md)              | Infra 0      | done |
+| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](./infra-2-lifecycle-testing.md) | Infra 1      | done |
+| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](./infra-3-agent-contract.md)    | 可并行       | done |
 
 > `effect-foundation-plan.md` 原单文件计划已拆为上列 sub-doc，文件保留为指针。
 
 ## Code Tier（blocked on Infra Tier）
 
-| 阶段    | 名称                   | 风险 | Sub-doc                                      |
-| ------- | ---------------------- | ---- | -------------------------------------------- |
-| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](./phase-0-baseline.md) |
-| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](./phase-1-cleanup.md)   |
-| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](./phase-2-style.md)       |
-| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](./phase-3-deps.md)         |
-| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](./phase-4-features.md) |
-| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](./phase-5-tests.md)       |
-| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         |
+| 阶段    | 名称                   | 风险 | Sub-doc                                      | 状态 |
+| ------- | ---------------------- | ---- | -------------------------------------------- | ---- |
+| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](./phase-0-baseline.md) | done |
+| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](./phase-1-cleanup.md)   | done |
+| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](./phase-2-style.md)       | done |
+| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](./phase-3-deps.md)         | done |
+| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](./phase-4-features.md) | done |
+| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](./phase-5-tests.md)       | done |
+| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         | in-progress |
 
 Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
 

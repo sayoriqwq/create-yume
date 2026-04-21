@@ -67,3 +67,5 @@
 - 本阶段 **不**动仓库根 catalog / 不动 `pnpm-workspace.yaml`
 - 任何跨主版本升级单独 commit，便于回滚
 - 若 Infra 1 已经把"模板版本"抽成 `AppConfig.templateVersions`，本阶段改成更新该数据源
+
+Done at commit `bffd159`.

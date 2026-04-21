@@ -8,15 +8,15 @@
 >
 > 已落地（对比评估时）：
 > - docs 已迁到仓库根 `docs/`，根 `eslint.config.mjs` 已排除 docs（§5.1 D 部分完成）
-> - vitest 已装并有首个测试（§5.3 B/C 雏形具备）
+> - repo-local `AGENTS.md` 已建，仓库级执行合同已落地
+> - vitest 已装，且已有 planner / template render snapshot 基线
 > - OTel tracing + pretty logger 已接入（§3 中提到的"可观察性合同"部分落地）
 >
 > 仍未落地：
-> - `AGENTS.md` 未建（§5.1 A）
 > - CLI 入口文件名曾经与文档和包配置存在漂移（§5.1 B）
 > - 统一 `pnpm verify` 入口（§5.1 C）
 > - `project-invariants.md` / `feature-matrix.md` / `verification-matrix.md` / `change-playbook.md`（§5.2）
-> - planner / template render snapshot + smoke test（§5.3）
+> - 生成产物的自动化 smoke test（§5.3）
 > - ADR 体系（§5.4 A）
 >
 > 下文保留作为背景阅读。

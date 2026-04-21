@@ -32,17 +32,18 @@
 
 ## 3. 主执行流程（自顶向下）
 
-1. `src/index.ts` 入口：构建 `main` Effect，依次执行：
-   - `showWelcome` → `collectQuestions` → `showConfigSummary` → `generateProject` → `finishProject`。
-2. `collectQuestions`：以 Effect 循环 / 分支收集配置（支持 *preset* 与 *create* 两种模式），返回 `ProjectConfig`（React / Vue 具体变体）。
-3. `generateProject`：调用 `OrchestratorService.execute(baseDir, config)`。
+1. `src/index.ts` 入口：先解析 CLI flags，构建 `CliContext`，再执行：
+   - 交互模式：`showWelcome` → `collectQuestions` → `showConfigSummary` → `generateProject` → `finishProject`
+   - 非交互模式：跳过欢迎语与 prompts，直接按 `preset + name` 生成
+2. `collectQuestions`：以 Effect 分支收集配置，支持 *preset* 与 *create* 两种模式，并支持非交互 preset 流程，返回 `ProjectConfig`（React / Vue 具体变体）。
+3. `generateProject`：调用 `OrchestratorService.execute(baseDir, config, { rollbackOnFailure })`。
 4. `Orchestrator.execute`：
    - 注册 helpers、partials（按框架命名空间 + 全局）。
    - 构造一个纯函数 `program(dsl)`：
      - 条件性注册 `root.svg`、`package.json` 组合逻辑（`buildRootSvg` / `buildPackageJson`）。
      - 根据 config 框架类型调用 `buildTemplates` 将 registry 中命中的模板（`ReactTemplates` / `VueTemplates`）转换为 DSL `render()` 任务。
    - `planner.build(program)` 产出一个 `Plan{ tasks }`。
-   - `planner.apply(plan, baseDir, config)` 并发执行：
+   - `planner.apply(plan, baseDir, config, options)` 并发执行：
      - 生成类（copy / render）
      - 修改 / 组合类（json / text）
 5. 任务执行：
@@ -57,7 +58,7 @@
 | DSL (`ComposeDSL`)      | `types/dsl.ts`                     | 统一声明任务的构建 API                        | render / copy / json / text 四类 |
 | `PlanService`           | `core/services/planner.ts`         | 将 DSL program 转换为可执行计划，并执行       | 分离“描述”与“执行”           |
 | `OrchestratorService`   | `core/services/orchestrator.ts`    | 绑定模板根路径 + partial + program 组装       | 聚合注册点                       |
-| `TemplateEngineService` | `core/services/template-engine.ts` | Handlebars 运行时包装 + helpers/partials 注册 | 缓存编译结果（Code Phase 1 计划移除）                 |
+| `TemplateEngineService` | `core/services/template-engine.ts` | Handlebars 运行时包装 + helpers/partials 注册 | 使用真实 partial/helper 注册路径执行渲染             |
 | `FsService`             | `core/services/fs.ts`              | 抽象文件系统并映射领域错误                    | 方便测试 / mock                  |
 | 交互问题模块              | `core/questions/*`                 | 将一次 CLI 交互拆成独立问题                   | 支持 preset / 自定义分支         |
 | 模板注册表                | `core/template-registry/*`         | 数据驱动：条件 + 目标路径 + 模板源            | 降低模板散落判断逻辑             |
@@ -72,7 +73,9 @@
 ## 6. 并发与安全
 
 - `DEFAULT_CONCURRENCY` 控制 `Effect.forEach` 并发写文件，避免同时打开过多 fd；当前简单值即可。
-- 写文件前确保目标目录 `ensureDir`，重复 copy 时若已存在则跳过（幂等性）。
+- `planner.apply` 运行在 `Effect.scoped` 中，会记录本次创建的文件与目录。
+- 失败时会逆序清理本次生成的路径；传 `--no-rollback` 时可显式关闭该行为。
+- 写文件前会按 `baseDir` 追踪并创建目标目录，重复 copy 时若已存在则跳过（幂等性）。
 - Handlebars 禁用原型访问（`allowProto* = false`）。
 - 错误模型：
   - 领域 FS 错误统一 `FileIOError`（带操作名 + 路径）。
@@ -89,19 +92,30 @@
 
 ## 8. 目录结构速览（与架构映射）
 
-```
-apps/cli/src
-├── core
-│   ├── adapters/              # 外部库适配（prompts/json）
-│   ├── services/              # Orchestrator / Planner / TemplateEngine / Fs
-│   ├── questions/             # 交互式问题（分 common / vue / react）
-│   ├── template-registry/     # 模板注册表（vue / react / root-svg）
-│   ├── modifier/              # 组合文件（package-json 等）
-│   └── compose.ts             # 欢迎语 / 总结输出辅助
-├── templates/                 # Handlebars 模板、partials、片段
-├── types/                     # DSL、错误、配置、模板类型
-├── utils/                     # 轻量工具 & type guards
-└── index.ts                   # CLI 入口，提供 Layer 装配
+```text
+apps/cli
+├── src
+│   ├── core
+│   │   ├── adapters/          # 外部库适配（prompts/json）
+│   │   ├── services/          # Orchestrator / Planner / TemplateEngine / Fs / Command
+│   │   ├── questions/         # 交互式问题（分 common / vue / react）
+│   │   ├── template-registry/ # 模板注册表（vue / react / root-svg）
+│   │   ├── modifier/          # 组合文件（package-json 等）
+│   │   ├── cli-args.ts        # 非交互参数解析
+│   │   └── cli-context.ts     # 交互/非交互上下文
+│   ├── config/                # AppConfig 等运行时配置
+│   ├── schema/                # Effect Schema 合同
+│   ├── types/                 # DSL、错误、配置、模板类型
+│   ├── utils/                 # 轻量工具 & type guards
+│   └── index.ts               # CLI 入口，提供 Layer 装配
+├── templates
+│   ├── fragments/             # 可渲染模板片段
+│   ├── partials/
+│   │   ├── global/            # 全局 partial
+│   │   ├── react/
+│   │   └── vue/
+│   └── assets/
+└── tests/                     # planner / render snapshot 与 support fixtures
 ```
 
 路径别名中 `@/*` 指向 `apps/cli/src/*`，`~/*` 是 `core/services/*` 的短路径。
@@ -119,18 +133,17 @@ apps/cli/src
 
 ## 10. 当前限制 / 改进方向
 
-| 类别     | 问题                          | 对应阶段                                     |
-| -------- | ----------------------------- | -------------------------------------------- |
-| 契约     | `ProjectConfig` 等只有 interface，无 Schema | Infra 0                        |
-| 配置读取 | 不支持 CLI flags / 非交互模式 | Code Phase 4-A（mri 已在 deps）              |
-| 回滚     | 失败时缺乏清理策略            | Code Phase 4-B（依赖 Infra 2 的 Scope）       |
-| 测试     | 仅有 `template-helpers.test.ts` | Code Phase 5（planner / render snapshot）  |
-| Runtime  | `AppConfig` 缺失，环境变量散读 | Infra 1                                     |
-| 缓存     | 模板编译缓存无收益            | Code Phase 1（直接删除）                     |
-| 入口一致性 | `bin` 声明 `.js`，产物是 `.mjs` | Infra 3                                  |
+| 类别     | 当前状态 / 限制                        | 说明 |
+| -------- | ------------------------------------- | ---- |
+| 支持范围 | 仅支持 React / Vue scaffold           | Node project flow 仍未实现 |
+| CLI      | ✅ 已支持非交互 preset 模式与回滚开关 | `preset + name + yes/install/git/rollback` |
+| 测试     | ✅ 已有 planner / render snapshot     | 生成后项目的端到端 smoke 仍主要靠手动 |
+| Runtime  | ✅ `AppConfig` 已作为运行时配置边界   | tracing / logger / concurrency 统一走配置层 |
+| 文档     | `status.md` 仍是历史快照              | 当前执行入口以 `docs/plan/lead.md` 为准 |
 
 ## 11. 演进路线（架构层）
 
-- 短期：按 [plan/lead.md](./plan/lead.md) 完成 Infra Tier（Schema / Brand / AppConfig / Service 模板 / Scope / 测试基建 / AGENTS.md），再推进 Code Tier 的清理、功能扩展与 snapshot 测试。
-- 中期：插件化（注册新 DSL 操作 / 新模板集合）、支持多阶段生成（pre / generate / post）。
+- ✅ 已完成：Infra Tier、Code Phase 0-5，以及 planner / template render snapshot 基线。
+- 当前：完成 [plan/phase-6-docs.md](./plan/phase-6-docs.md) 的文档对齐，并补必要的 smoke 说明。
+- 中期：补生成后项目的自动化 smoke、支持多阶段生成（pre / generate / post）。
 - 长期：远程模板拉取 + 缓存、增量更新（对现有项目 diff 并 apply）、可视化配置界面。

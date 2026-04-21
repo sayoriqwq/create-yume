@@ -55,3 +55,5 @@
 
 - 方案 A、B 不要混用
 - `Command.workingDirectory` 的类型变化如果让 `CommandService.execute` 要改，拆成独立 commit
+
+Done at commit `ab1702b`.
