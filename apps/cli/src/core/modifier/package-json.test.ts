@@ -100,4 +100,30 @@ describe('buildPackageJson', () => {
       'typescript': '^6.0.3',
     })
   })
+
+  it('writes latest frontend tooling versions when vite and tailwind are enabled', () => {
+    const packageJson = renderPackageJson({
+      type: 'vue',
+      name: makeProjectName('phase3-vue'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: true,
+      stateManagement: true,
+      cssPreprocessor: 'less',
+      cssFramework: 'tailwind',
+    })
+
+    expect(packageJson.dependencies).toMatchObject({
+      '@tailwindcss/vite': '^4.2.4',
+      'tailwindcss': '^4.2.4',
+      'vite': '^8.0.9',
+    })
+
+    expect(packageJson.devDependencies).toMatchObject({
+      less: '^4.6.4',
+    })
+  })
 })

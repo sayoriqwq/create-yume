@@ -34,13 +34,13 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
 
   if (isFrontendProject(config)) {
     entry
-      .modify(when(config.buildTool === 'vite', deps({ vite: '^7.1.3' })))
+      .modify(when(config.buildTool === 'vite', deps({ vite: '^8.0.9' })))
       .modify(when(config.buildTool === 'vite', scripts({ dev: 'vite', build: 'vite build', preview: 'vite preview' })))
 
-      .modify(when(config.cssPreprocessor === 'sass', devDeps({ sass: '^1.91.0' })))
-      .modify(when(config.cssPreprocessor === 'less', devDeps({ less: '^4.4.1' })))
+      .modify(when(config.cssPreprocessor === 'sass', devDeps({ sass: '^1.99.0' })))
+      .modify(when(config.cssPreprocessor === 'less', devDeps({ less: '^4.6.4' })))
 
-      .modify(when(config.cssFramework === 'tailwind', deps({ 'tailwindcss': '^4.1.12', '@tailwindcss/vite': '^4.1.12' })))
+      .modify(when(config.cssFramework === 'tailwind', deps({ 'tailwindcss': '^4.2.4', '@tailwindcss/vite': '^4.2.4' })))
 
     if (isVueProject(config)) {
       entry
