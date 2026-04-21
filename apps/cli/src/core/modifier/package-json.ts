@@ -44,11 +44,11 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
 
     if (isVueProject(config)) {
       entry
-        .modify(when(config.language === 'typescript', devDeps({ '@vue/tsconfig': '^0.8.1' })))
-        .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-vue': '^6.0.1', '@vue/compiler-sfc': '^3.5.20' })))
-        .modify(deps({ vue: '^3.5.20' }))
-        .modify(when(config.router, deps({ 'vue-router': '^4.5.1' })))
-        .modify(when(config.stateManagement, deps({ pinia: '^3.0.3' })))
+        .modify(when(config.language === 'typescript', devDeps({ '@vue/tsconfig': '^0.9.1' })))
+        .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-vue': '^6.0.6', '@vue/compiler-sfc': '^3.5.32' })))
+        .modify(deps({ vue: '^3.5.32' }))
+        .modify(when(config.router, deps({ 'vue-router': '^5.0.4' })))
+        .modify(when(config.stateManagement, deps({ pinia: '^3.0.4' })))
     }
     else if (isReactProject(config)) {
       entry

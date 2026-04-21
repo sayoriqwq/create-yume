@@ -126,4 +126,32 @@ describe('buildPackageJson', () => {
       less: '^4.6.4',
     })
   })
+
+  it('writes latest vue ecosystem versions for a full vue template', () => {
+    const packageJson = renderPackageJson({
+      type: 'vue',
+      name: makeProjectName('phase3-vue-ecosystem'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: true,
+      stateManagement: true,
+      cssPreprocessor: 'sass',
+      cssFramework: 'tailwind',
+    })
+
+    expect(packageJson.dependencies).toMatchObject({
+      '@vitejs/plugin-vue': '^6.0.6',
+      '@vue/compiler-sfc': '^3.5.32',
+      'pinia': '^3.0.4',
+      'vue': '^3.5.32',
+      'vue-router': '^5.0.4',
+    })
+
+    expect(packageJson.devDependencies).toMatchObject({
+      '@vue/tsconfig': '^0.9.1',
+    })
+  })
 })
