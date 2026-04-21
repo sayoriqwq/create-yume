@@ -1,7 +1,7 @@
 import type { ProjectConfig, ReactProjectConfig, VueProjectConfig } from '../../src/types/config'
 import { makeProjectName } from '../../src/brand/project-name'
 
-export const reactProjectConfig = {
+export const reactPresetProjectConfig = {
   name: makeProjectName('react-fixture'),
   type: 'react',
   language: 'typescript',
@@ -15,7 +15,7 @@ export const reactProjectConfig = {
   cssFramework: 'tailwind',
 } satisfies ReactProjectConfig
 
-export const vueProjectConfig = {
+export const vuePresetProjectConfig = {
   name: makeProjectName('vue-fixture'),
   type: 'vue',
   language: 'typescript',
@@ -29,7 +29,40 @@ export const vueProjectConfig = {
   cssFramework: 'tailwind',
 } satisfies VueProjectConfig
 
+export const reactCustomProjectConfig = {
+  name: makeProjectName('react-custom-fixture'),
+  type: 'react',
+  language: 'typescript',
+  git: true,
+  linting: 'antfu-eslint',
+  codeQuality: ['lint-staged', 'commitlint'],
+  buildTool: 'vite',
+  router: 'tanstack-router',
+  stateManagement: 'jotai',
+  cssPreprocessor: 'sass',
+  cssFramework: 'tailwind',
+} satisfies ReactProjectConfig
+
+export const vueCustomProjectConfig = {
+  name: makeProjectName('vue-custom-fixture'),
+  type: 'vue',
+  language: 'typescript',
+  git: true,
+  linting: 'antfu-eslint',
+  codeQuality: ['lint-staged', 'commitlint'],
+  buildTool: 'vite',
+  router: true,
+  stateManagement: true,
+  cssPreprocessor: 'sass',
+  cssFramework: 'none',
+} satisfies VueProjectConfig
+
+export const reactProjectConfig = reactPresetProjectConfig
+export const vueProjectConfig = vuePresetProjectConfig
+
 export const projectConfigs: readonly ProjectConfig[] = [
-  reactProjectConfig,
-  vueProjectConfig,
+  reactPresetProjectConfig,
+  vuePresetProjectConfig,
+  reactCustomProjectConfig,
+  vueCustomProjectConfig,
 ]
