@@ -154,4 +154,58 @@ describe('buildPackageJson', () => {
       '@vue/tsconfig': '^0.9.1',
     })
   })
+
+  it('writes latest react ecosystem versions for react-router and zustand', () => {
+    const packageJson = renderPackageJson({
+      type: 'react',
+      name: makeProjectName('phase3-react-ecosystem'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: 'react-router',
+      stateManagement: 'zustand',
+      cssPreprocessor: 'sass',
+      cssFramework: 'tailwind',
+    })
+
+    expect(packageJson.dependencies).toMatchObject({
+      '@vitejs/plugin-react': '^6.0.1',
+      'react': '^19.2.5',
+      'react-dom': '^19.2.5',
+      'react-router': '^7.14.2',
+      'react-router-dom': '^7.14.2',
+      'zustand': '^5.0.12',
+    })
+
+    expect(packageJson.devDependencies).toMatchObject({
+      '@eslint-react/eslint-plugin': '^4.2.3',
+      '@types/react': '^19.2.14',
+      '@types/react-dom': '^19.2.3',
+      'eslint-plugin-react-hooks': '^7.1.1',
+      'eslint-plugin-react-refresh': '^0.5.2',
+    })
+  })
+
+  it('writes latest react ecosystem versions for tanstack router and jotai', () => {
+    const packageJson = renderPackageJson({
+      type: 'react',
+      name: makeProjectName('phase3-react-alt'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: 'tanstack-router',
+      stateManagement: 'jotai',
+      cssPreprocessor: 'css',
+      cssFramework: 'none',
+    })
+
+    expect(packageJson.dependencies).toMatchObject({
+      '@tanstack/react-router': '^1.168.23',
+      'jotai': '^2.19.1',
+    })
+  })
 })

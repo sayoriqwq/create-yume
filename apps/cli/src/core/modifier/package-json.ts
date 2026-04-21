@@ -52,14 +52,14 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
     }
     else if (isReactProject(config)) {
       entry
-        .modify(deps({ 'react': '^19.1.1', 'react-dom': '^19.1.1' }))
-        .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-react': '^5.0.2' })))
-        .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^1.53.0', 'eslint-plugin-react-hooks': '^5.2.0', 'eslint-plugin-react-refresh': '^0.4.20' })))
-        .modify(when(config.router === 'react-router', deps({ 'react-router': '^7.8.2', 'react-router-dom': '^7.8.2' })))
-        .modify(when(config.router === 'tanstack-router', deps({ '@tanstack/react-router': '^1.131.35' })))
-        .modify(when(config.language === 'typescript', devDeps({ '@types/react': '^19.1.12', '@types/react-dom': '^19.1.9' })))
-        .modify(when(config.stateManagement === 'zustand', deps({ zustand: '^5.0.8' })))
-        .modify(when(config.stateManagement === 'jotai', deps({ jotai: '^2.13.1' })))
+        .modify(deps({ 'react': '^19.2.5', 'react-dom': '^19.2.5' }))
+        .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-react': '^6.0.1' })))
+        .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^4.2.3', 'eslint-plugin-react-hooks': '^7.1.1', 'eslint-plugin-react-refresh': '^0.5.2' })))
+        .modify(when(config.router === 'react-router', deps({ 'react-router': '^7.14.2', 'react-router-dom': '^7.14.2' })))
+        .modify(when(config.router === 'tanstack-router', deps({ '@tanstack/react-router': '^1.168.23' })))
+        .modify(when(config.language === 'typescript', devDeps({ '@types/react': '^19.2.14', '@types/react-dom': '^19.2.3' })))
+        .modify(when(config.stateManagement === 'zustand', deps({ zustand: '^5.0.12' })))
+        .modify(when(config.stateManagement === 'jotai', deps({ jotai: '^2.19.1' })))
     }
 
     entry.sortKeys(true)
