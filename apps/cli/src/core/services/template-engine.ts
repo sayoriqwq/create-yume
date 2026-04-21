@@ -1,12 +1,9 @@
 import type { TemplatePath } from '@/brand/template-path'
 import type { ProjectConfig } from '@/types/config'
-import type { ComposeDSL } from '@/types/dsl'
 import type { FileIOError } from '@/types/error'
-import type { TemplateRegistry } from '@/types/template'
 import * as path from 'node:path'
 import { Effect } from 'effect'
 import Handlebars from 'handlebars'
-import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig as AppConfigService } from '@/config/app-config'
 import { TemplateError } from '@/types/error'
 import { FsService } from '~/fs'
@@ -20,7 +17,6 @@ import { registerTemplateHelpers } from './template-helpers'
 interface TemplateEngineServiceShape {
   readonly registerHelpers: () => Effect.Effect<void, never>
   readonly registerPartials: (dir: TemplatePath, namespace: string) => Effect.Effect<void, FileIOError>
-  readonly registerTemplates: <T> (dsl: ComposeDSL, templateRoot: TemplatePath, registry: TemplateRegistry<T>, config: ProjectConfig) => Effect.Effect<void, FileIOError>
   readonly compile: (
     templatePath: TemplatePath,
     config: ProjectConfig,
@@ -39,7 +35,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
       const fs = yield* FsService
       const appConfig = yield* AppConfigService
 
-      // 模板缓存（似乎并没有意义）
       const cache = new Map<TemplatePath, Handlebars.TemplateDelegate>()
       // 单例，仅在此服务中
       const hb = Handlebars.create()
@@ -83,17 +78,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
         )
       })
 
-      const registerTemplates = <T>(dsl: ComposeDSL, templateRoot: TemplatePath, registry: TemplateRegistry<T>, config: ProjectConfig) =>
-        Effect.gen(function* () {
-          for (const item of Object.values(registry)) {
-            if (!item.condition(config as T))
-              continue
-            const target = typeof item.target === 'string' ? item.target : item.target(config as T)
-            const src = makeTemplatePath(path.join(templateRoot, item.template))
-            dsl.render(src, target)
-          }
-        })
-
       const compile = (path: TemplatePath, config: ProjectConfig) =>
         Effect.gen(function* () {
           const cached = cache.get(path)
@@ -127,7 +111,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
       return {
         registerHelpers,
         registerPartials,
-        registerTemplates,
         compile,
         render,
       } satisfies TemplateEngineServiceShape

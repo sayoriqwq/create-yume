@@ -239,7 +239,11 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
 
         program({ json, text, render, copy })
         return { tasks }
-      }).pipe(Effect.withSpan('plan.build'))
+      }).pipe(
+        Effect.withSpan('plan.build'),
+        Effect.annotateLogs({ taskKind: 'plan.build' }),
+        Effect.annotateSpans({ taskKind: 'plan.build' }),
+      )
 
     const writeText = (absPath: string, content: string) =>
       fs.ensureDir(path.dirname(absPath)).pipe(Effect.zipRight(fs.writeFileString(absPath, content)))
