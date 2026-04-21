@@ -28,6 +28,7 @@ create-yume \
 - [ ] 新建 `src/core/cli-args.ts`：
   ```ts
   import mri from 'mri'
+
   export interface CliArgs {
     preset?: 'react-app' | 'vue-app'
     name?: string
@@ -70,8 +71,8 @@ create-yume \
 
 - [ ] 在 `planner.ts` 内维护写入追踪：
   ```ts
-  const written = yield* Ref.make<string[]>([])
-  const createdDirs = yield* Ref.make<string[]>([])
+  const written = yield * Ref.make<string[]>([])
+  const createdDirs = yield * Ref.make<string[]>([])
   ```
   - `writeText` 成功后 `Ref.update(written, a => [path, ...a])`
   - `ensureDir` 创建新目录时追加到 `createdDirs`（用 `fs.exists` 先判）

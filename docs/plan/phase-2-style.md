@@ -15,7 +15,7 @@
   ```ts
   for (const command of commands) {
     const located = Command.workingDirectory(command, dir)
-    yield* commandSvc.execute(located as StandardCommand)
+    yield * commandSvc.execute(located as StandardCommand)
   }
   ```
 - [ ] 函数去掉 `previousCwd` 和 `try/finally`，签名保持不变
