@@ -26,32 +26,32 @@
 - Phase 1 清理已完成，产物对比目录：
   `/Users/sayori/Desktop/create-yume-phase1-output-20260422`。
 - Code Tier Phase 2-5 已在本地 `main` 后续提交中落地。
-- [Phase 6 — 文档对齐](./phase-6-docs.md) 已完成；当前主线计划已全部收口。
+- [Phase 6 — 文档对齐](../archive/plan/phase-6-docs.md) 已完成；当前主线计划已全部收口。
 
-下面是阶段索引与完成状态。
+下面是阶段索引与完成状态。详细的已完成阶段文档已归档到 `docs/archive/plan/`。
 
 ## Infra Tier（blocking，先全部完成）
 
 | 阶段    | 名称                        | Sub-doc                                                        | 依赖         | 状态 |
 | ------- | --------------------------- | -------------------------------------------------------------- | ------------ | ---- |
-| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](./infra-0-contracts.md)                 | —            | done |
-| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](./infra-1-runtime.md)              | Infra 0      | done |
-| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](./infra-2-lifecycle-testing.md) | Infra 1      | done |
-| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](./infra-3-agent-contract.md)    | 可并行       | done |
+| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](../archive/plan/infra-0-contracts.md)                 | —            | done |
+| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](../archive/plan/infra-1-runtime.md)              | Infra 0      | done |
+| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](../archive/plan/infra-2-lifecycle-testing.md) | Infra 1      | done |
+| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](../archive/plan/infra-3-agent-contract.md)    | 可并行       | done |
 
-> `effect-foundation-plan.md` 原单文件计划已拆为上列 sub-doc，文件保留为指针。
+> `effect-foundation-plan.md` 原单文件计划已归档为指针文档。
 
 ## Code Tier（blocked on Infra Tier）
 
 | 阶段    | 名称                   | 风险 | Sub-doc                                      | 状态 |
 | ------- | ---------------------- | ---- | -------------------------------------------- | ---- |
-| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](./phase-0-baseline.md) | done |
-| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](./phase-1-cleanup.md)   | done |
-| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](./phase-2-style.md)       | done |
-| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](./phase-3-deps.md)         | done |
-| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](./phase-4-features.md) | done |
-| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](./phase-5-tests.md)       | done |
-| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         | done |
+| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](../archive/plan/phase-0-baseline.md) | done |
+| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](../archive/plan/phase-1-cleanup.md)   | done |
+| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](../archive/plan/phase-2-style.md)       | done |
+| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](../archive/plan/phase-3-deps.md)         | done |
+| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](../archive/plan/phase-4-features.md) | done |
+| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](../archive/plan/phase-5-tests.md)       | done |
+| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](../archive/plan/phase-6-docs.md)         | done |
 
 Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
 
@@ -62,7 +62,7 @@ Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
 - 关键标识（`ProjectName` / `TargetDir` / `TemplatePath` / `PackageName` / `CommandName`）禁止裸 `string`。
 - 资源型副作用必须 scoped（Infra 2）。
 - 只有入口模块可以 `runMain` / `runPromise`，其余只返回 `Effect`。
-- 改代码走 `pnpm verify`；改 docs 不做自动检查，只人工 review（[infra-3-agent-contract.md](./infra-3-agent-contract.md) C 节选 C）。
+- 改代码走 `pnpm verify`；改 docs 不做自动检查，只人工 review（[infra-3-agent-contract.md](../archive/plan/infra-3-agent-contract.md) C 节选 C）。
 
 ## 端到端验证模板（Code Tier 每阶段执行）
 

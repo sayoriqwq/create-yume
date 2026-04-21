@@ -1,6 +1,6 @@
 # Infra 0 — Schema + Brand 契约层
 
-← [Lead](./lead.md)
+← [Lead](../../plan/lead.md)
 
 ## 目的
 
@@ -18,11 +18,11 @@
 
 仅覆盖 **纯数据** 对象；含闭包字段的不做 Schema（见 B/C）。
 
-- [ ] `project-config.ts` — `ProjectConfig` / `VueProjectConfig` / `ReactProjectConfig` / `BaseProjectConfig`
-- [ ] `preset.ts` — `Preset`（`'react-app' | 'vue-app'`）、`CreateMode`
-- [ ] `cli-args.ts` — CLI flag 解析结果（供 Phase 4-A decode）
-- [ ] `template-registry.ts` — registry 条目的 **声明部分**（`condition` / `target` / `template` 路径），`condition` 函数字段保持 TS type，不纳入 Schema
-- [ ] `plan-spec.ts` — 新引入的 **可序列化** 计划描述（见 B）
+- [x] `project-config.ts` — `ProjectConfig` / `VueProjectConfig` / `ReactProjectConfig` / `BaseProjectConfig`
+- [x] `preset.ts` — `Preset`（`'react-app' | 'vue-app'`）、`CreateMode`
+- [x] `cli-args.ts` — CLI flag 解析结果（供 Phase 4-A decode）
+- [x] `template-registry.ts` — registry 条目的 **声明部分**（`condition` / `target` / `template` 路径），`condition` 函数字段保持 TS type，不纳入 Schema
+- [x] `plan-spec.ts` — 新引入的 **可序列化** 计划描述（见 B）
 
 每个 Schema 导出：`Type`、`decode`、`encode`（可省）、pretty error（`TreeFormatter`）。
 `types/config.ts`、`types/project.ts` 等纯数据 interface 改为 `Schema.Schema.Type<typeof X>` 派生。
@@ -32,28 +32,28 @@
 
 当前 `Task` 含 `reducers / transforms / base / finalize` 等闭包（见 `apps/cli/src/types/task.ts`、`apps/cli/src/core/services/planner.ts` 的 `build`），不能直接做 Schema。处理方式：
 
-- [ ] 保留 `Task` / `Plan` 为执行期的 TS type，不 Schema 化
-- [ ] 新增 **`PlanSpec`**：只保留可序列化字段（`kind`、`path`、`src`、`data` 字面量）；`json` / `text` 任务记录"reducer 名称 + 输入字面量"而不是函数本体
-- [ ] `PlanSpec` 纳入 Schema，作为 Phase 5 planner snapshot 的稳定断言对象（替换旧计划里 "`normalizeTask` 手剥闭包" 的做法）
-- [ ] `Plan` → `PlanSpec` 的派生函数（`toPlanSpec(plan: Plan): PlanSpec`）作为边界
-- [ ] 不要求 `PlanSpec → Plan` 可逆；闭包侧永远在 `build` 里重建
+- [x] 保留 `Task` / `Plan` 为执行期的 TS type，不 Schema 化
+- [x] 新增 **`PlanSpec`**：只保留可序列化字段（`kind`、`path`、`src`、`data` 字面量）；`json` / `text` 任务记录"reducer 名称 + 输入字面量"而不是函数本体
+- [x] `PlanSpec` 纳入 Schema，作为 Phase 5 planner snapshot 的稳定断言对象（替换旧计划里 "`normalizeTask` 手剥闭包" 的做法）
+- [x] `Plan` → `PlanSpec` 的派生函数（`toPlanSpec(plan: Plan): PlanSpec`）作为边界
+- [x] 不要求 `PlanSpec → Plan` 可逆；闭包侧永远在 `build` 里重建
 
 ### C. Brand 类型（新建 `apps/cli/src/brand/`）
 
-- [ ] `ProjectName`、`TargetDir`、`TemplatePath`、`PackageName`、`CommandName`
+- [x] `ProjectName`、`TargetDir`、`TemplatePath`、`PackageName`、`CommandName`
 
 每个 Brand 通过 `Schema.brand(...)` 工厂生成，业务层只能通过工厂拿到实例。
 
 ### D. 边界消费点
 
-- [ ] `core/questions/compose.ts` 出口接一次 `ProjectConfig.decode`；失败直接中止。
-- [ ] `core/services/planner.ts` 的 `path` 字段类型换成 `TargetDir`。
-- [ ] `core/services/template-engine.ts` 的 `src` / `templatePath` 换成 `TemplatePath`。
+- [x] `core/questions/compose.ts` 出口接一次 `ProjectConfig.decode`；失败直接中止。
+- [x] `core/services/planner.ts` 的 `path` 字段类型换成 `TargetDir`。
+- [x] `core/services/template-engine.ts` 的 `src` / `templatePath` 换成 `TemplatePath`。
 
 ## 约定文档
 
-- [ ] `docs/conventions/effect-schema.md` — 哪些输入必须 decode、decode 失败如何处理。
-- [ ] `docs/conventions/effect-brand.md` — Brand 工厂位置、消费点、禁止裸 string 的边界。
+- [x] `docs/conventions/effect-schema.md` — 哪些输入必须 decode、decode 失败如何处理。
+- [x] `docs/conventions/effect-brand.md` — Brand 工厂位置、消费点、禁止裸 string 的边界。
 
 ## 验证
 

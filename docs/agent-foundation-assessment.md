@@ -3,7 +3,7 @@
 > 盘点日期：2026-04-21
 >
 > **状态**：本文件是**一次性评估快照**，不再作为执行指南。
-> 可执行项已迁入 [docs/plan/infra-3-agent-contract.md](./plan/infra-3-agent-contract.md)。
+> 可执行项已迁入 [docs/archive/plan/infra-3-agent-contract.md](./archive/plan/infra-3-agent-contract.md)。
 > 新 agent 请从 [docs/plan/lead.md](./plan/lead.md) 进入。
 >
 > 已落地（对比评估时）：

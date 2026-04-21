@@ -1,6 +1,6 @@
 # Phase 4 — 功能扩展（非交互模式 + 失败回滚）
 
-← [Lead](./lead.md) · 前置：[Phase 1](./phase-1-cleanup.md)、[Phase 2](./phase-2-style.md)、[Phase 3](./phase-3-deps.md)
+← [Lead](../../plan/lead.md) · 前置：[Phase 1](./phase-1-cleanup.md)、[Phase 2](./phase-2-style.md)、[Phase 3](./phase-3-deps.md)
 
 ## 目的
 
@@ -31,14 +31,14 @@ create-yume \
 
 **统一切口（避免漏改）**：本阶段必须先建 **`CliContext` Service**，把"是否非交互、flag 覆盖值"作为整条主流程的唯一来源。`collectQuestions` 之外的入口（`showWelcome` / `finishProject` / `buildCommands`）同样消费它。
 
-- [ ] 新建 `apps/cli/src/core/cli-args.ts`：
+- [x] 新建 `apps/cli/src/core/cli-args.ts`：
   ```ts
   import mri from 'mri'
   export interface RawCliArgs { /* mri 原始输出 */ }
   export function parseArgs(argv: string[]): RawCliArgs { /* mri + 手工 normalize */ }
   ```
-- [ ] 解析结果经过 Infra 0 的 `CliArgs` Schema decode 一次；失败直接 `--help` + 非零退出码
-- [ ] 新建 `apps/cli/src/core/cli-context.ts`：以 `Context.Tag` 暴露 `CliContext`：
+- [x] 解析结果经过 Infra 0 的 `CliArgs` Schema decode 一次；失败直接 `--help` + 非零退出码
+- [x] 新建 `apps/cli/src/core/cli-context.ts`：以 `Context.Tag` 暴露 `CliContext`：
   ```ts
   interface CliContext {
     readonly args: CliArgs         // decode 后结果
@@ -46,21 +46,21 @@ create-yume \
   }
   ```
   - `CliContextLive` 在 `index.ts` 层构造，注入主 Layer
-- [ ] `apps/cli/src/index.ts`：
+- [x] `apps/cli/src/index.ts`：
   - 顶部解析 + decode，构造 `CliContextLive`
   - **根据 `isInteractive` 分流**：`showWelcome` / `finishProject` 仅在交互模式下跑；非交互模式改走纯 `Effect.log` 简洁输出
-- [ ] `apps/cli/src/core/compose.ts`（`showWelcome` / `finishProject`）：消费 `CliContext`，`isInteractive === false` 时不调 `@clack/prompts` 的 `intro / outro / note`
-- [ ] `apps/cli/src/core/questions/compose.ts`：
+- [x] `apps/cli/src/core/compose.ts`（`showWelcome` / `finishProject`）：消费 `CliContext`，`isInteractive === false` 时不调 `@clack/prompts` 的 `intro / outro / note`
+- [x] `apps/cli/src/core/questions/compose.ts`：
   - `collectQuestions` 消费 `CliContext`
   - `askPreset`：`args.preset` 存在直接返回
   - `askProjectName`：`args.name` 存在且目录不存在直接返回；存在且 `args.yes` 自动 remove；存在且无 `--yes` 走原交互逻辑
-- [ ] `apps/cli/src/core/commands/index.ts` 的 `buildCommands` / `askInstallDeps` / `askGitInit`：改为消费 `CliContext`；`args.install` / `args.git` 优先于交互；非交互模式下不触发 prompts
-- [ ] `--help` / `-h`：`console.log` 用法摘要，`process.exit(0)`
-- [ ] `--version` / `-v`：读 `package.json.version`
+- [x] `apps/cli/src/core/commands/index.ts` 的 `buildCommands` / `askInstallDeps` / `askGitInit`：改为消费 `CliContext`；`args.install` / `args.git` 优先于交互；非交互模式下不触发 prompts
+- [x] `--help` / `-h`：`console.log` 用法摘要，`process.exit(0)`
+- [x] `--version` / `-v`：读 `package.json.version`
 
 ### 用户文档
 
-- [ ] `README.md` "使用方法" 段补非交互示例：
+- [x] `README.md` "使用方法" 段补非交互示例：
   ```bash
   create-yume --preset react-app --name my-app --yes --install
   ```
@@ -78,19 +78,19 @@ create-yume \
 
 ### 实现
 
-- [ ] 复用 Infra 2 的 scoped Ref（`tests/support/` 里已有模板）：
+- [x] 复用 Infra 2 的 scoped Ref（`tests/support/` 里已有模板）：
   ```ts
   const written = yield* Ref.make<string[]>([])
   const createdDirs = yield* Ref.make<string[]>([])
   ```
   - `writeText` 成功后 `Ref.update(written, a => [path, ...a])`
   - `ensureDir` 创建新目录时追加到 `createdDirs`（用 `fs.exists` 先判）
-- [ ] `apply` 的外层 `Effect.onError` / `Effect.catchAll`：
+- [x] `apply` 的外层 `Effect.onError` / `Effect.catchAll`：
   - 逆序删除 `written` 里的文件（`fs.remove`）
   - 逆序删除 `createdDirs` 里的目录（仅当空）
   - 把原错误 rethrow（不要吞）
-- [ ] 复用 `FileIOError`；回滚内部 `fs.remove` 失败时只记 log，不覆盖原错误
-- [ ] 添加 `--no-rollback` flag（通过 `cli-args.ts`）便于 debug
+- [x] 复用 `FileIOError`；回滚内部 `fs.remove` 失败时只记 log，不覆盖原错误
+- [x] 添加 `--no-rollback` flag（通过 `cli-args.ts`）便于 debug
 
 ### 注意
 
@@ -100,12 +100,12 @@ create-yume \
 
 ## 验证
 
-- [ ] `pnpm --filter create-yume build`
-- [ ] 非交互：`node apps/cli/dist/index.js --preset react-app --name nia-react --yes --install` 一路走完，且整个过程 **没有任何** `@clack/prompts` 输出（`intro / outro / note / prompt` 都不触发）
-- [ ] 非交互失败：人为 break 一个模板让 render 报错，确认 `nia-react/` 目录在命令退出后被清空
-- [ ] `--help` 和 `--version` 输出正确
-- [ ] 交互模式（不带 flag）行为与 Phase 3 结束时完全一致
-- [ ] `rg '@clack/prompts' apps/cli/src` 的消费点全部绕过了 `CliContext.isInteractive === false`
+- [x] `pnpm --filter create-yume build`
+- [x] 非交互：`node apps/cli/dist/index.js --preset react-app --name nia-react --yes --install` 一路走完，且整个过程 **没有任何** `@clack/prompts` 输出（`intro / outro / note / prompt` 都不触发）
+- [x] 非交互失败：人为 break 一个模板让 render 报错，确认 `nia-react/` 目录在命令退出后被清空
+- [x] `--help` 和 `--version` 输出正确
+- [x] 交互模式（不带 flag）行为与 Phase 3 结束时完全一致
+- [x] `rg '@clack/prompts' apps/cli/src` 的消费点全部绕过了 `CliContext.isInteractive === false`
 
 ## 注意事项
 

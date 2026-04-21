@@ -1,6 +1,6 @@
 # Phase 0 — 准备 & 基线
 
-← [Lead](./lead.md) · 前置：Infra Tier 全部完成
+← [Lead](../../plan/lead.md) · 前置：Infra Tier 全部完成
 
 ## 目的
 

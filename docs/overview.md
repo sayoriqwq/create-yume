@@ -137,13 +137,13 @@ apps/cli
 | -------- | ------------------------------------- | ---- |
 | 支持范围 | 仅支持 React / Vue scaffold           | Node project flow 仍未实现 |
 | CLI      | ✅ 已支持非交互 preset 模式与回滚开关 | `preset + name + yes/install/git/rollback` |
-| 测试     | ✅ 已有 planner / render snapshot     | 生成后项目的端到端 smoke 仍主要靠手动 |
+| 测试     | ✅ 已有 planner / render snapshot 与 generated smoke | generated project 的 lint 口径仍未收口 |
 | Runtime  | ✅ `AppConfig` 已作为运行时配置边界   | tracing / logger / concurrency 统一走配置层 |
 | 文档     | `status.md` 仍是历史快照              | 当前执行入口以 `docs/plan/lead.md` 为准 |
 
 ## 11. 演进路线（架构层）
 
 - ✅ 已完成：Infra Tier、Code Phase 0-6，以及 planner / template render snapshot 基线。
-- 当前：补生成后项目的自动化 smoke，并把阶段性经验继续沉淀为稳定文档。
+- 当前：补齐 generated smoke（generate/install/build），并把阶段性经验继续沉淀为稳定文档。
 - 中期：支持多阶段生成（pre / generate / post）。
 - 长期：远程模板拉取 + 缓存、增量更新（对现有项目 diff 并 apply）、可视化配置界面。

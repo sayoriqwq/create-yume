@@ -1,6 +1,6 @@
 # Infra 3 — Agent 执行合同
 
-← [Lead](./lead.md) · 前置：可与 Infra 0-2 并行，但必须在 Code Tier 开始前完成
+← [Lead](../../plan/lead.md) · 前置：可与 Infra 0-2 并行，但必须在 Code Tier 开始前完成
 
 ## 目的
 
@@ -22,21 +22,21 @@
 
 至少覆盖：
 
-- [ ] 当前支持的项目类型（react / vue）。
-- [ ] 当前明确不支持的范围（远程模板、插件化、CLI 增量更新）。
-- [ ] 允许修改的主要区域（`apps/cli/src`、`apps/cli/templates`、`docs/`）。
-- [ ] 高风险区域（`core/services/planner.ts`、`core/services/template-engine.ts`、`modifier/package-json.ts`）。
-- [ ] 常见任务的最小验证集合（见 D）。
-- [ ] CLI 入口 / 构建产物约定（见 B）。
-- [ ] 模板目录与注册表约定。
-- [ ] 提交信息要求（conventional + lobe-commit）。
+- [x] 当前支持的项目类型（react / vue）。
+- [x] 当前明确不支持的范围（远程模板、插件化、CLI 增量更新）。
+- [x] 允许修改的主要区域（`apps/cli/src`、`apps/cli/templates`、`docs/`）。
+- [x] 高风险区域（`core/services/planner.ts`、`core/services/template-engine.ts`、`modifier/package-json.ts`）。
+- [x] 常见任务的最小验证集合（见 D）。
+- [x] CLI 入口 / 构建产物约定（见 B）。
+- [x] 模板目录与注册表约定。
+- [x] 提交信息要求（conventional + lobe-commit）。
 
 ### B. 入口 / 产物一致性
 
-- [ ] 二选一并落地：
+- [x] 二选一并落地：
   - **选 A**（推荐）：`tsdown.config.ts` 输出 `dist/index.js`，更新 README 和 `package.json` `bin` / `main` 对齐。
   - **选 B**：`package.json` `bin` / `main` 改为 `dist/index.mjs`，README 示例改成 `.mjs`。
-- [ ] 扫 `rg 'dist/index\.(js|mjs)' .` 确认仓库内无残留的反向引用。
+- [x] 扫 `rg 'dist/index\.(js|mjs)' .` 确认仓库内无残留的反向引用。
 
 ### C. 统一验证入口
 
@@ -52,10 +52,10 @@
 }
 ```
 
-- [ ] `verify` 作为 agent 默认的"能不能提交"门。
-- [ ] `verify:code` 作为"只改代码"时的轻量版。
-- [ ] docs-only 改动按人工 review 执行；不再要求 `verify:docs` 脚本。
-- [ ] 同步更新 [lead.md](./lead.md) 与 `AGENTS.md` 里的 docs 验证口径。
+- [x] `verify` 作为 agent 默认的"能不能提交"门。
+- [x] `verify:code` 作为"只改代码"时的轻量版。
+- [x] docs-only 改动按人工 review 执行；不再要求 `verify:docs` 脚本。
+- [x] 同步更新 [lead.md](../../plan/lead.md) 与 `AGENTS.md` 里的 docs 验证口径。
 
 ### D. 验证矩阵（新建 `docs/verification-matrix.md`）
 
@@ -69,7 +69,7 @@
 | `apps/cli/src/core/modifier/package-json.ts` | 生成产物 diff                    |
 | `docs/**`                         | 人工 review                                 |
 
-- [ ] 该表需要和 Code Phase 5 的 snapshot 覆盖清单保持一致。
+- [x] 该表需要和 Code Phase 5 的 snapshot 覆盖清单保持一致。
 
 ## 验证
 

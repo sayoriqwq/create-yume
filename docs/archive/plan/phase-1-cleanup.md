@@ -1,6 +1,6 @@
 # Phase 1 — 清理（零行为变更）
 
-← [Lead](./lead.md) · 前置：[Phase 0](./phase-0-baseline.md)
+← [Lead](../../plan/lead.md) · 前置：[Phase 0](./phase-0-baseline.md)
 
 ## 目的
 

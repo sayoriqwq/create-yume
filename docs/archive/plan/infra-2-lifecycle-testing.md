@@ -1,6 +1,6 @@
 # Infra 2 — 生命周期 + 测试基建
 
-← [Lead](./lead.md) · 前置：[Infra 1](./infra-1-runtime.md)
+← [Lead](../../plan/lead.md) · 前置：[Infra 1](./infra-1-runtime.md)
 
 ## 目的
 
@@ -19,25 +19,25 @@
 
 ### A. Scope / Resource 规范
 
-- [ ] 新增 helper：`withWorkingDirectory(dir, command)`。**只能** 基于 `@effect/platform` 的 `Command.workingDirectory(cmd, dir)` 实现，**禁止** 内部回落到 `process.chdir`（否则只是把全局副作用包了一层）。
-- [ ] 入参类型为 `Command.Command`（不接受"任意 Effect + 切换 cwd"的语义），强制消费者把需要 cwd 的工作表达成 Command。
-- [ ] `planner.apply` 的写入轨迹改为 scoped Ref：`Ref.make<TargetDir[]>` 包在 `Effect.scoped` 里；出错时在释放阶段反向清理（为 Code Phase 4-B 搭好桥）。
-- [ ] 临时目录 / 输出目录统一用 `Scope` 管理。
+- [x] 新增 helper：`withWorkingDirectory(dir, command)`。**只能** 基于 `@effect/platform` 的 `Command.workingDirectory(cmd, dir)` 实现，**禁止** 内部回落到 `process.chdir`（否则只是把全局副作用包了一层）。
+- [x] 入参类型为 `Command.Command`（不接受"任意 Effect + 切换 cwd"的语义），强制消费者把需要 cwd 的工作表达成 Command。
+- [x] `planner.apply` 的写入轨迹改为 scoped Ref：`Ref.make<TargetDir[]>` 包在 `Effect.scoped` 里；出错时在释放阶段反向清理（为 Code Phase 4-B 搭好桥）。
+- [x] 临时目录 / 输出目录统一用 `Scope` 管理。
 
 ### B. 测试脚手架（`apps/cli/tests/`）
 
-- [ ] 新建 `tests/support/` 目录：
+- [x] 新建 `tests/support/` 目录：
   - `make-app-runtime.ts` — 构造 ManagedRuntime（Infra 3 准备落地前的轻量版）。
   - `fixtures.ts` — 复用的 `ProjectConfig` fixtures（供 Code Phase 5 继续扩）。
   - `clock.ts` — `TestClock` 包装器。
   - `config-provider.ts` — `ConfigProvider.fromMap` 包装器。
-- [ ] 给 `FsService` / `TemplateEngineService` 写一组 mock layer（仅用于单测，不放 `src/`）。
-- [ ] 至少 1 个 Schema decode 契约测试 + 1 个 TestClock 示例测试入库，作为模板。
+- [x] 给 `FsService` / `TemplateEngineService` 写一组 mock layer（仅用于单测，不放 `src/`）。
+- [x] 至少 1 个 Schema decode 契约测试 + 1 个 TestClock 示例测试入库，作为模板。
 
 ### C. 约定文档
 
-- [ ] `docs/conventions/effect-scope.md` — 哪些场景必须 scoped，释放顺序约定。
-- [ ] `docs/conventions/effect-testing.md` — 测试目录结构、fixtures 位置、TestClock / ConfigProvider 使用方式。
+- [x] `docs/conventions/effect-scope.md` — 哪些场景必须 scoped，释放顺序约定。
+- [x] `docs/conventions/effect-testing.md` — 测试目录结构、fixtures 位置、TestClock / ConfigProvider 使用方式。
 
 ## 验证
 
