@@ -303,8 +303,14 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             continue
           }
 
-          yield* fs.makeDirectory(directory)
-          yield* trackCreatedDirectory(createdDirs, directory)
+          yield* fs.makeDirectory(directory).pipe(
+            Effect.tap(() => trackCreatedDirectory(createdDirs, directory)),
+            Effect.catchAll(error =>
+              fs.exists(directory).pipe(
+                Effect.flatMap(exists => exists ? Effect.void : Effect.fail(error)),
+              ),
+            ),
+          )
         }
       })
 
@@ -340,7 +346,7 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
           Effect.forEach(
             [...paths].reverse(),
             createdDir =>
-              fs.remove(createdDir).pipe(
+              fs.remove(createdDir, { force: true, recursive: true }).pipe(
                 Effect.catchAll(error =>
                   Effect.logWarning(`Failed to clean up generated directory ${createdDir}: ${error.message}`),
                 ),

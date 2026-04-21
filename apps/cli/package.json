@@ -22,6 +22,7 @@
     "dev": "tsdown --config tsdown.config.ts --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "smoke:generated": "pnpm build && tsx tests/generated-projects.smoke.ts",
     "prepare": "effect-language-service patch",
     "link:global": "pnpm link --global",
     "unlink:global": "pnpm unlink --global"

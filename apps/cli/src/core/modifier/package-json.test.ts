@@ -180,7 +180,7 @@ describe('buildPackageJson', () => {
     })
 
     expect(packageJson.devDependencies).toMatchObject({
-      '@eslint-react/eslint-plugin': '^4.2.3',
+      '@eslint-react/eslint-plugin': '^3.0.0',
       '@types/react': '^19.2.14',
       '@types/react-dom': '^19.2.3',
       'eslint-plugin-react-hooks': '^7.1.1',

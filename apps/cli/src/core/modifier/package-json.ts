@@ -54,7 +54,7 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
       entry
         .modify(deps({ 'react': '^19.2.5', 'react-dom': '^19.2.5' }))
         .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-react': '^6.0.1' })))
-        .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^4.2.3', 'eslint-plugin-react-hooks': '^7.1.1', 'eslint-plugin-react-refresh': '^0.5.2' })))
+        .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^3.0.0', 'eslint-plugin-react-hooks': '^7.1.1', 'eslint-plugin-react-refresh': '^0.5.2' })))
         .modify(when(config.router === 'react-router', deps({ 'react-router': '^7.14.2', 'react-router-dom': '^7.14.2' })))
         .modify(when(config.router === 'tanstack-router', deps({ '@tanstack/react-router': '^1.168.23' })))
         .modify(when(config.language === 'typescript', devDeps({ '@types/react': '^19.2.14', '@types/react-dom': '^19.2.3' })))
