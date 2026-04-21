@@ -38,6 +38,7 @@
     "@effect/workflow": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
     "effect": "catalog:",
     "execa": "catalog:",
     "handlebars": "catalog:",
