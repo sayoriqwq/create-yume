@@ -1,12 +1,13 @@
 // 提供一个小型 DSL 来声明如何生成/编辑文件。
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL, JsonBuilder, TextBuilder } from '@/types/dsl'
-import type { FileIOError, TemplateError } from '@/types/error'
+import type { TemplateError } from '@/types/error'
 import type { JsonTask, Plan, Task, TextTask } from '@/types/task'
 import * as path from 'node:path'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, Layer, Schema } from 'effect'
 import { produce } from 'immer'
 import { DEFAULT_CONCURRENCY } from '@/constants/effect'
+import { FileIOError } from '@/types/error'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
@@ -113,6 +114,15 @@ export const PlanLive = Layer.effect(
     const writeText = (absPath: string, content: string) =>
       fs.ensureDir(path.dirname(absPath)).pipe(Effect.zipRight(fs.writeFileString(absPath, content)))
 
+    const encodeJson = (value: Record<string, unknown>) =>
+      Schema.encode(Schema.parseJson({ space: 2 }))(value).pipe(
+        Effect.mapError(error => new FileIOError({
+          op: 'parse',
+          path: '<memory>',
+          message: `Failed to encode JSON: ${error}`,
+        })),
+      )
+
     const runTask = (task: Task, baseDir: string, config: ProjectConfig) =>
       Effect.gen(function* () {
         switch (task.kind) {
@@ -165,7 +175,7 @@ export const PlanLive = Layer.effect(
             if (task.sortKeys) {
               out = sortJsonKeys(draft)
             }
-            const content = `${JSON.stringify(out, null, 2)}\n`
+            const content = `${yield* encodeJson(out)}\n`
             yield* writeText(abs, content)
             return
           }

@@ -1,5 +1,5 @@
 import { FileSystem } from '@effect/platform'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, Layer, pipe } from 'effect'
 import { FileIOError } from '@/types/error'
 
 // 借助平台能力，但转化为领域错误
@@ -12,12 +12,12 @@ interface FsService {
   readonly readDirectory: (path: string) => Effect.Effect<readonly string[], FileIOError>
   readonly makeDirectory: (
     path: string,
-    options?: { recursive?: boolean }
+    options?: { recursive?: boolean },
   ) => Effect.Effect<void, FileIOError>
   readonly ensureDir: (path: string) => Effect.Effect<void, FileIOError>
   readonly remove: (
     path: string,
-    options?: { recursive?: boolean, force?: boolean }
+    options?: { recursive?: boolean, force?: boolean },
   ) => Effect.Effect<void, FileIOError>
   readonly copyFile: (src: string, dest: string) => Effect.Effect<void, FileIOError>
 }
@@ -40,34 +40,70 @@ export const FsLive = Layer.effect(
       })
 
     const exists: FsService['exists'] = path =>
-      platformFs.exists(path).pipe(Effect.mapError(mapErr('exists', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.exists(path),
+        Effect.mapError(mapErr('exists', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const readFileString: FsService['readFileString'] = path =>
-      platformFs.readFileString(path).pipe(Effect.mapError(mapErr('read', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.readFileString(path),
+        Effect.mapError(mapErr('read', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const writeFileString: FsService['writeFileString'] = (path, content) =>
-      platformFs.writeFileString(path, content).pipe(Effect.mapError(mapErr('write', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.writeFileString(path, content),
+        Effect.mapError(mapErr('write', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const readFile: FsService['readFile'] = path =>
-      platformFs.readFile(path).pipe(Effect.mapError(mapErr('read', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.readFile(path),
+        Effect.mapError(mapErr('read', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const writeFile: FsService['writeFile'] = (path, data) =>
-      platformFs.writeFile(path, data).pipe(Effect.mapError(mapErr('write', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.writeFile(path, data),
+        Effect.mapError(mapErr('write', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const readDirectory: FsService['readDirectory'] = path =>
-      platformFs.readDirectory(path).pipe(Effect.mapError(mapErr('read', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.readDirectory(path),
+        Effect.mapError(mapErr('read', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const makeDirectory: FsService['makeDirectory'] = (path, options) =>
-      platformFs.makeDirectory(path, options).pipe(Effect.mapError(mapErr('mkdir', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.makeDirectory(path, options),
+        Effect.mapError(mapErr('mkdir', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const ensureDir: FsService['ensureDir'] = path =>
       makeDirectory(path, { recursive: true })
 
     const remove: FsService['remove'] = (path, options) =>
-      platformFs.remove(path, options).pipe(Effect.mapError(mapErr('remove', path))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.remove(path, options),
+        Effect.mapError(mapErr('remove', path)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     const copyFile: FsService['copyFile'] = (src, dest) =>
-      platformFs.copyFile(src, dest).pipe(Effect.mapError(mapErr('write', dest))).pipe(Effect.provideService(FileSystem.FileSystem, platformFs))
+      pipe(
+        platformFs.copyFile(src, dest),
+        Effect.mapError(mapErr('write', dest)),
+        Effect.provideService(FileSystem.FileSystem, platformFs),
+      )
 
     return FsServiceTag.of({ exists, readFileString, writeFileString, readFile, writeFile, readDirectory, makeDirectory, ensureDir, remove, copyFile })
   }),
