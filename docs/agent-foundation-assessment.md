@@ -13,7 +13,7 @@
 >
 > 仍未落地：
 > - `AGENTS.md` 未建（§5.1 A）
-> - `dist/index.js` vs `dist/index.mjs` 入口漂移（§5.1 B）
+> - CLI 入口文件名曾经与文档和包配置存在漂移（§5.1 B）
 > - 统一 `pnpm verify` 入口（§5.1 C）
 > - `project-invariants.md` / `feature-matrix.md` / `verification-matrix.md` / `change-playbook.md`（§5.2）
 > - planner / template render snapshot + smoke test（§5.3）
@@ -93,8 +93,8 @@
 
 典型例子：
 
-- 多处文档与包配置写的是 `dist/index.js`
-- 实际构建产物是 `dist/index.mjs`
+- 多处文档与包配置曾经与实际入口不一致
+- 入口合同现已统一为 `dist/index.js`
 
 类似漂移一旦出现，agent 往往会沿着错误入口继续实现、验证和发布，直到最后一步才暴露问题。
 

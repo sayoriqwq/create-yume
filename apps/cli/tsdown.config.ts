@@ -4,6 +4,7 @@ export default defineConfig({
   entry: 'src/index.ts',
   outDir: 'dist',
   format: 'esm',
+  fixedExtension: false,
   dts: false,
   // 外部依赖：不打进包，由运行时从 node_modules 加载
   deps: {

@@ -52,7 +52,7 @@ pnpm link
 
 ```bash
 # 在源码包内直接运行
-node dist/index.js
+node apps/cli/dist/index.js
 
 # 或使用 npx
 npx create yume

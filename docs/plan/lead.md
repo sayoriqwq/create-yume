@@ -50,14 +50,14 @@ Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
 - 关键标识（`ProjectName` / `TargetDir` / `TemplatePath` / `PackageName` / `CommandName`）禁止裸 `string`。
 - 资源型副作用必须 scoped（Infra 2）。
 - 只有入口模块可以 `runMain` / `runPromise`，其余只返回 `Effect`。
-- 改代码走 `pnpm verify`；改 docs 走 Infra 3 定义的 docs 检查入口（`verify:docs` 的具体实现见 [infra-3-agent-contract.md](./infra-3-agent-contract.md) C 节）。
+- 改代码走 `pnpm verify`；改 docs 不做自动检查，只人工 review（[infra-3-agent-contract.md](./infra-3-agent-contract.md) C 节选 C）。
 
 ## 端到端验证模板（Code Tier 每阶段执行）
 
 ```bash
 pnpm --filter create-yume build
-# 当前 tsdown 产物实际是 apps/cli/dist/index.mjs（入口一致性选型见 Infra 3 B）
-node apps/cli/dist/index.mjs
+# 当前 tsdown 产物实际是 apps/cli/dist/index.js（入口一致性见 Infra 3 B）
+node apps/cli/dist/index.js
 # 分别手跑 preset react-app / vue-app，产物归档到仓库外作为 diff 基线
 ```
 

@@ -9,6 +9,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "clean": "turbo run clean && rm -rf node_modules",
+    "verify": "pnpm --filter create-yume build && pnpm --filter create-yume test && pnpm lint",
+    "verify:code": "pnpm --filter create-yume build && pnpm --filter create-yume test && pnpm lint",
     "commit": "lobe-commit --hook",
     "commit:config": "lobe-commit --option",
     "outdated": "pnpm outdated -r",
