@@ -10,7 +10,7 @@
 
 - [ ] 在仓库根 `pnpm install`（当前无 `node_modules`）
 - [ ] `cd apps/cli && pnpm build`，确认 `apps/cli/dist/index.js` 产出
-- [ ] `pnpm link --global` 或直接 `node apps/cli/dist/index.js`
+- [ ] `pnpm link` 或直接 `node apps/cli/dist/index.js`
 - [ ] 手跑一次 `preset react-app`（名字统一：`baseline-react`）
 - [ ] 手跑一次 `preset vue-app`（名字统一：`baseline-vue`）
 - [ ] 把 `baseline-react/` 与 `baseline-vue/` 归档到仓库之外（或打 tar），作为后续 diff 对照
@@ -38,5 +38,5 @@ effect 实际安装版本：
 
 ## 注意事项
 
-- `pnpm link --global` 非必需；如果不 link，直接 `node dist/index.js` 也能跑
+- `pnpm link` 非必需；如果不 link，直接 `node dist/index.js` 也能跑
 - baseline 产物一定要归档到 **仓库以外** 的目录，避免下一阶段 git 误清

@@ -9,6 +9,12 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "clean": "turbo run clean && rm -rf node_modules",
+    "outdated": "pnpm outdated -r",
+    "deps": "pnpm update -r",
+    "deps:latest": "pnpm update -r --latest",
+    "build:cli": "pnpm --filter create-yume build",
+    "link": "pnpm --filter create-yume link --global",
+    "unlink": "pnpm --filter create-yume unlink --global",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "lint": "eslint",
@@ -16,14 +22,14 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "5.2.2",
-    "@biomejs/biome": "^2.0.6",
-    "@changesets/cli": "^2.29.5",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "eslint": "^9.33.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
-    "turbo": "^2.5.4"
+    "@antfu/eslint-config": "catalog:",
+    "@biomejs/biome": "catalog:",
+    "@changesets/cli": "catalog:",
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
+    "eslint": "catalog:",
+    "husky": "catalog:",
+    "lint-staged": "catalog:",
+    "turbo": "catalog:"
   }
 }

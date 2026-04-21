@@ -6,7 +6,7 @@ export default defineConfig({
   format: 'esm',
   dts: false,
   // 外部依赖：不打进包，由运行时从 node_modules 加载
-  external: ['effect', '@clack/prompts', 'handlebars-helpers'],
+  external: ['effect', '@clack/prompts'],
   tsconfig: 'tsconfig.build.json',
   minify: true,
 })

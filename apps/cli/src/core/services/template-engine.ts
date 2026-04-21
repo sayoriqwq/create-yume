@@ -5,10 +5,10 @@ import type { TemplateRegistry } from '@/types/template'
 import * as path from 'node:path'
 import { Context, Effect, Layer } from 'effect'
 import Handlebars from 'handlebars'
-import handlebarsHelpers from 'handlebars-helpers'
 import { DEFAULT_CONCURRENCY } from '@/constants/effect'
 import { TemplateError } from '@/types/error'
 import { FsService } from '~/fs'
+import { registerTemplateHelpers } from './template-helpers'
 
 // 1. 注册 helpers、partials
 // 2. 注册模板
@@ -54,8 +54,7 @@ export const TemplateEngineLive = Layer.effect(
 
     const registerHelpers = () =>
       Effect.sync(() => {
-        // 注册 helpers,区分 group 没啥必要，直接全量注册
-        handlebarsHelpers({ handlebars: hb })
+        registerTemplateHelpers(hb)
       })
 
     const registerPartials = (dir: string, namespace: string) => Effect.gen(function* () {

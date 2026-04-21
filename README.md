@@ -28,6 +28,15 @@ cd create-yume
 # 安装依赖（使用 pnpm + turbo）
 pnpm install
 
+# 查看整个 workspace 的过时依赖
+pnpm outdated
+
+# 按现有 semver 范围更新整个 workspace
+pnpm deps
+
+# 或升级整个 workspace 到最新版本范围
+pnpm deps:latest
+
 # 构建全部
 pnpm build
 
@@ -36,7 +45,7 @@ cd apps/cli
 pnpm build
 
 # 本地全局链接（可选）
-pnpm link --global
+pnpm link
 ```
 
 ### 使用方法
@@ -58,6 +67,7 @@ create-yume
 | ----------------------- | ---------------------------------- | ---------------------------------------------------- |
 | 技术架构总览            | 全局分层、执行流水线、DSL 与扩展点 | [概述](./apps/docs/overview.md)                         |
 | Handlebars Helpers 速查 | 模板可用/推荐 helpers 子集         | [handlebars-helpers](./apps/docs/handlebars-helpers.md) |
+| pnpm Monorepo 约定      | 依赖管理、catalog、workspace 协议  | [pnpm-monorepo](./apps/docs/pnpm-monorepo.md)           |
 
 ## 🙏 致谢
 
