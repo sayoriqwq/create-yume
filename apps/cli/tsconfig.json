@@ -21,6 +21,12 @@
       "@/templates/*": ["templates/*"],
       "~/*": ["src/core/services/*"]
     },
+    // Effect LSP：提供悬停信息、诊断与重构能力
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ],
 
     "resolveJsonModule": true, // 允许 import JSON（具静态类型）
 
