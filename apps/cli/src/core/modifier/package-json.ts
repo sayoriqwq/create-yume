@@ -23,15 +23,14 @@ function basePackageJson(config: ProjectConfig) {
 export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
   const entry = dsl.json('package.json')
     .base(() => basePackageJson(config))
-    .modify(when(config.language === 'typescript', devDeps({ typescript: '^5.9.2' })))
-    // 暂时锁一段时间版本，等 issue 解掉
-    .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '5.2.2', 'eslint': '^9.34.0' })))
+    .modify(when(config.language === 'typescript', devDeps({ typescript: '^6.0.3' })))
+    .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })))
     .modify(when(config.linting === 'antfu-eslint', scripts({ 'lint': 'eslint', 'lint:fix': 'eslint --fix' })))
     .modify(when(config.git, devDeps({ '@lobehub/commit-cli': '^2.19.0' })))
     .modify(when(config.git, scripts({ 'commit': 'lobe-commit --hook', 'commit:config': 'lobe-commit --option' })))
     .modify(when(config.codeQuality.length > 0, devDeps({ husky: '^9.1.7' })))
-    .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.1.6' })))
-    .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^19.8.1', '@commitlint/config-conventional': '^19.8.1' })))
+    .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.4.0' })))
+    .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })))
 
   if (isFrontendProject(config)) {
     entry
