@@ -26,9 +26,9 @@
 - Phase 1 清理已完成，产物对比目录：
   `/Users/sayori/Desktop/create-yume-phase1-output-20260422`。
 - Code Tier Phase 2-5 已在本地 `main` 后续提交中落地。
-- 当前剩余主线为 [Phase 6 — 文档对齐](./phase-6-docs.md)。
+- [Phase 6 — 文档对齐](./phase-6-docs.md) 已完成；当前主线计划已全部收口。
 
-下面是剩余工作。
+下面是阶段索引与完成状态。
 
 ## Infra Tier（blocking，先全部完成）
 
@@ -51,7 +51,7 @@
 | Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](./phase-3-deps.md)         | done |
 | Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](./phase-4-features.md) | done |
 | Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](./phase-5-tests.md)       | done |
-| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         | in-progress |
+| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         | done |
 
 Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
 

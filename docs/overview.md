@@ -143,7 +143,7 @@ apps/cli
 
 ## 11. 演进路线（架构层）
 
-- ✅ 已完成：Infra Tier、Code Phase 0-5，以及 planner / template render snapshot 基线。
-- 当前：完成 [plan/phase-6-docs.md](./plan/phase-6-docs.md) 的文档对齐，并补必要的 smoke 说明。
-- 中期：补生成后项目的自动化 smoke、支持多阶段生成（pre / generate / post）。
+- ✅ 已完成：Infra Tier、Code Phase 0-6，以及 planner / template render snapshot 基线。
+- 当前：补生成后项目的自动化 smoke，并把阶段性经验继续沉淀为稳定文档。
+- 中期：支持多阶段生成（pre / generate / post）。
 - 长期：远程模板拉取 + 缓存、增量更新（对现有项目 diff 并 apply）、可视化配置界面。
