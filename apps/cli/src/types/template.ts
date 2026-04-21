@@ -1,7 +1,7 @@
-export type TemplateRegistry<T> = Record<string, Template<T>>
-
-export interface Template<T> {
-  template: string
-  target: string | ((config: T) => string)
-  condition: (config: T) => boolean
-}
+export type {
+  TemplateRegistryEntry as Template,
+  TemplateRegistry,
+  TemplateRegistryCondition,
+  TemplateRegistryEntryDeclaration,
+  TemplateRegistryTarget,
+} from '@/schema/template-registry'

@@ -1,58 +1,21 @@
-import type {
-  BaseFrontendAppType,
-  BuildTool,
-  CSSFramework,
-  CSSPreprocessor,
-  NodeFramework,
-  NodeRuntime,
-  PackageManager,
-  ReactRouter,
-  ReactStateManagement,
-  Router,
-  StateManagement,
-} from './project'
+export type CreateMode = import('effect').Schema.Schema.Type<typeof import('@/schema/preset').CreateModeSchema>
+export type Preset = import('effect').Schema.Schema.Type<typeof import('@/schema/preset').PresetSchema>
 
-export type CreateMode = 'create' | 'preset'
-export type Preset = 'react-app' | 'vue-app'
+export type Language = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').LanguageSchema>
+export type Linting = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').LintingSchema>
+export type CodeQuality = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CodeQualitySchema>
 
-export type Language = 'typescript' | 'javascript'
-export type Linting = 'antfu-eslint' | 'none'
-export type CodeQuality = 'lint-staged' | 'commitlint'
+export type BaseProjectConfig = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BaseProjectConfigSchema>
+export type BaseFrontendAppConfig = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BaseFrontendAppConfigSchema>
 
-export interface BaseProjectConfig {
-  readonly name: string
-  readonly language: Language
-  readonly git: boolean
-  readonly linting: Linting
-  readonly codeQuality: CodeQuality[]
-}
+export type BuildTool = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BuildToolSchema>
+export type CSSPreprocessor = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSPreprocessorSchema>
+export type CSSFramework = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSFrameworkSchema>
+export type ReactStateManagement = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ReactStateManagementSchema>
+export type ReactRouter = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ReactRouterSchema>
+export type StateManagement = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').StateManagementSchema>
+export type Router = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').RouterSchema>
 
-export interface BaseFrontendAppConfig extends BaseProjectConfig {
-  readonly type: BaseFrontendAppType
-  readonly buildTool: BuildTool
-  readonly router: Router
-  readonly stateManagement: StateManagement
-  readonly cssPreprocessor: CSSPreprocessor
-  readonly cssFramework: CSSFramework
-}
-
-export interface VueProjectConfig extends BaseFrontendAppConfig {
-  readonly type: 'vue'
-  readonly router: boolean
-  readonly stateManagement: boolean
-}
-
-export interface ReactProjectConfig extends BaseFrontendAppConfig {
-  readonly type: 'react'
-  readonly router: ReactRouter
-  readonly stateManagement: ReactStateManagement
-}
-
-export interface NodeProjectConfig extends BaseProjectConfig {
-  readonly type: 'node'
-  readonly runtime: NodeRuntime
-  readonly packageManager: PackageManager
-  readonly framework: NodeFramework
-}
-
-export type ProjectConfig = VueProjectConfig | ReactProjectConfig | NodeProjectConfig
+export type VueProjectConfig = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').VueProjectConfigSchema>
+export type ReactProjectConfig = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ReactProjectConfigSchema>
+export type ProjectConfig = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ProjectConfigSchema>

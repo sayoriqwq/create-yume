@@ -1,3 +1,5 @@
+import type { TemplatePath } from '@/brand/template-path'
+
 // DSL Builders
 // 是否读已有文件取决于任务的阶段，如果是 generate + modify 则需要后续操作覆盖原有模板，默认 false，即视为纯由函数组合生成，此时的基础内容由 base 构建
 export interface JsonBuilder {
@@ -32,6 +34,6 @@ export interface TextBuilder {
 export interface ComposeDSL {
   json: (path: string) => JsonBuilder
   text: (path: string) => TextBuilder
-  copy: (src: string, path: string) => void
-  render: (src: string, path: string, data?: object) => void
+  copy: (src: TemplatePath, path: string) => void
+  render: (src: TemplatePath, path: string, data?: object) => void
 }

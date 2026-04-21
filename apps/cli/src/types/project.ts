@@ -1,14 +1,10 @@
-export type ReactStateManagement = 'zustand' | 'jotai' | 'none'
-export type ReactRouter = 'react-router' | 'tanstack-router' | 'none'
+export type ReactStateManagement = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ReactStateManagementSchema>
+export type ReactRouter = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ReactRouterSchema>
 
-export type NodeRuntime = 'node20' | 'node22' | 'node24'
-export type PackageManager = 'npm' | 'yarn' | 'pnpm'
-export type NodeFramework = 'express' | 'koa' | 'fastify' | 'none'
-
-export type ProjectType = 'vue' | 'react' | 'node'
-export type BaseFrontendAppType = 'vue' | 'react'
-export type BuildTool = 'vite' | 'none'
-export type CSSPreprocessor = 'css' | 'less' | 'sass'
-export type CSSFramework = 'tailwind' | 'none'
-export type StateManagement = ReactStateManagement | boolean
-export type Router = ReactRouter | boolean
+export type ProjectType = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').ProjectTypeSchema>
+export type BaseFrontendAppType = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BaseFrontendAppTypeSchema>
+export type BuildTool = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BuildToolSchema>
+export type CSSPreprocessor = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSPreprocessorSchema>
+export type CSSFramework = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSFrameworkSchema>
+export type StateManagement = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').StateManagementSchema>
+export type Router = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').RouterSchema>

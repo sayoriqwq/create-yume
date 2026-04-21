@@ -1,12 +1,14 @@
 // 编排整个阶段
 
 import type { CommandExecutor } from '@effect/platform/CommandExecutor'
+import type { TargetDir } from '@/brand/target-dir'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import type { CommandError, FileIOError, TemplateError } from '@/types/error'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Context, Effect, Layer } from 'effect'
+import { makeTemplatePath } from '@/brand/template-path'
 import { isFrontendProject } from '@/utils/type-guard'
 import { PlanService } from '~/planner'
 import { TemplateEngineService } from '~/template-engine'
@@ -16,7 +18,7 @@ import { buildTemplates, collectPartialEntries } from './compose'
 
 interface OrchestratorService {
   readonly execute: (
-    baseDir: string,
+    baseDir: TargetDir,
     config: ProjectConfig,
   ) => Effect.Effect<void, FileIOError | TemplateError | CommandError, CommandExecutor>
 }
@@ -30,8 +32,8 @@ export const OrchestratorLive = Layer.effect(
     const templateEngine = yield* TemplateEngineService
     // 计算模板根目录：dist 文件夹旁的 templates 目录（发布包中二者同级）
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
-    const templateRoot = path.resolve(__dirname, '../templates')
-    const partialRoot = path.join(templateRoot, 'partials')
+    const templateRoot = makeTemplatePath(path.resolve(__dirname, '../templates'))
+    const partialRoot = makeTemplatePath(path.join(templateRoot, 'partials'))
 
     const execute: OrchestratorService['execute'] = (baseDir, config) =>
       Effect.gen(function* () {

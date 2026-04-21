@@ -1,3 +1,9 @@
+import type { TargetDir } from '@/brand/target-dir'
+import type {
+  JsonLiteral,
+  PlanOperationSpec,
+  PlanSpec,
+} from '@/schema/plan-spec'
 // 提供一个小型 DSL 来声明如何生成/编辑文件。
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL, JsonBuilder, TextBuilder } from '@/types/dsl'
@@ -6,12 +12,129 @@ import type { JsonTask, Plan, Task, TextTask } from '@/types/task'
 import * as path from 'node:path'
 import { Context, Effect, Layer, Schema } from 'effect'
 import { produce } from 'immer'
+import { makeTemplatePath } from '@/brand/template-path'
 import { DEFAULT_CONCURRENCY } from '@/constants/effect'
 import { FileIOError } from '@/types/error'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
 import { safeParseJson } from '../adapters/json'
+
+const planOperationSpecSymbol = Symbol('planOperationSpec')
+
+type JsonReducer = JsonTask['reducers'][number] & {
+  readonly [planOperationSpecSymbol]?: PlanOperationSpec
+}
+
+type TextTransform = TextTask['transforms'][number] & {
+  readonly [planOperationSpecSymbol]?: PlanOperationSpec
+}
+
+function annotateOperation<T extends (...args: any[]) => any>(fn: T, spec: PlanOperationSpec): T {
+  Object.defineProperty(fn, planOperationSpecSymbol, {
+    value: spec,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
+  return fn
+}
+
+function getOperationSpec(fn: ((...args: any[]) => unknown) | undefined, fallbackName: string): PlanOperationSpec | undefined {
+  if (!fn) {
+    return undefined
+  }
+
+  const spec = (fn as JsonReducer | TextTransform)[planOperationSpecSymbol]
+  if (spec) {
+    return spec
+  }
+
+  return {
+    reducer: fn.name || fallbackName,
+  }
+}
+
+function isJsonLiteral(value: unknown): value is JsonLiteral {
+  if (value === null) {
+    return true
+  }
+
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+      return true
+    case 'object':
+      if (Array.isArray(value)) {
+        return value.every(isJsonLiteral)
+      }
+      return Object.values(value).every(isJsonLiteral)
+    default:
+      return false
+  }
+}
+
+function toJsonLiteral(value: unknown): JsonLiteral | undefined {
+  return isJsonLiteral(value) ? value : undefined
+}
+
+export function toPlanSpec(plan: Plan): PlanSpec {
+  return {
+    tasks: plan.tasks.map((task) => {
+      switch (task.kind) {
+        case 'render': {
+          const data = task.data === undefined ? undefined : toJsonLiteral(task.data)
+          return {
+            kind: 'render',
+            path: task.path,
+            src: makeTemplatePath(task.src),
+            ...(data !== undefined ? { data } : {}),
+          }
+        }
+        case 'copy':
+          return {
+            kind: 'copy',
+            path: task.path,
+            src: makeTemplatePath(task.src),
+          }
+        case 'json': {
+          const base = task.base ? toJsonLiteral(task.base()) : undefined
+          const finalize = getOperationSpec(task.finalize, 'finalize')
+          return {
+            kind: 'json',
+            path: task.path,
+            ...(task.readExisting !== undefined ? { readExisting: task.readExisting } : {}),
+            ...(task.sortKeys !== undefined ? { sortKeys: task.sortKeys } : {}),
+            ...(base !== undefined ? { base } : {}),
+            reducers: task.reducers.map((reducer) => {
+              const spec = getOperationSpec(reducer, 'modify')
+              return spec ?? { reducer: 'modify' }
+            }),
+            ...(finalize ? { finalize } : {}),
+          }
+        }
+        case 'text': {
+          const base = task.base?.()
+          return {
+            kind: 'text',
+            path: task.path,
+            ...(task.readExisting !== undefined ? { readExisting: task.readExisting } : {}),
+            ...(base !== undefined ? { base } : {}),
+            transforms: task.transforms.map((transform) => {
+              const spec = getOperationSpec(transform, 'transform')
+              return spec ?? { reducer: 'transform' }
+            }),
+          }
+        }
+        default: {
+          const exhaustive: never = task
+          return exhaustive
+        }
+      }
+    }),
+  }
+}
 
 interface PlanService {
   // 组合 tasks 但是不触发
@@ -21,7 +144,7 @@ interface PlanService {
   // 执行计划中的所有任务
   readonly apply: (
     plan: Plan,
-    baseDir: string,
+    baseDir: TargetDir,
     config: ProjectConfig,
   ) => Effect.Effect<void, FileIOError | TemplateError>
 }
@@ -58,19 +181,28 @@ export const PlanLive = Layer.effect(
               return builder
             },
             merge(patch) {
-              task.reducers.push((draft) => {
+              const input = typeof patch === 'function' ? undefined : toJsonLiteral(patch)
+              const reducer = annotateOperation((draft: Record<string, unknown>) => {
                 const obj = typeof patch === 'function' ? patch(draft) : patch
                 Object.assign(draft, obj)
+              }, {
+                reducer: typeof patch === 'function' ? patch.name || 'merge' : 'merge',
+                ...(input !== undefined ? { input } : {}),
               })
+              task.reducers.push(reducer)
               return builder
             },
             modify(fn) {
-              task.reducers.push(fn)
+              task.reducers.push(annotateOperation(fn, {
+                reducer: fn.name || 'modify',
+              }))
               return builder
             },
 
             finalize(fn) {
-              task.finalize = fn
+              task.finalize = annotateOperation(fn, {
+                reducer: fn.name || 'finalize',
+              })
               return builder
             },
 
@@ -91,7 +223,9 @@ export const PlanLive = Layer.effect(
               return builder
             },
             transform(fn) {
-              task.transforms.push(fn)
+              task.transforms.push(annotateOperation(fn, {
+                reducer: fn.name || 'transform',
+              }))
               return builder
             },
 
@@ -123,7 +257,7 @@ export const PlanLive = Layer.effect(
         })),
       )
 
-    const runTask = (task: Task, baseDir: string, config: ProjectConfig) =>
+    const runTask = (task: Task, baseDir: TargetDir, config: ProjectConfig) =>
       Effect.gen(function* () {
         switch (task.kind) {
           // 复制文件
@@ -137,7 +271,7 @@ export const PlanLive = Layer.effect(
           }
           // 模板渲染，直接 write
           case 'render': {
-            const content = yield* templates.render(task.src, task.data, config)
+            const content = yield* templates.render(makeTemplatePath(task.src), task.data, config)
             const abs = path.resolve(baseDir, task.path)
             yield* writeText(abs, content)
             return

@@ -1,3 +1,4 @@
+import type { TemplatePath } from '@/brand/template-path'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import type { FileIOError } from '@/types/error'
@@ -5,6 +6,7 @@ import type { TemplateRegistry } from '@/types/template'
 import * as path from 'node:path'
 import { Context, Effect, Layer } from 'effect'
 import Handlebars from 'handlebars'
+import { makeTemplatePath } from '@/brand/template-path'
 import { DEFAULT_CONCURRENCY } from '@/constants/effect'
 import { TemplateError } from '@/types/error'
 import { FsService } from '~/fs'
@@ -16,14 +18,14 @@ import { registerTemplateHelpers } from './template-helpers'
 // 4. 渲染 Handlebars 模板
 interface TemplateEngineService {
   readonly registerHelpers: () => Effect.Effect<void, never>
-  readonly registerPartials: (dir: string, namespace: string) => Effect.Effect<void, FileIOError>
-  readonly registerTemplates: <T> (dsl: ComposeDSL, templateRoot: string, registry: TemplateRegistry<T>, config: ProjectConfig) => Effect.Effect<void, FileIOError>
+  readonly registerPartials: (dir: TemplatePath, namespace: string) => Effect.Effect<void, FileIOError>
+  readonly registerTemplates: <T> (dsl: ComposeDSL, templateRoot: TemplatePath, registry: TemplateRegistry<T>, config: ProjectConfig) => Effect.Effect<void, FileIOError>
   readonly compile: (
-    templatePath: string,
+    templatePath: TemplatePath,
     config: ProjectConfig,
   ) => Effect.Effect<Handlebars.TemplateDelegate, TemplateError | FileIOError>
   readonly render: (
-    templatePath: string,
+    templatePath: TemplatePath,
     data: unknown,
     config: ProjectConfig,
   ) => Effect.Effect<string, TemplateError | FileIOError>
@@ -40,7 +42,7 @@ export const TemplateEngineLive = Layer.effect(
     const fs = yield* FsService
 
     // 模板缓存（似乎并没有意义）
-    const cache = new Map<string, Handlebars.TemplateDelegate>()
+    const cache = new Map<TemplatePath, Handlebars.TemplateDelegate>()
     // 单例，仅在此服务中
     const hb = Handlebars.create()
 
@@ -57,7 +59,7 @@ export const TemplateEngineLive = Layer.effect(
         registerTemplateHelpers(hb)
       })
 
-    const registerPartials = (dir: string, namespace: string) => Effect.gen(function* () {
+    const registerPartials = (dir: TemplatePath, namespace: string) => Effect.gen(function* () {
       const exists = yield* fs.exists(dir)
       if (!exists)
         return
@@ -83,18 +85,18 @@ export const TemplateEngineLive = Layer.effect(
       )
     })
 
-    const registerTemplates = <T>(dsl: ComposeDSL, templateRoot: string, registry: TemplateRegistry<T>, config: ProjectConfig) =>
+    const registerTemplates = <T>(dsl: ComposeDSL, templateRoot: TemplatePath, registry: TemplateRegistry<T>, config: ProjectConfig) =>
       Effect.gen(function* () {
         for (const item of Object.values(registry)) {
           if (!item.condition(config as T))
             continue
           const target = typeof item.target === 'string' ? item.target : item.target(config as T)
-          const src = path.join(templateRoot, item.template)
+          const src = makeTemplatePath(path.join(templateRoot, item.template))
           dsl.render(src, target)
         }
       })
 
-    const compile = (path: string, config: ProjectConfig) =>
+    const compile = (path: TemplatePath, config: ProjectConfig) =>
       Effect.gen(function* () {
         const cached = cache.get(path)
         if (cached)
@@ -110,7 +112,7 @@ export const TemplateEngineLive = Layer.effect(
         return compiled
       })
 
-    const render = (path: string, data: unknown, config: ProjectConfig) =>
+    const render = (path: TemplatePath, data: unknown, config: ProjectConfig) =>
       Effect.gen(function* () {
         const tpl = yield* compile(path, config)
         const out = yield* Effect.try({

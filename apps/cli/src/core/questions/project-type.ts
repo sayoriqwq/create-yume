@@ -7,7 +7,6 @@ export async function askProjectType() {
     options: [
       { value: 'vue', label: 'Vue Application' },
       { value: 'react', label: 'React Application' },
-      { value: 'node', label: 'Node.js Project' },
     ],
   })
 }

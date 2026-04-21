@@ -1,5 +1,7 @@
-import type { CodeQuality, ReactProjectConfig, VueProjectConfig } from '@/types/config'
-import { Effect } from 'effect'
+import type { CodeQuality } from '@/types/config'
+import { Effect, ParseResult } from 'effect'
+import { decodeProjectConfig, formatProjectConfigError } from '@/schema/project-config'
+import { SchemaContractError } from '@/types/error'
 import { isNone } from '@/utils/none'
 import { FsService } from '~/fs'
 import { ask } from '../adapters/prompts'
@@ -61,6 +63,16 @@ const askFrontendCommon = Effect.gen(function* () {
   return { buildTool, cssPreprocessor, cssFramework }
 })
 
+function decodeCollectedProjectConfig(input: unknown) {
+  return decodeProjectConfig(input).pipe(
+    Effect.mapError(error => new SchemaContractError({
+      schema: 'ProjectConfig',
+      message: formatProjectConfigError(error),
+      issueCount: ParseResult.ArrayFormatter.formatErrorSync(error).length,
+    })),
+  )
+}
+
 export const createProject = Effect.gen(function* () {
   const projectType = yield* ask(askProjectType)
   const base = yield* askBaseCommon
@@ -69,28 +81,26 @@ export const createProject = Effect.gen(function* () {
     const frontend = yield* askFrontendCommon
     const router = yield* ask(askVueRouter)
     const stateManagement = yield* ask(askVueStateManagement)
-    const config: VueProjectConfig = {
+    return {
       ...base,
       ...frontend,
       type: 'vue',
       router,
       stateManagement,
     }
-    return config
   }
 
   if (projectType === 'react') {
     const frontend = yield* askFrontendCommon
     const router = yield* ask(askReactRouter)
     const stateManagement = yield* ask(askReactStateManagement)
-    const config: ReactProjectConfig = {
+    return {
       ...base,
       ...frontend,
       type: 'react',
       router,
       stateManagement,
     }
-    return config
   }
 
   return yield* Effect.dieMessage('Unsupported project type')
@@ -101,7 +111,7 @@ const createPreset = Effect.gen(function* () {
   const name = yield* askProjectNameSafe
   switch (preset) {
     case 'react-app': {
-      const config: ReactProjectConfig = {
+      return {
         name,
         type: 'react',
         language: 'typescript',
@@ -114,10 +124,9 @@ const createPreset = Effect.gen(function* () {
         cssPreprocessor: 'less',
         cssFramework: 'tailwind',
       }
-      return config
     }
     case 'vue-app': {
-      const config: VueProjectConfig = {
+      return {
         name,
         type: 'vue',
         language: 'typescript',
@@ -130,7 +139,6 @@ const createPreset = Effect.gen(function* () {
         cssPreprocessor: 'less',
         cssFramework: 'tailwind',
       }
-      return config
     }
     default:
       return yield* Effect.dieMessage('Unsupported preset')
@@ -141,9 +149,9 @@ export const collectQuestions = Effect.gen(function* () {
   const createMode = yield* ask(askCreateMode)
   switch (createMode) {
     case 'create':
-      return yield* createProject
+      return yield* createProject.pipe(Effect.flatMap(decodeCollectedProjectConfig))
     case 'preset':
-      return yield* createPreset
+      return yield* createPreset.pipe(Effect.flatMap(decodeCollectedProjectConfig))
     default:
       return yield* Effect.dieMessage('Unsupported create mode')
   }

@@ -43,14 +43,6 @@ function formatConfigSummary(config: ProjectConfig) {
       `  CSS Framework: ${config.cssFramework}`,
     ]
   }
-  else if (config.type === 'node') {
-    return [
-      ...baseInfo,
-      `  Runtime: ${config.runtime}`,
-      `  Package Manager: ${config.packageManager}`,
-      `  Framework: ${config.framework}`,
-    ]
-  }
 
   return baseInfo
 }

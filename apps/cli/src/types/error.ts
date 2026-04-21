@@ -26,6 +26,12 @@ export class CommandError extends Data.TaggedError('CommandError')<{
   shell?: boolean
 }> {}
 
+export class SchemaContractError extends Data.TaggedError('SchemaContractError')<{
+  schema: string
+  message: string
+  issueCount?: number
+}> {}
+
 export class UnknownError extends Data.TaggedError('UnknownError') {
   constructor() {
     super()
@@ -35,6 +41,7 @@ export class UnknownError extends Data.TaggedError('UnknownError') {
 
 export type CLIError
   = | PlatformError
+    | SchemaContractError
     | TemplateError
     | FileIOError
     | UnknownError

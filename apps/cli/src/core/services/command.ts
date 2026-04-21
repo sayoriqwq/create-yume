@@ -1,12 +1,13 @@
 import type { StandardCommand } from '@effect/platform/Command'
 import type { CommandExecutor } from '@effect/platform/CommandExecutor'
+import type { CommandName } from '@/brand/command-name'
 // 借助平台能力，但转化为领域错误
 import { Command } from '@effect/platform'
 import { Context, Effect, Layer } from 'effect'
 import { CommandError } from '@/types/error'
 
 interface CommandService {
-  readonly make: (cmd: string, ...args: string[]) => StandardCommand
+  readonly make: (cmd: CommandName, ...args: string[]) => StandardCommand
   // 依赖于 CommandExecutor 来执行
   readonly execute: (command: StandardCommand) => Effect.Effect<string, CommandError, CommandExecutor>
 }
