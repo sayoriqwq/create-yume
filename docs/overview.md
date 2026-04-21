@@ -22,7 +22,11 @@
 ├──────────────────────────────────────────────┤
 │ File System (FsService)                     │ 封装平台 FS，统一领域错误类型
 ├──────────────────────────────────────────────┤
-│ Effect Runtime / Layers                     │ 提供依赖注入、日志、并发、错误模型
+│ Command (CommandService)                    │ 封装平台命令执行，统一 CommandError
+├──────────────────────────────────────────────┤
+│ Observability (Tracing + DevTools + Logger) │ OTel tracing、@effect/experimental DevTools、pretty logger
+├──────────────────────────────────────────────┤
+│ Effect Runtime / Layers                     │ 提供依赖注入、并发、错误模型
 └──────────────────────────────────────────────┘
 ```
 
@@ -53,7 +57,7 @@
 | DSL (`ComposeDSL`)      | `types/dsl.ts`                     | 统一声明任务的构建 API                        | render / copy / json / text 四类 |
 | `PlanService`           | `core/services/planner.ts`         | 将 DSL program 转换为可执行计划，并执行       | 分离“描述”与“执行”           |
 | `OrchestratorService`   | `core/services/orchestrator.ts`    | 绑定模板根路径 + partial + program 组装       | 聚合注册点                       |
-| `TemplateEngineService` | `core/services/template-engine.ts` | Handlebars 运行时包装 + helpers/partials 注册 | 缓存编译结果                     |
+| `TemplateEngineService` | `core/services/template-engine.ts` | Handlebars 运行时包装 + helpers/partials 注册 | 缓存编译结果（Code Phase 1 计划移除）                 |
 | `FsService`             | `core/services/fs.ts`              | 抽象文件系统并映射领域错误                    | 方便测试 / mock                  |
 | 交互问题模块              | `core/questions/*`                 | 将一次 CLI 交互拆成独立问题                   | 支持 preset / 自定义分支         |
 | 模板注册表                | `core/template-registry/*`         | 数据驱动：条件 + 目标路径 + 模板源            | 降低模板散落判断逻辑             |
@@ -113,17 +117,18 @@ apps/cli/src
 
 ## 10. 当前限制 / 改进方向
 
-| 类别     | 问题                          | 改进建议                                     |
+| 类别     | 问题                          | 对应阶段                                     |
 | -------- | ----------------------------- | -------------------------------------------- |
-| 配置读取 | 不支持 CLI flags / 非交互模式 | 增加参数解析（mri 已存在，可复用）           |
-| 回滚     | 失败时缺乏清理策略            | 引入简易事务：记录已写文件，出错回滚删除     |
-| 测试     | 缺单元 / 集成测试             | 对 planner.build 输出、模板渲染建立快照测试  |
-| 模板数据 | 仅注入 `@config`            | 提供上下文 helper（例如 date、versions map） |
-| 缓存     | 模板编译缓存未做失效策略      | 依据文件 mtime 或 hash 判定失效              |
-| 日志     | 使用默认 pretty logger        | 分级 & 可选 JSON 输出（CI 友好）             |
+| 契约     | `ProjectConfig` 等只有 interface，无 Schema | Infra 0                        |
+| 配置读取 | 不支持 CLI flags / 非交互模式 | Code Phase 4-A（mri 已在 deps）              |
+| 回滚     | 失败时缺乏清理策略            | Code Phase 4-B（依赖 Infra 2 的 Scope）       |
+| 测试     | 仅有 `template-helpers.test.ts` | Code Phase 5（planner / render snapshot）  |
+| Runtime  | `AppConfig` 缺失，环境变量散读 | Infra 1                                     |
+| 缓存     | 模板编译缓存无收益            | Code Phase 1（直接删除）                     |
+| 入口一致性 | `bin` 声明 `.js`，产物是 `.mjs` | Infra 3                                  |
 
 ## 11. 演进路线（架构层）
 
-- 短期：补充测试层、拆分错误等级（expected/unexpected），加强 DSL 断言。
+- 短期：按 [plan/lead.md](./plan/lead.md) 完成 Infra Tier（Schema / Brand / AppConfig / Service 模板 / Scope / 测试基建 / AGENTS.md），再推进 Code Tier 的清理、功能扩展与 snapshot 测试。
 - 中期：插件化（注册新 DSL 操作 / 新模板集合）、支持多阶段生成（pre / generate / post）。
 - 长期：远程模板拉取 + 缓存、增量更新（对现有项目 diff 并 apply）、可视化配置界面。

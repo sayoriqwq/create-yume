@@ -1,71 +1,75 @@
-# Create Yume 清理与升级计划 · Lead
+# Create Yume 计划总览
 
-> 本次会话 **只输出文档，不改代码**。后续迭代按阶段独立提交。
+> 本仓库后续工作分两层：**Infra Tier（基建，blocking）** 必须全部落地后再进入 **Code Tier（代码）**。
+> 新 agent 只看本页就能决定从哪一份 sub-doc 开始，不用再翻历史盘点。
 
-## 背景
+## 现状快照（2026-04-21）
 
-`apps/docs/status.md` 盘点出一组过时项与技术债。这份计划把扁平 checklist 按 **模块重新编组**、切成 **7 个可以独立提交的阶段**，阶段间有明确依赖顺序（清理 → 风格 → 依赖 → 功能 → 测试 → 文档）。
+已落地、无需再写进计划：
 
-目标：不动整体架构，清掉沉淀的死代码/冗余、刷新依赖快照、补上非交互模式与最小测试基线。
+- pnpm catalog 作为全仓库版本单一来源（`pnpm-workspace.yaml`）
+- Effect 3.21 / `@effect/platform` 0.96 / `@effect/platform-node` 0.106
+- OTel tracing layer + DevTools + pretty logger（`apps/cli/src/core/services/tracing.ts`、`apps/cli/src/index.ts`）
+- vitest 已装；首个测试 `apps/cli/src/core/services/template-helpers.test.ts`
+- docs 已迁到仓库根 `docs/`；根 `eslint.config.mjs` 已排除 docs
+- `@antfu/eslint-config` 解锁至 8.2.0
+- lobe-commit 集成（`pnpm commit`）
+- `fs.ts` / `planner.ts` 的 `provideService` 作者已决定**保留**以保证类型安全（commit `8107d8d`），不再视为清理项
 
-## 阶段索引
+下面是剩余工作。
 
-| 阶段    | 名称                   | 风险 | 依赖        | Sub-doc                                  |
-| ------- | ---------------------- | ---- | ----------- | ---------------------------------------- |
-| Phase 0 | 准备 & 基线            | 无   | —           | [phase-0-baseline.md](./phase-0-baseline.md) |
-| Phase 1 | 清理（零行为变更）     | 低   | Phase 0     | [phase-1-cleanup.md](./phase-1-cleanup.md)   |
-| Phase 2 | 风格 & 正确性          | 低   | Phase 1     | [phase-2-style.md](./phase-2-style.md)       |
-| Phase 3 | 依赖刷新               | 中   | Phase 1     | [phase-3-deps.md](./phase-3-deps.md)         |
-| Phase 4 | 功能扩展               | 中   | Phase 1,2,3 | [phase-4-features.md](./phase-4-features.md) |
-| Phase 5 | 测试基建               | 中   | Phase 1-4   | [phase-5-tests.md](./phase-5-tests.md)       |
-| Phase 6 | 文档对齐               | 无   | Phase 1-5   | [phase-6-docs.md](./phase-6-docs.md)         |
+## Infra Tier（blocking，先全部完成）
 
-## 模块速查（交叉视图）
+| 阶段    | 名称                        | Sub-doc                                                        | 依赖         |
+| ------- | --------------------------- | -------------------------------------------------------------- | ------------ |
+| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](./infra-0-contracts.md)                 | —            |
+| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](./infra-1-runtime.md)              | Infra 0      |
+| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](./infra-2-lifecycle-testing.md) | Infra 1      |
+| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](./infra-3-agent-contract.md)    | 可并行       |
 
-| 模块                            | 涉及阶段        | 主要动作                              |
-| ------------------------------- | --------------- | ------------------------------------- |
-| `types/`                        | Phase 1         | 删 `NodeProjectConfig`、修可选语义    |
-| `core/services/fs`              | Phase 1         | 去掉冗余 `provideService`             |
-| `core/services/planner`         | Phase 1, 4      | 修 `finalize!` 断言；新增 rollback    |
-| `core/services/template-engine` | Phase 1         | 删死 API `registerTemplates` + 缓存   |
-| `core/services/compose`         | Phase 2         | `chdir` → `Command.workingDirectory`  |
-| `core/services/command`         | —               | 无改动                                |
-| `core/modifier/`                | Phase 3         | 版本号整表刷新                        |
-| `core/questions/`               | Phase 4         | 接入 `mri` 非交互模式                 |
-| `templates/partials/`           | Phase 2         | 全局 partial 移入 `global/` 子目录    |
-| 根 `package.json`               | Phase 3         | `@antfu/eslint-config` 解锁、effect 升级 |
-| `apps/cli/tsconfig.json`        | Phase 1         | path alias 精简                       |
-| `apps/cli/tests/`               | Phase 5（新建） | planner / render snapshot             |
-| docs (`README/overview/status`) | Phase 6         | 对齐清理后的状态                      |
+> `effect-foundation-plan.md` 原单文件计划已拆为上列 sub-doc，文件保留为指针。
 
-## 端到端验证模板
+## Code Tier（blocked on Infra Tier）
 
-每阶段结束执行：
+| 阶段    | 名称                   | 风险 | Sub-doc                                      |
+| ------- | ---------------------- | ---- | -------------------------------------------- |
+| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](./phase-0-baseline.md) |
+| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](./phase-1-cleanup.md)   |
+| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](./phase-2-style.md)       |
+| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](./phase-3-deps.md)         |
+| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](./phase-4-features.md) |
+| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](./phase-5-tests.md)       |
+| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](./phase-6-docs.md)         |
+
+Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
+
+## 贯穿两层的一致性约束
+
+- 所有新增 Effect Service 必须走 Infra 1 的模板，不再手写 `Context.Tag + Layer.effect`。
+- 所有外部输入（CLI flags、JSON 读入、问答结果）必须走 Infra 0 的 Schema decode。
+- 关键标识（`ProjectName` / `TargetDir` / `TemplatePath` / `PackageName` / `CommandName`）禁止裸 `string`。
+- 资源型副作用必须 scoped（Infra 2）。
+- 只有入口模块可以 `runMain` / `runPromise`，其余只返回 `Effect`。
+- 改代码走 `pnpm verify`；改 docs 走 Infra 3 定义的 docs 检查入口（`verify:docs` 的具体实现见 [infra-3-agent-contract.md](./infra-3-agent-contract.md) C 节）。
+
+## 端到端验证模板（Code Tier 每阶段执行）
 
 ```bash
-cd apps/cli
-pnpm build
-node dist/index.js   # 走 preset react-app 与 preset vue-app 各一次
-cd <generated>
-pnpm install
-pnpm build
+pnpm --filter create-yume build
+# 当前 tsdown 产物实际是 apps/cli/dist/index.mjs（入口一致性选型见 Infra 3 B）
+node apps/cli/dist/index.mjs
+# 分别手跑 preset react-app / vue-app，产物归档到仓库外作为 diff 基线
 ```
 
-Phase 5 之后额外：`pnpm test`。
-
-最后一次（Phase 6 完成后）对比 Phase 0 留下的 preset 产物：**除依赖版本和 partial 路径外，其余应无 diff**。
-
-## 关键复用点（贯穿所有阶段）
-
-- `src/utils/file-helper.ts` 的 `when / scripts / deps / devDeps / mergeAt` —— Phase 3 刷版本时仍是主要 API
-- `Data.TaggedError` 现有三类错误（`FileIOError / TemplateError / CommandError`）—— Phase 4 rollback 复用 `FileIOError`，不新增
-- `Effect.forEach(..., { concurrency: DEFAULT_CONCURRENCY })` —— 新增并发点沿用
+Phase 5 之后额外：`pnpm verify`。
+Phase 6 结束时对比 Phase 0 的 baseline 产物：**除依赖版本和 partial 路径外，其余应无 diff**。
 
 ## 非目标
 
-以下不纳入本计划，如需后续单独立项：
+以下不纳入本轮计划，如需后续单独立项：
 
 - 远程模板拉取 / 模板版本化
 - 插件化 DSL 操作注册
 - 对已有项目做增量 diff 更新
 - 可视化配置界面
+- 引入 `@effect/cluster` / `@effect/rpc` / `@effect/sql` / `@effect/workflow` 到主路径
