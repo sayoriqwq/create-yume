@@ -5,6 +5,7 @@ import { SchemaContractError } from '@/types/error'
 import { isNone } from '@/utils/none'
 import { FsService } from '~/fs'
 import { ask } from '../adapters/prompts'
+import { CliContext } from '../cli-context'
 import { askProjectName } from '../questions/common/project-name'
 import { askRemoveExisting } from '../questions/common/remove-existing'
 import { askCodeQuality } from './common/code-quality'
@@ -24,14 +25,28 @@ import { askVueStateManagement } from './vue/state-management'
 
 const askProjectNameSafe = Effect.gen(function* () {
   const fs = yield* FsService
+  const cli = yield* CliContext
+  const preferredName = cli.args.name
 
   while (true) {
-    const name = yield* ask(askProjectName)
+    const name = preferredName ?? (yield* ask(askProjectName))
     const targetDir = `./${name}`
 
     const exists = yield* fs.exists(targetDir)
     if (!exists) {
       return name
+    }
+
+    if (cli.args.yes) {
+      yield* fs.remove(targetDir, { recursive: true, force: true })
+      return name
+    }
+
+    if (preferredName && !cli.isInteractive) {
+      return yield* Effect.fail(new SchemaContractError({
+        schema: 'CliArgs',
+        message: `Target directory "${targetDir}" already exists. Re-run with --yes to replace it.`,
+      }))
     }
 
     const confirmRemove = yield* ask(() => askRemoveExisting(name))
@@ -40,14 +55,22 @@ const askProjectNameSafe = Effect.gen(function* () {
       return name
     }
 
+    if (preferredName) {
+      return yield* Effect.fail(new SchemaContractError({
+        schema: 'CliArgs',
+        message: `Target directory "${targetDir}" already exists and was not removed.`,
+      }))
+    }
+
     yield* Effect.logWarning('目录已存在且未选择删除，请重新输入项目名。')
   }
 })
 
 const askBaseCommon = Effect.gen(function* () {
+  const cli = yield* CliContext
   const name = yield* askProjectNameSafe
   const language = yield* ask(askLanguage)
-  const git = yield* ask(askGit)
+  const git = cli.args.git ?? (yield* ask(askGit))
   const linting = yield* ask(askLinting)
   let codeQuality: CodeQuality[] = []
   if (git && !isNone(linting)) {
@@ -107,17 +130,21 @@ export const createProject = Effect.gen(function* () {
 })
 
 const createPreset = Effect.gen(function* () {
-  const preset = yield* ask(askPreset)
+  const cli = yield* CliContext
+  const preset = cli.args.preset ?? (yield* ask(askPreset))
   const name = yield* askProjectNameSafe
+  const git = cli.args.git ?? true
+  const codeQuality: CodeQuality[] = git ? ['lint-staged', 'commitlint'] : []
+
   switch (preset) {
     case 'react-app': {
       return {
         name,
         type: 'react',
         language: 'typescript',
-        git: true,
+        git,
         linting: 'antfu-eslint',
-        codeQuality: ['lint-staged', 'commitlint'],
+        codeQuality,
         buildTool: 'vite',
         router: 'react-router',
         stateManagement: 'jotai',
@@ -130,9 +157,9 @@ const createPreset = Effect.gen(function* () {
         name,
         type: 'vue',
         language: 'typescript',
-        git: true,
+        git,
         linting: 'antfu-eslint',
-        codeQuality: ['lint-staged', 'commitlint'],
+        codeQuality,
         buildTool: 'vite',
         router: true,
         stateManagement: true,
@@ -146,6 +173,12 @@ const createPreset = Effect.gen(function* () {
 })
 
 export const collectQuestions = Effect.gen(function* () {
+  const cli = yield* CliContext
+
+  if (!cli.isInteractive) {
+    return yield* createPreset.pipe(Effect.flatMap(decodeCollectedProjectConfig))
+  }
+
   const createMode = yield* ask(askCreateMode)
   switch (createMode) {
     case 'create':

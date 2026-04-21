@@ -3,14 +3,17 @@ import type { ProjectConfig } from '@/types/config'
 import { Effect } from 'effect'
 import { makeCommandName } from '@/brand/command-name'
 import { ask } from '../adapters/prompts'
+import { CliContext } from '../cli-context'
 import { askInstallDeps } from '../questions/common/install-deps'
 import { CommandService } from '../services/command'
 
 export function buildCommands(config: ProjectConfig) {
   return Effect.gen(function* () {
     const commands: StandardCommand[] = []
+    const cli = yield* CliContext
     const commandSvc = yield* CommandService
-    const installDeps = yield* ask(askInstallDeps)
+    const installDeps = cli.args.install
+      ?? (!cli.isInteractive ? false : (yield* ask(askInstallDeps)))
     if (config.git) {
       const git = commandSvc.make(makeCommandName('git'), 'init')
       commands.push(git)
