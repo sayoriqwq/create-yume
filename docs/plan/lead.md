@@ -16,6 +16,18 @@
 - lobe-commit 集成（`pnpm commit`）
 - `fs.ts` / `planner.ts` 的 `provideService` 作者已决定**保留**以保证类型安全（commit `8107d8d`），不再视为清理项
 
+追加快照（2026-04-22）：
+
+- Infra 1 / Infra 2 已在本地 `main` 后续提交中落地。
+- Code Tier Phase 0 基线已完成，归档目录：
+  `/Users/sayori/Desktop/create-yume-phase0-baseline-20260422`。
+- Phase 0 smoke 发现 OTel Node SDK 缺少运行时 peer，已补齐
+  `@opentelemetry/sdk-trace-node` 的 catalog / CLI dependency / lockfile。
+- Phase 1 清理已完成，产物对比目录：
+  `/Users/sayori/Desktop/create-yume-phase1-output-20260422`。
+- 下一轮从 [Phase 2 — 风格 & 正确性](./phase-2-style.md) 或
+  [Phase 3 — 模板版本刷新](./phase-3-deps.md) 开始（二者可并行）。
+
 下面是剩余工作。
 
 ## Infra Tier（blocking，先全部完成）
