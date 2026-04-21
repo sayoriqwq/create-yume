@@ -61,6 +61,23 @@ npx create yume
 create-yume
 ```
 
+### Git 提交流程
+
+仓库已集成 `lobe-commit`、`husky` 和 `commitlint`：
+
+```bash
+# 首次配置 lobe-commit（OpenAI / GitHub token 等）
+pnpm commit:config
+
+# 交互式生成提交信息
+pnpm commit
+
+# 或继续使用 git commit，普通场景会自动走 lobe-commit hook
+git commit
+```
+
+`commitlint` 已兼容 `✨ feat: ...` 和 `feat: ...` 两种 header。`prepare-commit-msg` 只会接管普通 `git commit`，不会覆盖 `git commit -m`、merge、squash、amend 等 Git 自带消息来源。
+
 ### 📚 文档 & 参考
 
 | 文档                    | 说明                               | 链接                                                 |

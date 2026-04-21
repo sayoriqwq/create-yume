@@ -21,6 +21,12 @@ export function buildCommands(config: ProjectConfig) {
       }
       const huskyInit = commandSvc.make('pnpm', 'exec', 'husky', 'init')
       commands.push(huskyInit)
+      const writePrepareCommitMsg = commandSvc.make(
+        'sh',
+        '-c',
+        'echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg',
+      )
+      commands.push(writePrepareCommitMsg)
       // 使用 sh -c 以便支持重定向与 &&
       if (config.codeQuality.includes('lint-staged')) {
         // 覆盖 pre-commit（husky init 已创建且具执行权限，重定向只会截断保持权限）
@@ -36,7 +42,7 @@ export function buildCommands(config: ProjectConfig) {
         const writeCommitMsg = commandSvc.make(
           'sh',
           '-c',
-          'echo \'pnpm dlx commitlint --edit $1\' > .husky/commit-msg && chmod +x .husky/commit-msg',
+          'echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
         )
         commands.push(writeCommitMsg)
       }
