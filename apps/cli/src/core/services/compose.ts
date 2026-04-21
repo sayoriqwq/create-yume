@@ -41,7 +41,7 @@ export function collectPartialEntries(config: ProjectConfig, partialRoot: Templa
     entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'vue')), namespace: 'vue' })
   if (isReactProject(config))
     entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'react')), namespace: 'react' })
-  entries.push({ dir: partialRoot, namespace: 'global' })
+  entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'global')), namespace: 'global' })
   return entries
 }
 
