@@ -148,6 +148,7 @@ interface PlanServiceShape {
     plan: Plan,
     baseDir: TargetDir,
     config: ProjectConfig,
+    options?: { readonly rollbackOnFailure?: boolean },
   ) => Effect.Effect<void, FileIOError | TemplateError>
 }
 
@@ -255,8 +256,8 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         Effect.annotateSpans({ taskKind: 'plan.build' }),
       )
 
-    const writeText = (absPath: string, content: string) =>
-      fs.ensureDir(path.dirname(absPath)).pipe(Effect.zipRight(fs.writeFileString(absPath, content)))
+    const trackCreatedFile = (writtenPaths: Ref.Ref<TargetDir[]>, absPath: string) =>
+      Ref.update(writtenPaths, paths => [...paths, makeTargetDir(absPath)])
 
     const encodeJson = (value: Record<string, unknown>) =>
       Schema.encode(Schema.parseJson({ space: 2 }))(value).pipe(
@@ -267,8 +268,55 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         })),
       )
 
-    const trackCreatedPath = (writtenPaths: Ref.Ref<TargetDir[]>, absPath: string) =>
-      Ref.update(writtenPaths, paths => [...paths, makeTargetDir(absPath)])
+    const trackCreatedDirectory = (createdDirs: Ref.Ref<TargetDir[]>, absPath: string) =>
+      Ref.update(createdDirs, paths => [...paths, makeTargetDir(absPath)])
+
+    const ensureTrackedDirectories = (
+      baseDir: TargetDir,
+      absPath: string,
+      createdDirs: Ref.Ref<TargetDir[]>,
+    ) =>
+      Effect.gen(function* () {
+        const resolvedBaseDir = path.resolve(baseDir)
+        const targetDir = path.dirname(absPath)
+        const relativeTargetDir = path.relative(resolvedBaseDir, targetDir)
+
+        if (relativeTargetDir.startsWith('..') || path.isAbsolute(relativeTargetDir)) {
+          yield* fs.ensureDir(targetDir)
+          return
+        }
+
+        const segments = relativeTargetDir === ''
+          ? []
+          : relativeTargetDir.split(path.sep).filter(Boolean)
+
+        let currentDir = resolvedBaseDir
+        const directories = [resolvedBaseDir]
+
+        for (const segment of segments) {
+          currentDir = path.join(currentDir, segment)
+          directories.push(currentDir)
+        }
+
+        for (const directory of directories) {
+          if (yield* fs.exists(directory)) {
+            continue
+          }
+
+          yield* fs.makeDirectory(directory)
+          yield* trackCreatedDirectory(createdDirs, directory)
+        }
+      })
+
+    const writeText = (
+      baseDir: TargetDir,
+      absPath: string,
+      content: string,
+      createdDirs: Ref.Ref<TargetDir[]>,
+    ) =>
+      ensureTrackedDirectories(baseDir, absPath, createdDirs).pipe(
+        Effect.zipRight(fs.writeFileString(absPath, content)),
+      )
 
     const cleanupCreatedPaths = (writtenPaths: Ref.Ref<TargetDir[]>) =>
       Ref.get(writtenPaths).pipe(
@@ -286,15 +334,50 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         ),
       )
 
-    const registerRollbackFinalizer = (writtenPaths: Ref.Ref<TargetDir[]>) =>
-      Effect.scopeWith((scope) => {
+    const cleanupCreatedDirectories = (createdDirs: Ref.Ref<TargetDir[]>) =>
+      Ref.get(createdDirs).pipe(
+        Effect.flatMap(paths =>
+          Effect.forEach(
+            [...paths].reverse(),
+            createdDir =>
+              fs.remove(createdDir).pipe(
+                Effect.catchAll(error =>
+                  Effect.logWarning(`Failed to clean up generated directory ${createdDir}: ${error.message}`),
+                ),
+              ),
+            { concurrency: 1, discard: true },
+          ),
+        ),
+      )
+
+    const registerRollbackFinalizer = (
+      writtenPaths: Ref.Ref<TargetDir[]>,
+      createdDirs: Ref.Ref<TargetDir[]>,
+      enabled: boolean,
+    ) => {
+      if (!enabled) {
+        return Effect.void
+      }
+
+      return Effect.scopeWith((scope) => {
         const rollbackOnFailure = (exit: Exit.Exit<unknown, unknown>) =>
-          Exit.isFailure(exit) ? cleanupCreatedPaths(writtenPaths) : Effect.void
+          Exit.isFailure(exit)
+            ? cleanupCreatedPaths(writtenPaths).pipe(
+                Effect.zipRight(cleanupCreatedDirectories(createdDirs)),
+              )
+            : Effect.void
 
         return Scope.addFinalizerExit(scope, rollbackOnFailure)
       })
+    }
 
-    const runTask = (task: Task, baseDir: TargetDir, config: ProjectConfig, writtenPaths: Ref.Ref<TargetDir[]>) =>
+    const runTask = (
+      task: Task,
+      baseDir: TargetDir,
+      config: ProjectConfig,
+      writtenPaths: Ref.Ref<TargetDir[]>,
+      createdDirs: Ref.Ref<TargetDir[]>,
+    ) =>
       Effect.gen(function* () {
         switch (task.kind) {
           // 复制文件
@@ -303,9 +386,9 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             if (yield* fs.exists(abs)) {
               return
             }
-            yield* fs.ensureDir(path.dirname(abs))
+            yield* ensureTrackedDirectories(baseDir, abs, createdDirs)
             yield* fs.copyFile(task.src, abs)
-            yield* trackCreatedPath(writtenPaths, abs)
+            yield* trackCreatedFile(writtenPaths, abs)
             return
           }
           // 模板渲染，直接 write
@@ -313,9 +396,9 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             const content = yield* templates.render(makeTemplatePath(task.src), task.data, config)
             const abs = path.resolve(baseDir, task.path)
             const existed = yield* fs.exists(abs)
-            yield* writeText(abs, content)
+            yield* writeText(baseDir, abs, content, createdDirs)
             if (!existed)
-              yield* trackCreatedPath(writtenPaths, abs)
+              yield* trackCreatedFile(writtenPaths, abs)
             return
           }
           // 组合 Json 文件
@@ -353,9 +436,9 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
               out = sortJsonKeys(draft)
             }
             const content = `${yield* encodeJson(out)}\n`
-            yield* writeText(abs, content)
+            yield* writeText(baseDir, abs, content, createdDirs)
             if (!existed)
-              yield* trackCreatedPath(writtenPaths, abs)
+              yield* trackCreatedFile(writtenPaths, abs)
             return
           }
           // 基础文本变换
@@ -372,26 +455,39 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
             }
             for (const tr of task.transforms) current = tr(current)
 
-            yield* writeText(abs, current)
+            yield* writeText(baseDir, abs, current, createdDirs)
             if (!existed)
-              yield* trackCreatedPath(writtenPaths, abs)
+              yield* trackCreatedFile(writtenPaths, abs)
           }
         }
       }).pipe(withProjectAnnotations(config, `plan.task.${task.kind}`, task.path))
 
-    const apply: PlanServiceShape['apply'] = (p, baseDir, config) =>
+    const apply: PlanServiceShape['apply'] = (p, baseDir, config, options) =>
       Effect.scoped(Effect.gen(function* () {
         const writtenPaths = yield* Ref.make<TargetDir[]>([])
-        yield* registerRollbackFinalizer(writtenPaths)
+        const createdDirs = yield* Ref.make<TargetDir[]>([])
+        yield* registerRollbackFinalizer(
+          writtenPaths,
+          createdDirs,
+          options?.rollbackOnFailure ?? true,
+        )
 
         const generate = p.tasks.filter(t => t.kind === 'copy' || t.kind === 'render')
         const modify = p.tasks.filter(t => t.kind === 'json' || t.kind === 'text')
 
         // 1：并发执行生成类任务（copy/render）
-        yield* Effect.forEach(generate, t => runTask(t, baseDir, config, writtenPaths), { concurrency: appConfig.defaultConcurrency })
+        yield* Effect.forEach(
+          generate,
+          t => runTask(t, baseDir, config, writtenPaths, createdDirs),
+          { concurrency: appConfig.defaultConcurrency },
+        )
 
         // 2：并发执行修改类任务（json/text）
-        yield* Effect.forEach(modify, t => runTask(t, baseDir, config, writtenPaths), { concurrency: appConfig.defaultConcurrency })
+        yield* Effect.forEach(
+          modify,
+          t => runTask(t, baseDir, config, writtenPaths, createdDirs),
+          { concurrency: appConfig.defaultConcurrency },
+        )
       })).pipe(
         Effect.withSpan('plan.apply'),
         withProjectAnnotations(config, 'plan.apply', baseDir),

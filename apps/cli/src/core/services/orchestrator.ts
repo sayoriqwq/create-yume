@@ -20,6 +20,7 @@ interface OrchestratorServiceShape {
   readonly execute: (
     baseDir: TargetDir,
     config: ProjectConfig,
+    options?: { readonly rollbackOnFailure?: boolean },
   ) => Effect.Effect<void, FileIOError | TemplateError>
 }
 
@@ -34,7 +35,7 @@ export class OrchestratorService extends Effect.Service<OrchestratorService>()(
       const templateRoot = makeTemplatePath(path.resolve(__dirname, '../templates'))
       const partialRoot = makeTemplatePath(path.join(templateRoot, 'partials'))
 
-      const execute: OrchestratorServiceShape['execute'] = (baseDir, config) =>
+      const execute: OrchestratorServiceShape['execute'] = (baseDir, config, options) =>
         Effect.gen(function* () {
         // 1. 注册 helpers
           yield* templateEngine.registerHelpers()
@@ -60,7 +61,7 @@ export class OrchestratorService extends Effect.Service<OrchestratorService>()(
 
           // 4. 生成计划并应用
           const plan = yield* planner.build(program)
-          yield* planner.apply(plan, baseDir, config)
+          yield* planner.apply(plan, baseDir, config, options)
         }).pipe(
           Effect.withSpan('orchestrator.execute'),
           withProjectAnnotations(config, 'orchestrator.execute', baseDir),

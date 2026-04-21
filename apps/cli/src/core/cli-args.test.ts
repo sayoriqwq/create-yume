@@ -12,6 +12,7 @@ describe('parseRawCliArgs', () => {
       '--yes',
       '--no-install',
       '--no-git',
+      '--no-rollback',
       '-h',
     ])).toEqual({
       _: [],
@@ -21,7 +22,7 @@ describe('parseRawCliArgs', () => {
       install: false,
       git: false,
       help: true,
-      rollback: true,
+      rollback: false,
     })
   })
 })

@@ -10,13 +10,23 @@ import { reactProjectConfig } from './support/fixtures'
 import { makeFsMockLayer, makeTemplateEngineMockLayer } from './support/mock-layers'
 
 describe('planner rollback', () => {
-  it('removes created paths when plan application fails', async () => {
+  it('removes created files and directories when plan application fails', async () => {
+    const existingPaths = new Set<string>()
     const writes: string[] = []
+    const directories: string[] = []
     const removes: string[] = []
     const baseDir = makeTargetDir('/tmp/create-yume-rollback')
-    const failedPath = `${baseDir}/fail.txt`
+    const okDir = `${baseDir}/nested`
+    const okPath = `${okDir}/ok.txt`
+    const failedPath = `${okDir}/fail.txt`
 
     const fsLayer = makeFsMockLayer({
+      exists: path => Effect.succeed(existingPaths.has(path)),
+      makeDirectory: path =>
+        Effect.sync(() => {
+          existingPaths.add(path)
+          directories.push(path)
+        }),
       writeFileString: (path, content) => {
         if (path === failedPath) {
           return Effect.fail(new FileIOError({
@@ -27,11 +37,13 @@ describe('planner rollback', () => {
         }
 
         return Effect.sync(() => {
+          existingPaths.add(path)
           writes.push(`${path}:${content}`)
         })
       },
       remove: path =>
         Effect.sync(() => {
+          existingPaths.delete(path)
           removes.push(path)
         }),
     })
@@ -53,8 +65,8 @@ describe('planner rollback', () => {
 
     const plan: Plan = {
       tasks: [
-        { kind: 'render', src: makeTemplatePath('/tmp/ok.hbs'), path: 'ok.txt', data: 'ok' },
-        { kind: 'render', src: makeTemplatePath('/tmp/fail.hbs'), path: 'fail.txt', data: 'fail' },
+        { kind: 'render', src: makeTemplatePath('/tmp/ok.hbs'), path: 'nested/ok.txt', data: 'ok' },
+        { kind: 'render', src: makeTemplatePath('/tmp/fail.hbs'), path: 'nested/fail.txt', data: 'fail' },
       ],
     }
 
@@ -66,7 +78,84 @@ describe('planner rollback', () => {
     )
 
     expect(Exit.isFailure(exit)).toBe(true)
-    expect(writes).toEqual([`${baseDir}/ok.txt:ok`])
-    expect(removes).toEqual([`${baseDir}/ok.txt`])
+    expect(directories).toEqual([baseDir, okDir])
+    expect(writes).toEqual([`${okPath}:ok`])
+    expect(removes).toEqual([okPath, okDir, baseDir])
+  })
+
+  it('keeps generated paths when rollback is disabled', async () => {
+    const existingPaths = new Set<string>()
+    const writes: string[] = []
+    const directories: string[] = []
+    const removes: string[] = []
+    const baseDir = makeTargetDir('/tmp/create-yume-no-rollback')
+    const okDir = `${baseDir}/nested`
+    const okPath = `${okDir}/ok.txt`
+    const failedPath = `${okDir}/fail.txt`
+
+    const fsLayer = makeFsMockLayer({
+      exists: path => Effect.succeed(existingPaths.has(path)),
+      makeDirectory: path =>
+        Effect.sync(() => {
+          existingPaths.add(path)
+          directories.push(path)
+        }),
+      writeFileString: (path, content) => {
+        if (path === failedPath) {
+          return Effect.fail(new FileIOError({
+            op: 'write',
+            path,
+            message: 'forced write failure',
+          }))
+        }
+
+        return Effect.sync(() => {
+          existingPaths.add(path)
+          writes.push(`${path}:${content}`)
+        })
+      },
+      remove: path =>
+        Effect.sync(() => {
+          existingPaths.delete(path)
+          removes.push(path)
+        }),
+    })
+
+    const templateLayer = makeTemplateEngineMockLayer({
+      render: (_templatePath, data) => Effect.succeed(String(data)),
+    })
+
+    const appConfigLayer = Layer.succeed(AppConfig, {
+      logLevel: LogLevel.Debug,
+      defaultConcurrency: 1,
+      tracingEndpoint: Option.none(),
+      debug: false,
+    })
+
+    const layer = PlanService.DefaultWithoutDependencies.pipe(
+      Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),
+    )
+
+    const plan: Plan = {
+      tasks: [
+        { kind: 'render', src: makeTemplatePath('/tmp/ok.hbs'), path: 'nested/ok.txt', data: 'ok' },
+        { kind: 'render', src: makeTemplatePath('/tmp/fail.hbs'), path: 'nested/fail.txt', data: 'fail' },
+      ],
+    }
+
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const planner = yield* PlanService
+        yield* planner.apply(plan, baseDir, reactProjectConfig, { rollbackOnFailure: false })
+      }).pipe(Effect.provide(layer)),
+    )
+
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect(directories).toEqual([baseDir, okDir])
+    expect(writes).toEqual([`${okPath}:ok`])
+    expect(removes).toEqual([])
+    expect(existingPaths.has(baseDir)).toBe(true)
+    expect(existingPaths.has(okDir)).toBe(true)
+    expect(existingPaths.has(okPath)).toBe(true)
   })
 })

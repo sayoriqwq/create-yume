@@ -30,6 +30,8 @@ Options:
   --no-install          Skip pnpm install after generation
   --git                 Force Git initialization on
   --no-git              Force Git initialization off
+  --rollback            Remove generated files if generation fails (default)
+  --no-rollback         Keep generated files when generation fails
   --help, -h            Show this help message
   --version, -v         Show CLI version
 `

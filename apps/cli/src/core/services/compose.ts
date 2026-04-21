@@ -10,6 +10,7 @@ import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { isReactProject, isVueProject } from '@/utils/type-guard'
+import { CliContext } from '../cli-context'
 import { buildCommands } from '../commands'
 import { ReactTemplates } from '../template-registry/react'
 import { VueTemplates } from '../template-registry/vue'
@@ -48,9 +49,12 @@ export function collectPartialEntries(config: ProjectConfig, partialRoot: Templa
 export function generateProject(projectConfig: ProjectConfig) {
   return Effect.gen(function* () {
     yield* Effect.logInfo('🔧 Generating your project...')
+    const cli = yield* CliContext
     const orchestrator = yield* OrchestratorService
     const targetDir = makeTargetDir(`./${projectConfig.name}`)
-    yield* orchestrator.execute(targetDir, projectConfig)
+    yield* orchestrator.execute(targetDir, projectConfig, {
+      rollbackOnFailure: cli.args.rollback ?? true,
+    })
   }).pipe(
     Effect.withSpan('generate.project'),
     withProjectAnnotations(projectConfig, 'generate.project', `./${projectConfig.name}`),
