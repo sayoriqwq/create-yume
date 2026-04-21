@@ -35,7 +35,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
       const fs = yield* FsService
       const appConfig = yield* AppConfigService
 
-      const cache = new Map<TemplatePath, Handlebars.TemplateDelegate>()
       // 单例，仅在此服务中
       const hb = Handlebars.create()
 
@@ -80,9 +79,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
 
       const compile = (path: TemplatePath, config: ProjectConfig) =>
         Effect.gen(function* () {
-          const cached = cache.get(path)
-          if (cached)
-            return cached
           const source = yield* fs.readFileString(path)
 
           const compiled = yield* Effect.try({
@@ -90,7 +86,6 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
             catch: e =>
               new TemplateError({ message: '模板编译错误', templatePath: path, stage: 'compile', cause: e }),
           })
-          cache.set(path, compiled)
           return compiled
         })
 

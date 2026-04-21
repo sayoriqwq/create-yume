@@ -104,6 +104,8 @@ apps/cli/src
 └── index.ts                   # CLI 入口，提供 Layer 装配
 ```
 
+路径别名中 `@/*` 指向 `apps/cli/src/*`，`~/*` 是 `core/services/*` 的短路径。
+
 ## 9. 架构权衡与选择
 
 | 议题       | 选择             | 原因                                | 替代方案                  |

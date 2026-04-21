@@ -15,10 +15,6 @@
     "moduleResolution": "bundler", // bundler 风格解析（尊重 exports/conditions）
     "paths": {
       "@/*": ["src/*"],
-      "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/core/*": ["src/core/*"],
-      "@/templates/*": ["templates/*"],
       "~/*": ["src/core/services/*"]
     },
     // Effect LSP：提供悬停信息、诊断与重构能力

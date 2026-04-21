@@ -19,9 +19,8 @@ export interface CopyTask extends ITask {
 
 export interface JsonTask extends ITask {
   kind: 'json'
-  // 需要显示指定才不报错，是bug？
-  readExisting: boolean | undefined
-  sortKeys: boolean | undefined
+  readExisting?: boolean
+  sortKeys?: boolean
   reducers: Array<(draft: Record<string, unknown>) => void>
   base?: () => Record<string, unknown>
   finalize?: (draft: Record<string, unknown>) => void
@@ -29,7 +28,7 @@ export interface JsonTask extends ITask {
 
 export interface TextTask extends ITask {
   kind: 'text'
-  readExisting: boolean | undefined
+  readExisting?: boolean
   transforms: Array<(current: string) => string>
   base?: () => string
 }

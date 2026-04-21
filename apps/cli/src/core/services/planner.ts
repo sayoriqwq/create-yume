@@ -162,15 +162,21 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         const tasks: Task[] = []
 
         const json: ComposeDSL['json'] = (path) => {
-          const task: JsonTask = { kind: 'json', path, reducers: [], readExisting: undefined, sortKeys: undefined }
+          const task: JsonTask = { kind: 'json', path, reducers: [] }
           tasks.push(task)
           const builder: JsonBuilder = {
             readExisting(flag) {
-              task.readExisting = flag
+              if (flag === undefined)
+                delete task.readExisting
+              else
+                task.readExisting = flag
               return builder
             },
             sortKeys(flag) {
-              task.sortKeys = flag
+              if (flag === undefined)
+                delete task.sortKeys
+              else
+                task.sortKeys = flag
               return builder
             },
             base(fn) {
@@ -208,11 +214,14 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
         }
 
         const text: ComposeDSL['text'] = (path) => {
-          const task: TextTask = { kind: 'text', path, transforms: [], readExisting: undefined }
+          const task: TextTask = { kind: 'text', path, transforms: [] }
           tasks.push(task)
           const builder: TextBuilder = {
             readExisting(flag) {
-              task.readExisting = flag
+              if (flag === undefined)
+                delete task.readExisting
+              else
+                task.readExisting = flag
               return builder
             },
             base(fn) {
