@@ -3,7 +3,7 @@
 import type { TargetDir } from '@/brand/target-dir'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
-import type { FileIOError, TemplateError } from '@/types/error'
+import type { FileIOError, PlanConflictError, TemplateError } from '@/types/error'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Effect } from 'effect'
@@ -21,7 +21,7 @@ interface OrchestratorServiceShape {
     baseDir: TargetDir,
     config: ProjectConfig,
     options?: { readonly rollbackOnFailure?: boolean },
-  ) => Effect.Effect<void, FileIOError | TemplateError>
+  ) => Effect.Effect<void, FileIOError | PlanConflictError | TemplateError>
 }
 
 export class OrchestratorService extends Effect.Service<OrchestratorService>()(

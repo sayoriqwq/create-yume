@@ -26,6 +26,12 @@ export class CommandError extends Data.TaggedError('CommandError')<{
   shell?: boolean
 }> {}
 
+export class PlanConflictError extends Data.TaggedError('PlanConflictError')<{
+  path: string
+  taskKinds: string[]
+  message: string
+}> {}
+
 export class SchemaContractError extends Data.TaggedError('SchemaContractError')<{
   schema: string
   message: string
@@ -44,4 +50,5 @@ export type CLIError
     | SchemaContractError
     | TemplateError
     | FileIOError
+    | PlanConflictError
     | UnknownError

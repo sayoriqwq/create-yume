@@ -15,7 +15,7 @@ import { produce } from 'immer'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig as AppConfigService } from '@/config/app-config'
-import { FileIOError } from '@/types/error'
+import { FileIOError, PlanConflictError } from '@/types/error'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
@@ -79,6 +79,25 @@ function isJsonLiteral(value: unknown): value is JsonLiteral {
 
 function toJsonLiteral(value: unknown): JsonLiteral | undefined {
   return isJsonLiteral(value) ? value : undefined
+}
+
+function findDuplicateTargetPath(tasks: Task[]) {
+  const taskKindsByPath = new Map<string, Task['kind'][]>()
+
+  for (const task of tasks) {
+    const taskKinds = taskKindsByPath.get(task.path)
+    if (taskKinds) {
+      taskKinds.push(task.kind)
+      return {
+        path: task.path,
+        taskKinds,
+      }
+    }
+
+    taskKindsByPath.set(task.path, [task.kind])
+  }
+
+  return undefined
 }
 
 export function toPlanSpec(plan: Plan): PlanSpec {
@@ -149,7 +168,7 @@ interface PlanServiceShape {
     baseDir: TargetDir,
     config: ProjectConfig,
     options?: { readonly rollbackOnFailure?: boolean },
-  ) => Effect.Effect<void, FileIOError | TemplateError>
+  ) => Effect.Effect<void, FileIOError | PlanConflictError | TemplateError>
 }
 
 export class PlanService extends Effect.Service<PlanService>()('PlanService', {
@@ -470,6 +489,15 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
 
     const apply: PlanServiceShape['apply'] = (p, baseDir, config, options) =>
       Effect.scoped(Effect.gen(function* () {
+        const conflict = findDuplicateTargetPath(p.tasks)
+        if (conflict) {
+          return yield* new PlanConflictError({
+            path: conflict.path,
+            taskKinds: [...conflict.taskKinds],
+            message: `Duplicate target path "${conflict.path}" is not allowed within a plan apply`,
+          })
+        }
+
         const writtenPaths = yield* Ref.make<TargetDir[]>([])
         const createdDirs = yield* Ref.make<TargetDir[]>([])
         yield* registerRollbackFinalizer(
