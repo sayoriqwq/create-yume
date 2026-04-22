@@ -15,6 +15,10 @@ export interface RawCliArgs {
   readonly rollback?: boolean
 }
 
+type MutableRawCliArgs = {
+  -readonly [Key in keyof RawCliArgs]: RawCliArgs[Key]
+}
+
 export function parseRawCliArgs(argv: string[]): RawCliArgs {
   const parsed = mri(argv, {
     alias: {
@@ -27,17 +31,26 @@ export function parseRawCliArgs(argv: string[]): RawCliArgs {
     },
   })
 
-  return {
-    _: parsed._,
-    ...(parsed.preset === undefined ? {} : { preset: parsed.preset as RawCliArgs['preset'] }),
-    ...(parsed.name === undefined ? {} : { name: parsed.name as RawCliArgs['name'] }),
-    ...(parsed.yes === undefined ? {} : { yes: parsed.yes }),
-    ...(parsed.install === undefined ? {} : { install: parsed.install }),
-    ...(parsed.git === undefined ? {} : { git: parsed.git }),
-    ...(parsed.help === undefined ? {} : { help: parsed.help }),
-    ...(parsed.version === undefined ? {} : { version: parsed.version }),
-    ...(parsed.rollback === undefined ? {} : { rollback: parsed.rollback }),
-  }
+  const rawArgs: MutableRawCliArgs = { _: parsed._ }
+
+  if (parsed.preset !== undefined)
+    rawArgs.preset = parsed.preset
+  if (parsed.name !== undefined)
+    rawArgs.name = parsed.name
+  if (parsed.yes !== undefined)
+    rawArgs.yes = parsed.yes
+  if (parsed.install !== undefined)
+    rawArgs.install = parsed.install
+  if (parsed.git !== undefined)
+    rawArgs.git = parsed.git
+  if (parsed.help !== undefined)
+    rawArgs.help = parsed.help
+  if (parsed.version !== undefined)
+    rawArgs.version = parsed.version
+  if (parsed.rollback !== undefined)
+    rawArgs.rollback = parsed.rollback
+
+  return rawArgs
 }
 
 export function parseCliArgs(argv: string[]) {

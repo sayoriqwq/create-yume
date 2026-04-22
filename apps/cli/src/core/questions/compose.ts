@@ -43,10 +43,10 @@ const askProjectNameSafe = Effect.gen(function* () {
     }
 
     if (preferredName && !cli.isInteractive) {
-      return yield* Effect.fail(new SchemaContractError({
+      return yield* new SchemaContractError({
         schema: 'CliArgs',
         message: `Target directory "${targetDir}" already exists. Re-run with --yes to replace it.`,
-      }))
+      })
     }
 
     const confirmRemove = yield* ask(() => askRemoveExisting(name))
@@ -56,10 +56,10 @@ const askProjectNameSafe = Effect.gen(function* () {
     }
 
     if (preferredName) {
-      return yield* Effect.fail(new SchemaContractError({
+      return yield* new SchemaContractError({
         schema: 'CliArgs',
         message: `Target directory "${targetDir}" already exists and was not removed.`,
-      }))
+      })
     }
 
     yield* Effect.logWarning('目录已存在且未选择删除，请重新输入项目名。')
