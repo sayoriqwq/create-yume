@@ -1,5 +1,4 @@
 import type { StandardCommand } from '@effect/platform/Command'
-import type { CommandExecutor } from '@effect/platform/CommandExecutor'
 import type Handlebars from 'handlebars'
 import type { CommandName } from '../../src/brand/command-name'
 import type { TemplatePath } from '../../src/brand/template-path'
@@ -34,8 +33,7 @@ export function makeCommandMockLayer(
 ) {
   return Layer.succeed(CommandService, {
     make: (cmd: CommandName, ...args: string[]) => Command.make(cmd, ...args) as StandardCommand,
-    execute: (_command: StandardCommand): Effect.Effect<string, FileIOError, CommandExecutor> =>
-      Effect.succeed(''),
+    execute: (_command: StandardCommand) => Effect.succeed(''),
     ...overrides,
   })
 }

@@ -1,19 +1,19 @@
 import type { StandardCommand } from '@effect/platform/Command'
-import type { CommandExecutor } from '@effect/platform/CommandExecutor'
 import type { CommandName } from '@/brand/command-name'
 // 借助平台能力，但转化为领域错误
 import { Command } from '@effect/platform'
+import { CommandExecutor } from '@effect/platform/CommandExecutor'
 import { Effect, Option } from 'effect'
 import { CommandError } from '@/types/error'
 
 interface CommandServiceShape {
   readonly make: (cmd: CommandName, ...args: string[]) => StandardCommand
-  // 依赖于 CommandExecutor 来执行
-  readonly execute: (command: StandardCommand) => Effect.Effect<string, CommandError, CommandExecutor>
+  readonly execute: (command: StandardCommand) => Effect.Effect<string, CommandError>
 }
 
 export class CommandService extends Effect.Service<CommandService>()('CommandService', {
   effect: Effect.gen(function* () {
+    const executor = yield* CommandExecutor
     const make: CommandServiceShape['make'] = (cmd, ...args) => {
       const command = Command.make(cmd, ...args)
       // 只有使用 Command.pipeTo 或者 command.pipe 才会导致类型发生变动，暂时没有这种需求
@@ -27,11 +27,14 @@ export class CommandService extends Effect.Service<CommandService>()('CommandSer
 
         const output = yield* Command
           .string(command)
-          .pipe(Effect.mapError(() => new CommandError({
-            command: command.command,
-            args: [...command.args],
-            ...(Option.isSome(command.cwd) ? { cwd: command.cwd.value } : {}),
-          })))
+          .pipe(
+            Effect.provideService(CommandExecutor, executor),
+            Effect.mapError(() => new CommandError({
+              command: command.command,
+              args: [...command.args],
+              ...(Option.isSome(command.cwd) ? { cwd: command.cwd.value } : {}),
+            })),
+          )
 
         // 只有在真正得到结果后再输出
         yield* Effect.logDebug(`Command output: ${output}`)
