@@ -1,6 +1,8 @@
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import { makePackageName } from '@/brand/package-name'
+import { applyReactRouterPackageJson, applyVueRouterPackageJson } from '@/core/owners/router'
+import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { deps, devDeps, scripts, when } from '@/utils/file-helper'
 import { isFrontendProject, isReactProject, isVueProject } from '@/utils/type-guard'
 
@@ -21,7 +23,7 @@ function basePackageJson(config: ProjectConfig) {
 }
 
 export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
-  const entry = dsl.json('package.json')
+  const entry = dsl.json('package.json', contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.JsonTextMutation))
     .base(() => basePackageJson(config))
     .modify(when(config.language === 'typescript', devDeps({ typescript: '^6.0.3' })))
     .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })))
@@ -47,19 +49,18 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
         .modify(when(config.language === 'typescript', devDeps({ '@vue/tsconfig': '^0.9.1' })))
         .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-vue': '^6.0.6', '@vue/compiler-sfc': '^3.5.32' })))
         .modify(deps({ vue: '^3.5.32' }))
-        .modify(when(config.router, deps({ 'vue-router': '^5.0.4' })))
         .modify(when(config.stateManagement, deps({ pinia: '^3.0.4' })))
+      applyVueRouterPackageJson(entry, config)
     }
     else if (isReactProject(config)) {
       entry
         .modify(deps({ 'react': '^19.2.5', 'react-dom': '^19.2.5' }))
         .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-react': '^6.0.1' })))
         .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^3.0.0', 'eslint-plugin-react-hooks': '^7.1.1', 'eslint-plugin-react-refresh': '^0.5.2' })))
-        .modify(when(config.router === 'react-router', deps({ 'react-router': '^7.14.2', 'react-router-dom': '^7.14.2' })))
-        .modify(when(config.router === 'tanstack-router', deps({ '@tanstack/react-router': '^1.168.23' })))
         .modify(when(config.language === 'typescript', devDeps({ '@types/react': '^19.2.14', '@types/react-dom': '^19.2.3' })))
         .modify(when(config.stateManagement === 'zustand', deps({ zustand: '^5.0.12' })))
         .modify(when(config.stateManagement === 'jotai', deps({ jotai: '^2.19.1' })))
+      applyReactRouterPackageJson(entry, config)
     }
 
     entry.sortKeys(true)

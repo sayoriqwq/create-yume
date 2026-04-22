@@ -5,6 +5,10 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
   "tasks": [
     {
       "kind": "copy",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "static-asset-copy",
+      },
       "path": "public/moon-star.svg",
       "src": "/virtual/templates/assets/moon-star.svg",
     },
@@ -23,6 +27,10 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
         "version": "0.0.0",
       },
       "kind": "json",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "json-text-mutation",
+      },
       "path": "package.json",
       "reducers": [
         {
@@ -83,9 +91,10 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
           "reducer": "modify",
         },
         {
-          "reducer": "modify",
-        },
-        {
+          "ownership": {
+            "owner": "router",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
       ],
@@ -93,101 +102,181 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "index.html",
       "src": "/virtual/templates/fragments/common/index.html.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "vite.config.ts",
       "src": "/virtual/templates/fragments/common/vite.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.node.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.node.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.app.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.app.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/vite-env.d.ts",
       "src": "/virtual/templates/fragments/common/ts/vite-env.d.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "eslint.config.mjs",
       "src": "/virtual/templates/fragments/common/linter/eslint.config.mjs.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".vscode/settings.json",
       "src": "/virtual/templates/fragments/common/linter/vscode.settings.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".gitignore",
       "src": "/virtual/templates/fragments/common/gitignore.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "README.md",
       "src": "/virtual/templates/fragments/common/README.md.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/style.scss",
       "src": "/virtual/templates/fragments/common/css/style.css.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "commitlint.config.ts",
       "src": "/virtual/templates/fragments/common/code-quality/commitlint.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".lintstagedrc.json",
       "src": "/virtual/templates/fragments/common/code-quality/.lintstagedrc.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/app.tsx",
       "src": "/virtual/templates/fragments/react/App.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/about.tsx",
       "src": "/virtual/templates/fragments/react/About.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/home.tsx",
       "src": "/virtual/templates/fragments/react/Home.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/components/Counter.tsx",
       "src": "/virtual/templates/fragments/react/Counter.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/stores/counter.ts",
       "src": "/virtual/templates/fragments/react/Counter.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/main.tsx",
       "src": "/virtual/templates/fragments/react/main.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/router/index.tsx",
       "src": "/virtual/templates/fragments/react/router.ts.hbs",
     },
@@ -200,6 +289,10 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
   "tasks": [
     {
       "kind": "copy",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "static-asset-copy",
+      },
       "path": "public/moon-star.svg",
       "src": "/virtual/templates/assets/moon-star.svg",
     },
@@ -218,6 +311,10 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
         "version": "0.0.0",
       },
       "kind": "json",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "json-text-mutation",
+      },
       "path": "package.json",
       "reducers": [
         {
@@ -278,9 +375,10 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
           "reducer": "modify",
         },
         {
-          "reducer": "modify",
-        },
-        {
+          "ownership": {
+            "owner": "router",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
       ],
@@ -288,101 +386,181 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "index.html",
       "src": "/virtual/templates/fragments/common/index.html.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "vite.config.ts",
       "src": "/virtual/templates/fragments/common/vite.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.node.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.node.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.app.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.app.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/vite-env.d.ts",
       "src": "/virtual/templates/fragments/common/ts/vite-env.d.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "eslint.config.mjs",
       "src": "/virtual/templates/fragments/common/linter/eslint.config.mjs.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".vscode/settings.json",
       "src": "/virtual/templates/fragments/common/linter/vscode.settings.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".gitignore",
       "src": "/virtual/templates/fragments/common/gitignore.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "README.md",
       "src": "/virtual/templates/fragments/common/README.md.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/style.less",
       "src": "/virtual/templates/fragments/common/css/style.css.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "commitlint.config.ts",
       "src": "/virtual/templates/fragments/common/code-quality/commitlint.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".lintstagedrc.json",
       "src": "/virtual/templates/fragments/common/code-quality/.lintstagedrc.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/app.tsx",
       "src": "/virtual/templates/fragments/react/App.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/about.tsx",
       "src": "/virtual/templates/fragments/react/About.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/pages/home.tsx",
       "src": "/virtual/templates/fragments/react/Home.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/components/Counter.tsx",
       "src": "/virtual/templates/fragments/react/Counter.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/stores/counter.ts",
       "src": "/virtual/templates/fragments/react/Counter.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "react-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/main.tsx",
       "src": "/virtual/templates/fragments/react/main.tsx.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/router/index.tsx",
       "src": "/virtual/templates/fragments/react/router.ts.hbs",
     },
@@ -395,6 +573,10 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
   "tasks": [
     {
       "kind": "copy",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "static-asset-copy",
+      },
       "path": "public/moon-star.svg",
       "src": "/virtual/templates/assets/moon-star.svg",
     },
@@ -413,6 +595,10 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
         "version": "0.0.0",
       },
       "kind": "json",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "json-text-mutation",
+      },
       "path": "package.json",
       "reducers": [
         {
@@ -467,6 +653,10 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
           "reducer": "modify",
         },
         {
+          "ownership": {
+            "owner": "router",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
       ],
@@ -474,101 +664,181 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "index.html",
       "src": "/virtual/templates/fragments/common/index.html.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "vite.config.ts",
       "src": "/virtual/templates/fragments/common/vite.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.node.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.node.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.app.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.app.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/vite-env.d.ts",
       "src": "/virtual/templates/fragments/common/ts/vite-env.d.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "eslint.config.mjs",
       "src": "/virtual/templates/fragments/common/linter/eslint.config.mjs.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".vscode/settings.json",
       "src": "/virtual/templates/fragments/common/linter/vscode.settings.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".gitignore",
       "src": "/virtual/templates/fragments/common/gitignore.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "README.md",
       "src": "/virtual/templates/fragments/common/README.md.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/style.scss",
       "src": "/virtual/templates/fragments/common/css/style.css.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "commitlint.config.ts",
       "src": "/virtual/templates/fragments/common/code-quality/commitlint.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".lintstagedrc.json",
       "src": "/virtual/templates/fragments/common/code-quality/.lintstagedrc.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/main.ts",
       "src": "/virtual/templates/fragments/vue/main.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/App.vue",
       "src": "/virtual/templates/fragments/vue/App.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/components/Counter.vue",
       "src": "/virtual/templates/fragments/vue/Counter.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/router/index.ts",
       "src": "/virtual/templates/fragments/vue/router.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/views/Home.vue",
       "src": "/virtual/templates/fragments/vue/Home.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/views/About.vue",
       "src": "/virtual/templates/fragments/vue/About.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/stores/counter.ts",
       "src": "/virtual/templates/fragments/vue/counter-store.ts.hbs",
     },
@@ -581,6 +851,10 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
   "tasks": [
     {
       "kind": "copy",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "static-asset-copy",
+      },
       "path": "public/moon-star.svg",
       "src": "/virtual/templates/assets/moon-star.svg",
     },
@@ -599,6 +873,10 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
         "version": "0.0.0",
       },
       "kind": "json",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "json-text-mutation",
+      },
       "path": "package.json",
       "reducers": [
         {
@@ -653,6 +931,10 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
           "reducer": "modify",
         },
         {
+          "ownership": {
+            "owner": "router",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
       ],
@@ -660,101 +942,181 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "index.html",
       "src": "/virtual/templates/fragments/common/index.html.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "vite.config.ts",
       "src": "/virtual/templates/fragments/common/vite.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.node.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.node.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "tsconfig.app.json",
       "src": "/virtual/templates/fragments/common/ts/tsconfig.app.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/vite-env.d.ts",
       "src": "/virtual/templates/fragments/common/ts/vite-env.d.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "eslint.config.mjs",
       "src": "/virtual/templates/fragments/common/linter/eslint.config.mjs.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".vscode/settings.json",
       "src": "/virtual/templates/fragments/common/linter/vscode.settings.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".gitignore",
       "src": "/virtual/templates/fragments/common/gitignore.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "README.md",
       "src": "/virtual/templates/fragments/common/README.md.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "frontend-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/style.less",
       "src": "/virtual/templates/fragments/common/css/style.css.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": "commitlint.config.ts",
       "src": "/virtual/templates/fragments/common/code-quality/commitlint.config.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "workspace-bootstrap",
+        "unit": "fragment-render",
+      },
       "path": ".lintstagedrc.json",
       "src": "/virtual/templates/fragments/common/code-quality/.lintstagedrc.json.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/main.ts",
       "src": "/virtual/templates/fragments/vue/main.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/App.vue",
       "src": "/virtual/templates/fragments/vue/App.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/components/Counter.vue",
       "src": "/virtual/templates/fragments/vue/Counter.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/router/index.ts",
       "src": "/virtual/templates/fragments/vue/router.ts.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/views/Home.vue",
       "src": "/virtual/templates/fragments/vue/Home.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "router",
+        "unit": "fragment-render",
+      },
       "path": "src/views/About.vue",
       "src": "/virtual/templates/fragments/vue/About.vue.hbs",
     },
     {
       "kind": "render",
+      "ownership": {
+        "owner": "vue-scaffold",
+        "unit": "fragment-render",
+      },
       "path": "src/stores/counter.ts",
       "src": "/virtual/templates/fragments/vue/counter-store.ts.hbs",
     },
