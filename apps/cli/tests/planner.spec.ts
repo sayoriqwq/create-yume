@@ -94,3 +94,22 @@ describe('state management ownership boundaries', () => {
     expect(vuePlan.tasks.some(task => task.path === 'src/stores/counter.ts')).toBe(false)
   })
 })
+
+describe('scaffold-family shared frontend policy', () => {
+  it('omits vite-owned files when the build tool is disabled', async () => {
+    const reactPlan = await Effect.runPromise(buildPlanSpec({
+      ...reactPresetProjectConfig,
+      buildTool: 'none',
+    }))
+    const vuePlan = await Effect.runPromise(buildPlanSpec({
+      ...vuePresetProjectConfig,
+      buildTool: 'none',
+    }))
+
+    for (const plan of [reactPlan, vuePlan]) {
+      expect(plan.tasks.some(task => task.path === 'vite.config.ts')).toBe(false)
+      expect(plan.tasks.some(task => task.path === 'src/vite-env.d.ts')).toBe(false)
+      expect(plan.tasks.some(task => task.path === 'tsconfig.node.json')).toBe(false)
+    }
+  })
+})
