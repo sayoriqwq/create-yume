@@ -1,87 +1,117 @@
-# Create Yume 计划总览
+# Create Yume 当前阶段架构计划（Lead）
 
-> 本仓库后续工作分两层：**Infra Tier（基建，blocking）** 必须全部落地后再进入 **Code Tier（代码）**。
-> 新 agent 只看本页就能决定从哪一份 sub-doc 开始，不用再翻历史盘点。
+> 本文是当前 active lead。上一轮已经完成的历史主线计划已归档到
+> [../archive/plan/lead-2026-04-22-completed.md](../archive/plan/lead-2026-04-22-completed.md)。
 
-## 现状快照（2026-04-21）
+## 范围
 
-已落地、无需再写进计划：
+当前阶段只做一件事：把现有“按执行阶段散落的决策”收敛成一套可以长期扩展的 ownership hierarchy，同时保留已经健康的执行内核。
 
-- pnpm catalog 作为全仓库版本单一来源（`pnpm-workspace.yaml`）
-- Effect 3.21 / `@effect/platform` 0.96 / `@effect/platform-node` 0.106
-- OTel tracing layer + DevTools + pretty logger（`apps/cli/src/core/services/tracing.ts`、`apps/cli/src/index.ts`）
-- vitest 已装；已落地 compose helper、planner snapshot、template render snapshot 测试
-- docs 已迁到仓库根 `docs/`；根 `eslint.config.mjs` 已排除 docs
-- `@antfu/eslint-config` 解锁至 8.2.0
-- lobe-commit 集成（`pnpm commit`）
-- `fs.ts` / `planner.ts` 的 `provideService` 作者已决定**保留**以保证类型安全（commit `8107d8d`），不再视为清理项
+这轮计划服务于以下未来方向：
 
-追加快照（2026-04-22）：
-
-- Infra 1 / Infra 2 已在本地 `main` 后续提交中落地。
-- Code Tier Phase 0 基线已完成，归档目录：
-  `/Users/sayori/Desktop/create-yume-phase0-baseline-20260422`。
-- Phase 0 smoke 发现 OTel Node SDK 缺少运行时 peer，已补齐
-  `@opentelemetry/sdk-trace-node` 的 catalog / CLI dependency / lockfile。
-- Phase 1 清理已完成，产物对比目录：
-  `/Users/sayori/Desktop/create-yume-phase1-output-20260422`。
-- Code Tier Phase 2-5 已在本地 `main` 后续提交中落地。
-- [Phase 6 — 文档对齐](../archive/plan/phase-6-docs.md) 已完成；当前主线计划已全部收口。
-
-下面是阶段索引与完成状态。详细的已完成阶段文档已归档到 `docs/archive/plan/`。
-
-## Infra Tier（blocking，先全部完成）
-
-| 阶段    | 名称                        | Sub-doc                                                        | 依赖         | 状态 |
-| ------- | --------------------------- | -------------------------------------------------------------- | ------------ | ---- |
-| Infra 0 | Schema + Brand 契约层       | [infra-0-contracts.md](../archive/plan/infra-0-contracts.md)                 | —            | done |
-| Infra 1 | Runtime 合同（Config/Service/Obs） | [infra-1-runtime.md](../archive/plan/infra-1-runtime.md)              | Infra 0      | done |
-| Infra 2 | 生命周期 + 测试基建          | [infra-2-lifecycle-testing.md](../archive/plan/infra-2-lifecycle-testing.md) | Infra 1      | done |
-| Infra 3 | Agent 执行合同（AGENTS/verify）| [infra-3-agent-contract.md](../archive/plan/infra-3-agent-contract.md)    | 可并行       | done |
-
-> `effect-foundation-plan.md` 原单文件计划已归档为指针文档。
-
-## Code Tier（blocked on Infra Tier）
-
-| 阶段    | 名称                   | 风险 | Sub-doc                                      | 状态 |
-| ------- | ---------------------- | ---- | -------------------------------------------- | ---- |
-| Phase 0 | 准备 & 基线            | 无   | [phase-0-baseline.md](../archive/plan/phase-0-baseline.md) | done |
-| Phase 1 | 清理（零行为变更）     | 低   | [phase-1-cleanup.md](../archive/plan/phase-1-cleanup.md)   | done |
-| Phase 2 | 风格 & 正确性          | 低   | [phase-2-style.md](../archive/plan/phase-2-style.md)       | done |
-| Phase 3 | 模板版本刷新           | 中   | [phase-3-deps.md](../archive/plan/phase-3-deps.md)         | done |
-| Phase 4 | 功能扩展（mri + 回滚） | 中   | [phase-4-features.md](../archive/plan/phase-4-features.md) | done |
-| Phase 5 | 测试 fixture / snapshot | 中   | [phase-5-tests.md](../archive/plan/phase-5-tests.md)       | done |
-| Phase 6 | 文档对齐               | 无   | [phase-6-docs.md](../archive/plan/phase-6-docs.md)         | done |
-
-Code 阶段内部依赖：Phase 0 → 1 → (2 ∥ 3) → 4 → 5 → 6。
-
-## 贯穿两层的一致性约束
-
-- 所有新增 Effect Service 必须走 Infra 1 的模板，不再手写 `Context.Tag + Layer.effect`。
-- 所有外部输入（CLI flags、JSON 读入、问答结果）必须走 Infra 0 的 Schema decode。
-- 关键标识（`ProjectName` / `TargetDir` / `TemplatePath` / `PackageName` / `CommandName`）禁止裸 `string`。
-- 资源型副作用必须 scoped（Infra 2）。
-- 只有入口模块可以 `runMain` / `runPromise`，其余只返回 `Effect`。
-- 改代码走 `pnpm verify`；改 docs 不做自动检查，只人工 review（[infra-3-agent-contract.md](../archive/plan/infra-3-agent-contract.md) C 节选 C）。
-
-## 端到端验证模板（Code Tier 每阶段执行）
-
-```bash
-pnpm --filter create-yume build
-# 当前 tsdown 产物实际是 apps/cli/dist/index.js（入口一致性见 Infra 3 B）
-node apps/cli/dist/index.js
-# 分别手跑 preset react-app / vue-app，产物归档到仓库外作为 diff 基线
-```
-
-Phase 5 之后额外：`pnpm verify`。
-Phase 6 结束时对比 Phase 0 的 baseline 产物：**除依赖版本和 partial 路径外，其余应无 diff**。
+- `node`
+- monorepo / workspace
+- CLI setup
+- 更强的 traceability
+- 更强的 self-maintainability
+- 未来 agent-assisted / agent-autonomous template maintenance
 
 ## 非目标
 
-以下不纳入本轮计划，如需后续单独立项：
+- 立即引入插件系统
+- 重写 planner / template engine / rollback
+- 直接开始实现 `node` / monorepo
+- 一次性迁移多个 capability owner
 
-- 远程模板拉取 / 模板版本化
-- 插件化 DSL 操作注册
-- 对已有项目做增量 diff 更新
-- 可视化配置界面
-- 引入 `@effect/cluster` / `@effect/rpc` / `@effect/sql` / `@effect/workflow` 到主路径
+## 当前基线
+
+- 上一轮 Infra / Code Tier 主线已完成并归档，不再重开。
+- 当前实现仍以 React / Vue scaffold 为主。
+- `fs.ts` / `planner.ts` 中为类型安全保留的 `provideService` 决策，不作为本轮清理目标。
+- docs-only 变更继续按 [docs/verification-matrix.md](../verification-matrix.md) 走人工校对。
+
+## 原则
+
+1. 保留 proven core：`PlanService`、`PlanSpec`、`TemplateEngineService`、`FsService`、rollback 不是重写目标。
+2. 自上而下建立 ownership：preserved core -> scaffold-family -> workspace/bootstrap -> capability owner。
+3. 先定义 contribution units，再定义 owner contract。
+4. 先过安全 gate，再开始迁移。
+5. 先用一个 pilot owner 证明模型，再决定是否扩展。
+
+## 决策驱动
+
+1. 未来扩展到 `node` / monorepo / setup 时，不能继续放大 cross-cutting edits。
+2. 计划、执行、路径归属和 bootstrap 副作用必须更可追溯。
+3. 模板 / 依赖 / breaking API 的后续维护必须能局部归属，而不是继续散落。
+
+## 备选方案
+
+| 方案 | 结论 | 优点 | 缺点 |
+| --- | --- | --- | --- |
+| A. 保持 stage-oriented，只做局部清理 | 不选 | 变更最小 | 根因不动，后续扩展继续横向扩散 |
+| B. 在现有 pipeline 上增量引入 layered ownership | 选中 | 解决 root cause，又不推翻现有执行内核 | 有一段 old/new 共存过渡期 |
+| C. 立即上完整插件系统 | 不选 | 理论上最强扩展性 | 当前仓库过度设计，验证和迁移成本过高 |
+
+## 选型
+
+选择 **B. layered ownership over existing pipeline**。
+
+执行含义：
+
+- 外层执行链路继续保留。
+- 先把 hierarchy、contribution units 和 foundation gates 定死。
+- 第一个 proof 只做 `router`。
+
+## Ownership Layer Model
+
+1. Preserved Core
+2. Scaffold-Family Owner
+3. Workspace/Bootstrap Owner
+4. Capability Owner
+
+详细定义见：[ownership-model.md](./ownership-model.md)。
+
+## Hard Pre-Migration Gates
+
+在 docs 和 code 两边，以下三项全部完成前，不允许开始 owner migration：
+
+1. `CommandService.execute` 边界闭包
+2. planner path ownership guardrail
+3. runtime / config semantic cleanup
+
+详细定义见：[foundation-gates.md](./foundation-gates.md)。
+
+## Named Pilot Owner
+
+当前阶段唯一 pilot owner：`router`
+
+详细说明见：[pilot-router-owner.md](./pilot-router-owner.md)。
+
+## 执行顺序
+
+1. [ownership-model.md](./ownership-model.md)
+2. [contribution-units.md](./contribution-units.md)
+3. [foundation-gates.md](./foundation-gates.md)
+4. [scaffold-and-workspace-owners.md](./scaffold-and-workspace-owners.md)
+5. [pilot-router-owner.md](./pilot-router-owner.md)
+6. [verification-rollout.md](./verification-rollout.md)
+
+## 全局验收标准
+
+1. active `docs/plan/lead.md` 只保留前瞻性架构计划，历史完成内容只留在 archive。
+2. `docs/plan/` 必须包含本轮固定的 7 个文件，不允许为了补结构空洞再发明新的核心计划文档。
+3. ownership hierarchy 必须完整出现，不能直接跳到 capability owner。
+4. contribution units 必须先于 owner contract 定义。
+5. 三个 hard gates 必须有 done 条件，并明确写明“不完成不迁移”。
+6. 当前阶段只能有一个 pilot owner：`router`。
+7. 验证策略必须绑定现有仓库的验证矩阵，而不是泛泛地写“跑测试”。
+
+## 验证映射
+
+- docs-only：人工校对
+- planner / registry 变化：`pnpm --filter create-yume test`
+- template engine / helper / partial 变化：`pnpm --filter create-yume test`
+- `package-json` 变化：`pnpm --filter create-yume build` + 产物检查
+- 混合 runtime / template / config 变化：`pnpm verify`
+
+后续代码执行顺序与 stop/go 条件见：[verification-rollout.md](./verification-rollout.md)。
