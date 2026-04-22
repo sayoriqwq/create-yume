@@ -1,38 +1,66 @@
-# create-yume 模板可用 & 推荐 Handlebars Helpers 速查
+# create-yume 当前 Handlebars Helper 说明
 
-> 精选自 `handlebars-helpers` 包（及 Handlebars 内置），只列出在本项目脚手架场景“真正可能用到 / 已使用”的子集，并给出在 React 模板重构中的应用示例。避免 180+ helper 的噪音。
+> 当前仓库**没有**引入 `handlebars-helpers` 这个第三方包。模板里可用的自定义 helper 只来自 [`apps/cli/src/core/services/template-helpers.ts`](/Users/sayori/Desktop/create-yume/apps/cli/src/core/services/template-helpers.ts)，目前一共 3 个。
 
-## 1. 比较与逻辑类（核心）
-| Helper | 作用 | 典型用法 |
-| ------ | ---- | -------- |
-| `eq` | 严格相等 | `{{#if (eq config.router 'react-router')}}...{{/if}}` |
-| `or` | 多条件或 | `{{or condA condB}}` -> 只要有一个 truthy 返回第一个 truthy 值（用于布尔） |
-| `and` | 多条件且 | `{{and condA condB}}` |
-| `not` | 取反（falsey 判断） | `{{#if (not config.stateManagement)}}/* no state mgmt */{{/if}}` |
-| `contains` | 集合 / 字符串包含 | `{{#if (contains list 'react')}}` |
-| `compare` | 自定义操作符 | `{{#compare count ">" 0}}...{{/compare}}`（必要时再用） |
-| `unlessEq` | `a !== b` 快捷（块反向） | `{{#unlessEq config.language 'typescript'}}...{{/unlessEq}}` |
+## 当前实现
 
-> 说明：`is` / `isnt` 是宽松相等，不建议在生成代码的确定性判断里使用；优先 `eq`。
+模板引擎在 [`apps/cli/src/core/services/template-engine.ts`](/Users/sayori/Desktop/create-yume/apps/cli/src/core/services/template-engine.ts) 中创建独立的 Handlebars 实例，并在渲染前注册 helper。当前自定义 helper 如下：
 
-## 2. 上下文与结构辅助
-| Helper | 作用 | 示例 |
-| ------ | ---- | ---- |
-| `withHash` | 构造一个临时上下文（本次重构重点） | `{{#withHash hasRouter=(or (eq a 'x') (eq a 'y'))}} ... {{/withHash}}` |
-| `isEmpty` | 判空数组/对象/字符串 | 控制可选片段输出 |
-| `option` | 读取 `options.hash` 中的值（一般不直接用） | - |
-| `noop` | 空渲染（占位） | - |
+| Helper | 作用 | 当前语义 |
+| --- | --- | --- |
+| `eq` | 严格相等判断 | `left === right` |
+| `or` | 返回第一个 truthy 值 | 常用于 `#if` 条件或给 `withHash` 生成派生值 |
+| `withHash` | 给当前块扩展一个临时作用域 | 会保留父级上下文，再把 `options.hash` 合并进去 |
 
-## 3. 数组 / 迭代（潜在扩展）
-| Helper | 作用 | 可能场景 |
-| ------ | ---- | -------- |
-| `forEach` | 迭代数组并暴露 `index`、`isFirst`、`isLast` | 批量生成多框架入口、批量依赖声明 |
-| `map` / `pluck` | 派生数组 | 复杂派生需求时（当前暂不需要） |
-| `some` | 条件存在性 | 未来动态 feature flags 汇总 |
+## 使用约定
 
-## 4. 字符串（如需命名转换时）
-| Helper | 作用 | 示例 |
-| ------ | ---- | ---- |
-| `camelcase` / `pascalcase` | 命名风格转换 | 组件/变量命名派生 |
-| `dashcase` / `snakecase` | 转不同分隔格式 | 包名、文件名生成 |
-| `trim` / `replace` | 基础清理替换 | 动态注释内容处理 |
+- 模板渲染时会把项目配置注入到 `@config`，所以分支判断通常写成 `{{#if (eq @config.xxx 'value')}}...{{/if}}`。
+- `or` 不是单纯返回布尔值，而是返回第一个 truthy 操作数；如果都为 falsy，则返回最后一个值。
+- `withHash` 适合把重复判断结果提升成局部变量，避免在同一个模板里反复写一长串条件。
+- Handlebars 内置语法，例如 `if`、`unless`、`each`、partial 引用，不在这份文档里展开。
+
+## 真实示例
+
+### `eq`
+
+```hbs
+{{#if (eq @config.language 'typescript')}}
+export type AppConfig = {}
+{{else}}
+export {}
+{{/if}}
+```
+
+### `or`
+
+```hbs
+{{#if (or (eq @config.router 'react-router') (eq @config.router 'tanstack-router'))}}
+router
+{{else}}
+app
+{{/if}}
+```
+
+### `withHash`
+
+```hbs
+{{#withHash hasRouter=(or (eq @config.router 'react-router') (eq @config.router 'tanstack-router'))}}
+  {{#if hasRouter}}
+    // render router-specific fragment
+  {{/if}}
+{{/withHash}}
+```
+
+## 不再适用的口径
+
+下面这些说法都不再符合当前仓库现状：
+
+- “本项目精选使用了 `handlebars-helpers` 的一部分能力”
+- “还推荐保留一些潜在可用 helper，未来再用”
+- “当前模板里可以直接使用 `and`、`not`、`contains`、命名转换等 helper”
+
+如果未来新增 helper，需要同时更新：
+
+- [`apps/cli/src/core/services/template-helpers.ts`](/Users/sayori/Desktop/create-yume/apps/cli/src/core/services/template-helpers.ts)
+- [`apps/cli/src/core/services/template-helpers.test.ts`](/Users/sayori/Desktop/create-yume/apps/cli/src/core/services/template-helpers.test.ts)
+- 本文档

@@ -4,7 +4,7 @@
 
 ## 目的
 
-让 `README.md` / `docs/overview.md` / `docs/status.md` 三方口径一致，与清理后的代码匹配。
+让 `README.md` / `docs/overview.md` / `docs/archive/status.md` 三方口径一致，与清理后的代码匹配。
 
 > **注意**：docs 已在基建阶段迁到仓库根 `docs/`（不再是 `apps/docs/`）。本阶段所有路径都以 `docs/` 为准。
 
@@ -29,12 +29,12 @@
 - [x] §10 限制表：把 Phase 4-A / 4-B / Phase 5 已完成项删除或改为 ✅；剩余项与 Infra / Code Tier 对齐
 - [x] §11 演进路线：把已完成项标注 ✅ 或移除，把未完成项按新优先级重排
 
-### `docs/status.md`
+### `docs/archive/status.md`
 
 - 当前已加 snapshot banner。本阶段 **不修改 status.md 正文**（它是历史档案）。
 - [x] 仅确认 banner 指向 `plan/lead.md` 仍然有效。
 
-### `docs/agent-foundation-assessment.md`
+### `docs/archive/agent-foundation-assessment.md`
 
 - [x] 确认状态头指向 `plan/infra-3-agent-contract.md` 仍然有效
 - [x] 若 Infra 3 的 `AGENTS.md` 已落地，把 §5.1 A 标 ✅

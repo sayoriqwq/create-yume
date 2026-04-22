@@ -4,7 +4,7 @@
 >
 > **状态**：本文件是**一次性评估快照**，不再作为执行指南。
 > 可执行项已迁入 [docs/archive/plan/infra-3-agent-contract.md](./archive/plan/infra-3-agent-contract.md)。
-> 新 agent 请从 [docs/plan/lead.md](./plan/lead.md) 进入。
+> 新 agent 请从 [docs/plan/lead.md](../plan/lead.md) 进入。
 >
 > 已落地（对比评估时）：
 > - docs 已迁到仓库根 `docs/`，根 `eslint.config.mjs` 已排除 docs（§5.1 D 部分完成）
@@ -58,7 +58,7 @@
 
 - [overview.md](./overview.md)：架构总览
 - [status.md](./status.md)：现状盘点
-- [plan/lead.md](./plan/lead.md) 及各 phase 文档：后续工作拆分
+- [plan/lead.md](../plan/lead.md) 及各 phase 文档：后续工作拆分
 - [pnpm-monorepo.md](./pnpm-monorepo.md)：workspace 约定
 - [handlebars-helpers.md](./handlebars-helpers.md)：模板 helper 参考
 
