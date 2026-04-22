@@ -31,10 +31,18 @@ describe('collectPartialEntries', () => {
       {
         dir: makeTemplatePath(path.join(partialRoot, 'react')),
         namespace: 'react',
+        ownership: {
+          owner: 'react-scaffold',
+          unit: 'partial-namespace',
+        },
       },
       {
         dir: makeTemplatePath(path.join(partialRoot, 'global')),
         namespace: 'global',
+        ownership: {
+          owner: 'frontend-scaffold',
+          unit: 'partial-namespace',
+        },
       },
     ])
   })
@@ -58,10 +66,18 @@ describe('collectPartialEntries', () => {
       {
         dir: makeTemplatePath(path.join(partialRoot, 'vue')),
         namespace: 'vue',
+        ownership: {
+          owner: 'vue-scaffold',
+          unit: 'partial-namespace',
+        },
       },
       {
         dir: makeTemplatePath(path.join(partialRoot, 'global')),
         namespace: 'global',
+        ownership: {
+          owner: 'frontend-scaffold',
+          unit: 'partial-namespace',
+        },
       },
     ])
   })

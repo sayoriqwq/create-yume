@@ -1,3 +1,5 @@
+import type { ContributionTrace } from '@/core/ownership/model'
+
 export type GenerateTask = RenderTask | CopyTask
 export type ModifyTask = JsonTask | TextTask
 export type Task = GenerateTask | ModifyTask
@@ -5,6 +7,7 @@ export type Task = GenerateTask | ModifyTask
 interface ITask {
   kind: 'render' | 'copy' | 'json' | 'text'
   path: string
+  ownership?: ContributionTrace
 }
 
 export interface RenderTask extends ITask {

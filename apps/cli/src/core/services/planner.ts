@@ -111,6 +111,7 @@ export function toPlanSpec(plan: Plan): PlanSpec {
             path: task.path,
             src: makeTemplatePath(task.src),
             ...(data !== undefined ? { data } : {}),
+            ...(task.ownership ? { ownership: task.ownership } : {}),
           }
         }
         case 'copy':
@@ -118,6 +119,7 @@ export function toPlanSpec(plan: Plan): PlanSpec {
             kind: 'copy',
             path: task.path,
             src: makeTemplatePath(task.src),
+            ...(task.ownership ? { ownership: task.ownership } : {}),
           }
         case 'json': {
           const base = task.base ? toJsonLiteral(task.base()) : undefined
@@ -125,6 +127,7 @@ export function toPlanSpec(plan: Plan): PlanSpec {
           return {
             kind: 'json',
             path: task.path,
+            ...(task.ownership ? { ownership: task.ownership } : {}),
             ...(task.readExisting !== undefined ? { readExisting: task.readExisting } : {}),
             ...(task.sortKeys !== undefined ? { sortKeys: task.sortKeys } : {}),
             ...(base !== undefined ? { base } : {}),
@@ -140,6 +143,7 @@ export function toPlanSpec(plan: Plan): PlanSpec {
           return {
             kind: 'text',
             path: task.path,
+            ...(task.ownership ? { ownership: task.ownership } : {}),
             ...(task.readExisting !== undefined ? { readExisting: task.readExisting } : {}),
             ...(base !== undefined ? { base } : {}),
             transforms: task.transforms.map((transform) => {
@@ -181,8 +185,8 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
       Effect.sync<Plan>(() => {
         const tasks: Task[] = []
 
-        const json: ComposeDSL['json'] = (path) => {
-          const task: JsonTask = { kind: 'json', path, reducers: [] }
+        const json: ComposeDSL['json'] = (path, ownership) => {
+          const task: JsonTask = { kind: 'json', path, reducers: [], ...(ownership ? { ownership } : {}) }
           tasks.push(task)
           const builder: JsonBuilder = {
             readExisting(flag) {
@@ -203,28 +207,31 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
               task.base = fn
               return builder
             },
-            merge(patch) {
+            merge(patch, ownership) {
               const input = typeof patch === 'function' ? undefined : toJsonLiteral(patch)
               const reducer = annotateOperation((draft: Record<string, unknown>) => {
                 const obj = typeof patch === 'function' ? patch(draft) : patch
                 Object.assign(draft, obj)
               }, {
                 reducer: typeof patch === 'function' ? patch.name || 'merge' : 'merge',
+                ...(ownership ? { ownership } : {}),
                 ...(input !== undefined ? { input } : {}),
               })
               task.reducers.push(reducer)
               return builder
             },
-            modify(fn) {
+            modify(fn, ownership) {
               task.reducers.push(annotateOperation(fn, {
                 reducer: fn.name || 'modify',
+                ...(ownership ? { ownership } : {}),
               }))
               return builder
             },
 
-            finalize(fn) {
+            finalize(fn, ownership) {
               task.finalize = annotateOperation(fn, {
                 reducer: fn.name || 'finalize',
+                ...(ownership ? { ownership } : {}),
               })
               return builder
             },
@@ -233,8 +240,8 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
           return builder
         }
 
-        const text: ComposeDSL['text'] = (path) => {
-          const task: TextTask = { kind: 'text', path, transforms: [] }
+        const text: ComposeDSL['text'] = (path, ownership) => {
+          const task: TextTask = { kind: 'text', path, transforms: [], ...(ownership ? { ownership } : {}) }
           tasks.push(task)
           const builder: TextBuilder = {
             readExisting(flag) {
@@ -248,9 +255,10 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
               task.base = fn
               return builder
             },
-            transform(fn) {
+            transform(fn, ownership) {
               task.transforms.push(annotateOperation(fn, {
                 reducer: fn.name || 'transform',
+                ...(ownership ? { ownership } : {}),
               }))
               return builder
             },
@@ -259,12 +267,12 @@ export class PlanService extends Effect.Service<PlanService>()('PlanService', {
           return builder
         }
 
-        const render: ComposeDSL['render'] = (src, path, data) => {
-          tasks.push({ kind: 'render', src, path, data })
+        const render: ComposeDSL['render'] = (src, path, data, ownership) => {
+          tasks.push({ kind: 'render', src, path, ...(data !== undefined ? { data } : {}), ...(ownership ? { ownership } : {}) })
         }
 
-        const copy: ComposeDSL['copy'] = (src, path) => {
-          tasks.push({ kind: 'copy', src, path })
+        const copy: ComposeDSL['copy'] = (src, path, ownership) => {
+          tasks.push({ kind: 'copy', src, path, ...(ownership ? { ownership } : {}) })
         }
 
         program({ json, text, render, copy })

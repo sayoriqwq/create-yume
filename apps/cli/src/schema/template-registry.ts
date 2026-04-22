@@ -1,10 +1,13 @@
 import type { TemplatePath } from '../brand/template-path'
+import type { ContributionTrace } from '@/core/ownership/model'
 import { ParseResult, Schema } from 'effect'
 import { TemplatePathSchema } from '../brand/template-path'
+import { ContributionTraceSchema } from './plan-spec'
 
 export const TemplateRegistryEntryDeclarationSchema = Schema.Struct({
   target: Schema.String,
   template: TemplatePathSchema,
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
 }).annotations({
   identifier: 'TemplateRegistryEntryDeclaration',
   title: 'TemplateRegistryEntryDeclaration',
@@ -19,6 +22,7 @@ export interface TemplateRegistryEntry<T> {
   readonly template: TemplatePath
   readonly target: TemplateRegistryTarget<T>
   readonly condition: TemplateRegistryCondition<T>
+  readonly ownership?: ContributionTrace
 }
 
 export type TemplateRegistry<T> = Record<string, TemplateRegistryEntry<T>>

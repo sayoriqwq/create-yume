@@ -1,6 +1,25 @@
 import { ParseResult, Schema } from 'effect'
 import { TemplatePathSchema } from '../brand/template-path'
 
+export const ContributionUnitKindSchema = Schema.Literal(
+  'fragment-render',
+  'partial-namespace',
+  'json-text-mutation',
+  'static-asset-copy',
+  'post-generate-command',
+).annotations({
+  identifier: 'ContributionUnitKind',
+  title: 'ContributionUnitKind',
+})
+
+export const ContributionTraceSchema = Schema.Struct({
+  owner: Schema.String,
+  unit: ContributionUnitKindSchema,
+}).annotations({
+  identifier: 'ContributionTrace',
+  title: 'ContributionTrace',
+})
+
 export type JsonLiteral
   = | string
     | number
@@ -25,6 +44,7 @@ export const JsonLiteralSchema: Schema.Schema<JsonLiteral> = Schema.suspend((): 
 
 export const PlanOperationSpecSchema = Schema.Struct({
   reducer: Schema.String,
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
   input: Schema.optionalWith(JsonLiteralSchema, { exact: true }),
 }).annotations({
   identifier: 'PlanOperationSpec',
@@ -36,6 +56,7 @@ export const RenderTaskSpecSchema = Schema.Struct({
   path: Schema.String,
   src: TemplatePathSchema,
   data: Schema.optionalWith(JsonLiteralSchema, { exact: true }),
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
 }).annotations({
   identifier: 'RenderTaskSpec',
   title: 'RenderTaskSpec',
@@ -45,6 +66,7 @@ export const CopyTaskSpecSchema = Schema.Struct({
   kind: Schema.Literal('copy'),
   path: Schema.String,
   src: TemplatePathSchema,
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
 }).annotations({
   identifier: 'CopyTaskSpec',
   title: 'CopyTaskSpec',
@@ -53,6 +75,7 @@ export const CopyTaskSpecSchema = Schema.Struct({
 export const JsonTaskSpecSchema = Schema.Struct({
   kind: Schema.Literal('json'),
   path: Schema.String,
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
   readExisting: Schema.optionalWith(Schema.Boolean, { exact: true }),
   sortKeys: Schema.optionalWith(Schema.Boolean, { exact: true }),
   base: Schema.optionalWith(JsonLiteralSchema, { exact: true }),
@@ -66,6 +89,7 @@ export const JsonTaskSpecSchema = Schema.Struct({
 export const TextTaskSpecSchema = Schema.Struct({
   kind: Schema.Literal('text'),
   path: Schema.String,
+  ownership: Schema.optionalWith(ContributionTraceSchema, { exact: true }),
   readExisting: Schema.optionalWith(Schema.Boolean, { exact: true }),
   base: Schema.optionalWith(Schema.String, { exact: true }),
   transforms: Schema.Array(PlanOperationSpecSchema),
@@ -92,6 +116,8 @@ export const PlanSpecSchema = Schema.Struct({
 })
 
 export type PlanOperationSpec = Schema.Schema.Type<typeof PlanOperationSpecSchema>
+export type ContributionUnitKindSpec = Schema.Schema.Type<typeof ContributionUnitKindSchema>
+export type ContributionTraceSpec = Schema.Schema.Type<typeof ContributionTraceSchema>
 export type RenderTaskSpec = Schema.Schema.Type<typeof RenderTaskSpecSchema>
 export type CopyTaskSpec = Schema.Schema.Type<typeof CopyTaskSpecSchema>
 export type JsonTaskSpec = Schema.Schema.Type<typeof JsonTaskSpecSchema>

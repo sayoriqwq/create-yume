@@ -1,6 +1,7 @@
 import type { StandardCommand } from '@effect/platform/Command'
 import type { TargetDir } from '@/brand/target-dir'
 import type { TemplatePath } from '@/brand/template-path'
+import type { ContributionTrace } from '@/core/ownership/model'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import type { TemplateRegistry } from '@/types/template'
@@ -9,6 +10,13 @@ import { Command } from '@effect/platform'
 import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
+import {
+  contributionTrace,
+  ContributionUnitKind,
+  FrontendScaffoldOwner,
+  ReactScaffoldOwner,
+  VueScaffoldOwner,
+} from '@/core/ownership/model'
 import { isReactProject, isVueProject } from '@/utils/type-guard'
 import { CliContext } from '../cli-context'
 import { buildCommands } from '../commands'
@@ -26,7 +34,7 @@ export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, conf
         continue
       const target = typeof item.target === 'string' ? item.target : item.target(config as T)
       const src = makeTemplatePath(path.join(templateRoot, item.template))
-      dsl.render(src, target)
+      dsl.render(src, target, undefined, item.ownership)
     }
   }
   if (isVueProject(config))
@@ -36,13 +44,23 @@ export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, conf
 }
 
 // 返回需要注册的 partial 目录（供调用方自行调用 templateEngine.registerPartials）
+export interface PartialEntry {
+  readonly dir: TemplatePath
+  readonly namespace: string
+  readonly ownership: ContributionTrace
+}
+
+function partialNamespace(owner: typeof ReactScaffoldOwner | typeof VueScaffoldOwner | typeof FrontendScaffoldOwner) {
+  return contributionTrace(owner, ContributionUnitKind.PartialNamespace)
+}
+
 export function collectPartialEntries(config: ProjectConfig, partialRoot: TemplatePath) {
-  const entries: Array<{ dir: TemplatePath, namespace: string }> = []
+  const entries: PartialEntry[] = []
   if (isVueProject(config))
-    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'vue')), namespace: 'vue' })
+    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'vue')), namespace: 'vue', ownership: partialNamespace(VueScaffoldOwner) })
   if (isReactProject(config))
-    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'react')), namespace: 'react' })
-  entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'global')), namespace: 'global' })
+    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'react')), namespace: 'react', ownership: partialNamespace(ReactScaffoldOwner) })
+  entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'global')), namespace: 'global', ownership: partialNamespace(FrontendScaffoldOwner) })
   return entries
 }
 
