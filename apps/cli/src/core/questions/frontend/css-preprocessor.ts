@@ -1,13 +1,11 @@
 import type { CSSPreprocessor } from '@/types/project'
 import { select } from '@clack/prompts'
+import { sharedFrontendQuestionContracts } from '@/core/template-registry/frontend-app'
 
 export async function askCSSPreprocessor() {
+  const contract = sharedFrontendQuestionContracts.cssPreprocessor
   return await select<CSSPreprocessor>({
-    message: 'Choose a CSS preprocessor:',
-    options: [
-      { value: 'css', label: 'CSS' },
-      { value: 'less', label: 'Less' },
-      { value: 'sass', label: 'Sass/SCSS' },
-    ],
+    message: contract.message,
+    options: [...contract.options],
   })
 }

@@ -1,12 +1,11 @@
 import type { BuildTool } from '@/types/project'
 import { select } from '@clack/prompts'
+import { sharedFrontendQuestionContracts } from '@/core/template-registry/frontend-app'
 
 export async function askBuildTool() {
+  const contract = sharedFrontendQuestionContracts.buildTool
   return await select<BuildTool>({
-    message: 'choose build tool:',
-    options: [
-      { value: 'vite', label: 'vite' },
-      { value: 'none', label: 'none' },
-    ],
+    message: contract.message,
+    options: [...contract.options],
   })
 }

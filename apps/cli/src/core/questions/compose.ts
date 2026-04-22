@@ -1,5 +1,6 @@
 import type { CodeQuality } from '@/types/config'
 import { Effect, ParseResult } from 'effect'
+import { getSharedFrontendPresetDefaults } from '@/core/template-registry/frontend-app'
 import { decodeProjectConfig, formatProjectConfigError } from '@/schema/project-config'
 import { SchemaContractError } from '@/types/error'
 import { isNone } from '@/utils/none'
@@ -138,6 +139,7 @@ const createPreset = Effect.gen(function* () {
 
   switch (preset) {
     case 'react-app': {
+      const frontend = getSharedFrontendPresetDefaults('react-app')
       return {
         name,
         type: 'react',
@@ -145,14 +147,13 @@ const createPreset = Effect.gen(function* () {
         git,
         linting: 'antfu-eslint',
         codeQuality,
-        buildTool: 'vite',
+        ...frontend,
         router: 'react-router',
         stateManagement: 'jotai',
-        cssPreprocessor: 'less',
-        cssFramework: 'tailwind',
       }
     }
     case 'vue-app': {
+      const frontend = getSharedFrontendPresetDefaults('vue-app')
       return {
         name,
         type: 'vue',
@@ -160,11 +161,9 @@ const createPreset = Effect.gen(function* () {
         git,
         linting: 'antfu-eslint',
         codeQuality,
-        buildTool: 'vite',
+        ...frontend,
         router: true,
         stateManagement: true,
-        cssPreprocessor: 'less',
-        cssFramework: 'tailwind',
       }
     }
     default:

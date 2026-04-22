@@ -4,12 +4,11 @@ import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, ReactScaffoldOwner } from '@/core/ownership/model'
 import { ReactRouterAboutTemplate, ReactRouterIndexTemplate } from '../owners/router'
 import { ReactCounterStoreTemplate } from '../owners/state-management'
-import { commonTemplates } from './frontend-app'
+import { assembleFrontendFamilyTemplates } from './frontend-app'
 
 const reactFragmentRender = contributionTrace(ReactScaffoldOwner, ContributionUnitKind.FragmentRender)
 
-export const ReactTemplates: TemplateRegistry<ReactProjectConfig> = {
-  ...commonTemplates,
+const reactFamilyTemplates: TemplateRegistry<ReactProjectConfig> = {
   'App.tsx': {
     template: makeTemplatePath('fragments/react/App.tsx.hbs'),
     target: config => `src/pages/app.${config.language === 'typescript' ? 'tsx' : 'jsx'}`,
@@ -44,3 +43,5 @@ export const ReactTemplates: TemplateRegistry<ReactProjectConfig> = {
 
   'router.ts': ReactRouterIndexTemplate,
 }
+
+export const ReactTemplates: TemplateRegistry<ReactProjectConfig> = assembleFrontendFamilyTemplates(reactFamilyTemplates)

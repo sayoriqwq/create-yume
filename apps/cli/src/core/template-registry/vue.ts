@@ -4,12 +4,11 @@ import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, VueScaffoldOwner } from '@/core/ownership/model'
 import { VueRouterAboutTemplate, VueRouterIndexTemplate } from '../owners/router'
 import { VueCounterStoreTemplate } from '../owners/state-management'
-import { commonTemplates } from './frontend-app'
+import { assembleFrontendFamilyTemplates } from './frontend-app'
 
 const vueFragmentRender = contributionTrace(VueScaffoldOwner, ContributionUnitKind.FragmentRender)
 
-export const VueTemplates: TemplateRegistry<VueProjectConfig> = {
-  ...commonTemplates,
+const vueFamilyTemplates: TemplateRegistry<VueProjectConfig> = {
   'main.ts': {
     template: makeTemplatePath('fragments/vue/main.ts.hbs'),
     target: config => `src/main.${config.language === 'typescript' ? 'ts' : 'js'}`,
@@ -44,3 +43,5 @@ export const VueTemplates: TemplateRegistry<VueProjectConfig> = {
 
   'counter-store.ts': VueCounterStoreTemplate,
 }
+
+export const VueTemplates: TemplateRegistry<VueProjectConfig> = assembleFrontendFamilyTemplates(vueFamilyTemplates)
