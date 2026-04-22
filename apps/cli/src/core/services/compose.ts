@@ -1,19 +1,16 @@
 import type { StandardCommand } from '@effect/platform/Command'
 import type { TargetDir } from '@/brand/target-dir'
 import type { TemplatePath } from '@/brand/template-path'
-import type { PostGenerateCommand } from '@/core/commands'
 import type { ContributionTrace } from '@/core/ownership/model'
-import type { PlanSpec } from '@/schema/plan-spec'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
-import type { Plan } from '@/types/task'
+import type { Plan, PostGenerateCommand } from '@/types/task'
 import type { TemplateRegistry } from '@/types/template'
 import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
-import { toPostGenerateCommandSpec } from '@/core/commands'
 import {
   contributionTrace,
   ContributionUnitKind,
@@ -75,21 +72,18 @@ export function generateProject(projectConfig: ProjectConfig) {
     const cli = yield* CliContext
     const orchestrator = yield* OrchestratorService
     const targetDir = makeTargetDir(`./${projectConfig.name}`)
-    return yield* orchestrator.execute(targetDir, projectConfig, {
+    const plan = yield* orchestrator.execute(targetDir, projectConfig, {
       rollbackOnFailure: cli.args.rollback ?? true,
     })
+    const postGenerateCommands = yield* buildCommands(projectConfig)
+    return {
+      ...plan,
+      ...(postGenerateCommands.length > 0 ? { postGenerateCommands } : {}),
+    } satisfies Plan
   }).pipe(
     Effect.withSpan('generate.project'),
     withProjectAnnotations(projectConfig, 'generate.project', `./${projectConfig.name}`),
   )
-}
-
-export function executeAllCommands(commands: StandardCommand[]) {
-  return Effect.gen(function* () {
-    const commandSvc = yield* CommandService
-    for (const command of commands)
-      yield* commandSvc.execute(command)
-  })
 }
 
 export function withWorkingDirectory(command: StandardCommand, dir: TargetDir): StandardCommand {
@@ -121,28 +115,25 @@ export function executeAllCommandsInDir(commands: PostGenerateCommand[], dir: Ta
   })
 }
 
-export function toTracedPlanSpec(plan: Plan, commands: PostGenerateCommand[]): PlanSpec {
-  const postGenerateCommands = commands.map(toPostGenerateCommandSpec)
-  return {
-    ...toPlanSpec(plan),
-    ...(postGenerateCommands.length > 0 ? { postGenerateCommands } : {}),
-  }
-}
-
 export function finishProject(config: ProjectConfig, plan: Plan) {
   return Effect.gen(function* () {
-    const commands = yield* buildCommands(config)
-    const tracedPlanSpec = toTracedPlanSpec(plan, commands)
+    const tracedPlanSpec = toPlanSpec(plan)
+    const postGenerateCommands = tracedPlanSpec.postGenerateCommands ?? []
+    const postGenerateCommandTrace = postGenerateCommands
+      .map(command => `${command.phase}:${command.ownership.owner}:${command.command} ${command.args.join(' ')}`)
+      .join(' | ')
     const targetDir = makeTargetDir(`./${config.name}`)
     yield* Effect.logDebug('Prepared traced plan spec for post-generate commands').pipe(
       Effect.annotateLogs({
-        postGenerateCommandCount: tracedPlanSpec.postGenerateCommands?.length ?? 0,
+        postGenerateCommandCount: postGenerateCommands.length,
+        ...(postGenerateCommandTrace ? { postGenerateCommands: postGenerateCommandTrace } : {}),
       }),
       Effect.annotateSpans({
-        postGenerateCommandCount: tracedPlanSpec.postGenerateCommands?.length ?? 0,
+        postGenerateCommandCount: postGenerateCommands.length,
+        ...(postGenerateCommandTrace ? { postGenerateCommands: postGenerateCommandTrace } : {}),
       }),
     )
-    yield* executeAllCommandsInDir(commands, targetDir)
+    yield* executeAllCommandsInDir(plan.postGenerateCommands ?? [], targetDir)
     yield* Effect.logInfo('🎉 Project generated successfully!')
   }).pipe(
     Effect.withSpan('finish.project'),

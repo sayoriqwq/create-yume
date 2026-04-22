@@ -8,7 +8,8 @@ import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { makeCommandMockLayer } from '../../../tests/support/mock-layers'
-import { collectPartialEntries, executeAllCommandsInDir, toTracedPlanSpec, withWorkingDirectory } from './compose'
+import { collectPartialEntries, executeAllCommandsInDir, finishProject, withWorkingDirectory } from './compose'
+import { toPlanSpec } from './planner'
 
 describe('collectPartialEntries', () => {
   const partialRoot = makeTemplatePath('/tmp/create-yume/templates/partials')
@@ -137,19 +138,19 @@ describe('command working directory helpers', () => {
     ])
   })
 
-  it('attaches post-generate commands into the final traced plan spec', () => {
+  it('serializes post-generate commands from the actual plan model', () => {
     const ownership = contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand)
 
-    const tracedPlanSpec = toTracedPlanSpec(
-      { tasks: [] },
-      [
+    const tracedPlanSpec = toPlanSpec({
+      tasks: [],
+      postGenerateCommands: [
         {
           command: Command.make('pnpm', 'install') as StandardCommand,
           phase: 'after-plan-apply',
           ownership,
         },
       ],
-    )
+    })
 
     expect(tracedPlanSpec).toEqual({
       tasks: [],
@@ -162,5 +163,56 @@ describe('command working directory helpers', () => {
         },
       ],
     })
+  })
+
+  it('executes post-generate commands from the emitted plan', async () => {
+    const targetDir = makeTargetDir('./phase2-plan-commands')
+    const executed: Array<{ command: string, cwd?: string }> = []
+
+    await Effect.runPromise(
+      finishProject(
+        {
+          type: 'react',
+          name: makeProjectName('phase2-plan-commands'),
+          language: 'typescript',
+          git: true,
+          linting: 'antfu-eslint',
+          codeQuality: ['lint-staged'],
+          buildTool: 'vite',
+          router: 'react-router',
+          stateManagement: 'zustand',
+          cssPreprocessor: 'css',
+          cssFramework: 'none',
+        },
+        {
+          tasks: [],
+          postGenerateCommands: [
+            {
+              command: Command.make('pnpm', 'install') as StandardCommand,
+              phase: 'after-plan-apply',
+              ownership: contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand),
+            },
+          ],
+        },
+      ).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            makeCommandMockLayer({
+              execute: (command) => {
+                executed.push({
+                  command: `${command.command} ${command.args.join(' ')}`,
+                  ...(Option.isSome(command.cwd) ? { cwd: command.cwd.value } : {}),
+                })
+                return Effect.succeed('')
+              },
+            }),
+          ),
+        ),
+      ),
+    )
+
+    expect(executed).toEqual([
+      { command: 'pnpm install', cwd: targetDir },
+    ])
   })
 })

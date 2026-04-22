@@ -1,6 +1,7 @@
 import type { StandardCommand } from '@effect/platform/Command'
-import type { PostGenerateCommandPhaseSpec, PostGenerateCommandSpec } from '@/schema/plan-spec'
+import type { PostGenerateCommandSpec } from '@/schema/plan-spec'
 import type { ProjectConfig } from '@/types/config'
+import type { PostGenerateCommand } from '@/types/task'
 import { Effect } from 'effect'
 import { makeCommandName } from '@/brand/command-name'
 import {
@@ -16,12 +17,6 @@ import { CommandService } from '../services/command'
 const PostGenerateCommandPhase = {
   AfterPlanApply: 'after-plan-apply',
 } as const
-
-export interface PostGenerateCommand {
-  readonly command: StandardCommand
-  readonly phase: PostGenerateCommandPhaseSpec
-  readonly ownership: ReturnType<typeof contributionTrace>
-}
 
 const postGenerateCommandOwnership = contributionTrace(
   WorkspaceBootstrapOwner,

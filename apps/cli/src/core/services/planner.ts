@@ -20,6 +20,7 @@ import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
 import { safeParseJson } from '../adapters/json'
+import { toPostGenerateCommandSpec } from '../commands'
 import { withProjectAnnotations } from './observability'
 
 const planOperationSpecSymbol = Symbol('planOperationSpec')
@@ -158,6 +159,11 @@ export function toPlanSpec(plan: Plan): PlanSpec {
         }
       }
     }),
+    ...(plan.postGenerateCommands
+      ? {
+          postGenerateCommands: plan.postGenerateCommands.map(toPostGenerateCommandSpec),
+        }
+      : {}),
   }
 }
 

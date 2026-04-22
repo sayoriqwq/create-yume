@@ -1,4 +1,6 @@
+import type { StandardCommand } from '@effect/platform/Command'
 import type { ContributionTrace } from '@/core/ownership/model'
+import type { PostGenerateCommandPhaseSpec } from '@/schema/plan-spec'
 
 export type GenerateTask = RenderTask | CopyTask
 export type ModifyTask = JsonTask | TextTask
@@ -36,4 +38,13 @@ export interface TextTask extends ITask {
   base?: () => string
 }
 
-export interface Plan { tasks: Task[] }
+export interface PostGenerateCommand {
+  readonly command: StandardCommand
+  readonly phase: PostGenerateCommandPhaseSpec
+  readonly ownership: ContributionTrace
+}
+
+export interface Plan {
+  tasks: Task[]
+  postGenerateCommands?: PostGenerateCommand[]
+}
