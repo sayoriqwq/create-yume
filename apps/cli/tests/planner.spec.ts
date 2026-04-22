@@ -55,3 +55,42 @@ describe('planner snapshots', () => {
     expect(planSpec).toMatchSnapshot()
   })
 })
+
+describe('state management ownership boundaries', () => {
+  it('routes store file renders through the state-management capability owner', async () => {
+    const reactPlan = await Effect.runPromise(buildPlanSpec(reactPresetProjectConfig))
+    const vuePlan = await Effect.runPromise(buildPlanSpec(vuePresetProjectConfig))
+
+    expect(reactPlan.tasks).toContainEqual(expect.objectContaining({
+      kind: 'render',
+      path: 'src/stores/counter.ts',
+      ownership: {
+        owner: 'state-management',
+        unit: 'fragment-render',
+      },
+    }))
+
+    expect(vuePlan.tasks).toContainEqual(expect.objectContaining({
+      kind: 'render',
+      path: 'src/stores/counter.ts',
+      ownership: {
+        owner: 'state-management',
+        unit: 'fragment-render',
+      },
+    }))
+  })
+
+  it('omits store renders when state management is disabled', async () => {
+    const reactPlan = await Effect.runPromise(buildPlanSpec({
+      ...reactPresetProjectConfig,
+      stateManagement: 'none',
+    }))
+    const vuePlan = await Effect.runPromise(buildPlanSpec({
+      ...vuePresetProjectConfig,
+      stateManagement: false,
+    }))
+
+    expect(reactPlan.tasks.some(task => task.path === 'src/stores/counter.ts')).toBe(false)
+    expect(vuePlan.tasks.some(task => task.path === 'src/stores/counter.ts')).toBe(false)
+  })
+})

@@ -208,4 +208,41 @@ describe('buildPackageJson', () => {
       'jotai': '^2.19.1',
     })
   })
+
+  it('does not add react state-management dependencies when disabled', () => {
+    const packageJson = renderPackageJson({
+      type: 'react',
+      name: makeProjectName('phase3-react-no-state'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: 'react-router',
+      stateManagement: 'none',
+      cssPreprocessor: 'css',
+      cssFramework: 'none',
+    })
+
+    expect(packageJson.dependencies).not.toHaveProperty('jotai')
+    expect(packageJson.dependencies).not.toHaveProperty('zustand')
+  })
+
+  it('does not add pinia when vue state management is disabled', () => {
+    const packageJson = renderPackageJson({
+      type: 'vue',
+      name: makeProjectName('phase3-vue-no-state'),
+      language: 'typescript',
+      git: true,
+      linting: 'antfu-eslint',
+      codeQuality: ['lint-staged', 'commitlint'],
+      buildTool: 'vite',
+      router: true,
+      stateManagement: false,
+      cssPreprocessor: 'css',
+      cssFramework: 'none',
+    })
+
+    expect(packageJson.dependencies).not.toHaveProperty('pinia')
+  })
 })
