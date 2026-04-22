@@ -1,12 +1,10 @@
 import type { Linting } from '@/types/config'
 import { select } from '@clack/prompts'
+import { workspaceBootstrapQuestionContracts } from '@/core/workspace-bootstrap'
 
 export async function askLinting() {
   return await select<Linting>({
-    message: 'choose a linting tool:',
-    options: [
-      { value: 'antfu-eslint', label: 'Antfu ESLint' },
-      { value: 'none', label: 'No Linting' },
-    ],
+    message: workspaceBootstrapQuestionContracts.linting.message,
+    options: [...workspaceBootstrapQuestionContracts.linting.options],
   })
 }

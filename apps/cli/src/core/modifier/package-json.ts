@@ -4,6 +4,7 @@ import { makePackageName } from '@/brand/package-name'
 import { applyReactRouterPackageJson, applyVueRouterPackageJson } from '@/core/owners/router'
 import { applyReactStateManagementPackageJson, applyVueStateManagementPackageJson } from '@/core/owners/state-management'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
+import { applyWorkspaceBootstrapPackageJson } from '@/core/workspace-bootstrap'
 import { deps, devDeps, scripts, when } from '@/utils/file-helper'
 import { isFrontendProject, isReactProject, isVueProject } from '@/utils/type-guard'
 
@@ -27,13 +28,8 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
   const entry = dsl.json('package.json', contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.JsonTextMutation))
     .base(() => basePackageJson(config))
     .modify(when(config.language === 'typescript', devDeps({ typescript: '^6.0.3' })))
-    .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })))
-    .modify(when(config.linting === 'antfu-eslint', scripts({ 'lint': 'eslint', 'lint:fix': 'eslint --fix' })))
-    .modify(when(config.git, devDeps({ '@lobehub/commit-cli': '^2.19.0' })))
-    .modify(when(config.git, scripts({ 'commit': 'lobe-commit --hook', 'commit:config': 'lobe-commit --option' })))
-    .modify(when(config.codeQuality.length > 0, devDeps({ husky: '^9.1.7' })))
-    .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.4.0' })))
-    .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })))
+
+  applyWorkspaceBootstrapPackageJson(entry, config)
 
   if (isFrontendProject(config)) {
     entry

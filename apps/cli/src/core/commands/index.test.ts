@@ -92,4 +92,33 @@ describe('buildCommands', () => {
       },
     ])
   })
+
+  it('keeps install fallback and husky bootstrap policy explainable when install is skipped', async () => {
+    const commands = await Effect.runPromise(
+      buildCommands(reactProjectConfig).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            CliContextLive({
+              args: {
+                preset: 'react-app',
+                name: makeProjectName('commands-react-skip-install'),
+                install: false,
+              },
+              isInteractive: false,
+            }),
+            makeCommandMockLayer(),
+          ),
+        ),
+      ),
+    )
+
+    expect(commands.map(command => `${command.command.command} ${command.command.args.join(' ')}`)).toEqual([
+      'git init',
+      'pnpm add -D husky',
+      'pnpm exec husky init',
+      'sh -c echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg',
+      'sh -c echo \'pnpm lint-staged\' > .husky/pre-commit',
+      'sh -c echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
+    ])
+  })
 })

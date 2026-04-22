@@ -245,4 +245,26 @@ describe('buildPackageJson', () => {
 
     expect(packageJson.dependencies).not.toHaveProperty('pinia')
   })
+
+  it('omits workspace bootstrap tooling when git, linting, and code quality are disabled', () => {
+    const packageJson = renderPackageJson({
+      type: 'react',
+      name: makeProjectName('phase-f2-react-minimal-workspace'),
+      language: 'typescript',
+      git: false,
+      linting: 'none',
+      codeQuality: [],
+      buildTool: 'vite',
+      router: 'none',
+      stateManagement: 'none',
+      cssPreprocessor: 'css',
+      cssFramework: 'none',
+    })
+
+    expect(packageJson.devDependencies).not.toHaveProperty('@antfu/eslint-config')
+    expect(packageJson.devDependencies).not.toHaveProperty('@lobehub/commit-cli')
+    expect(packageJson.devDependencies).not.toHaveProperty('husky')
+    expect(packageJson.scripts).not.toHaveProperty('commit')
+    expect(packageJson.scripts).not.toHaveProperty('lint')
+  })
 })

@@ -1,9 +1,14 @@
 import type { CodeQuality } from '@/types/config'
 import { Effect, ParseResult } from 'effect'
-import { getSharedFrontendPresetDefaults } from '@/core/template-registry/frontend-app'
+import {
+  getSharedFrontendPresetDefaults,
+} from '@/core/template-registry/frontend-app'
+import {
+  getWorkspaceBootstrapPresetDefaults,
+  shouldAskWorkspaceBootstrapCodeQuality,
+} from '@/core/workspace-bootstrap'
 import { decodeProjectConfig, formatProjectConfigError } from '@/schema/project-config'
 import { SchemaContractError } from '@/types/error'
-import { isNone } from '@/utils/none'
 import { FsService } from '~/fs'
 import { ask } from '../adapters/prompts'
 import { CliContext } from '../cli-context'
@@ -74,7 +79,7 @@ const askBaseCommon = Effect.gen(function* () {
   const git = cli.args.git ?? (yield* ask(askGit))
   const linting = yield* ask(askLinting)
   let codeQuality: CodeQuality[] = []
-  if (git && !isNone(linting)) {
+  if (shouldAskWorkspaceBootstrapCodeQuality({ git, linting })) {
     codeQuality = yield* ask(askCodeQuality)
   }
   return { name, language, git, linting, codeQuality }
@@ -135,7 +140,7 @@ const createPreset = Effect.gen(function* () {
   const preset = cli.args.preset ?? (yield* ask(askPreset))
   const name = yield* askProjectNameSafe
   const git = cli.args.git ?? true
-  const codeQuality: CodeQuality[] = git ? ['lint-staged', 'commitlint'] : []
+  const workspaceBootstrap = getWorkspaceBootstrapPresetDefaults(git)
 
   switch (preset) {
     case 'react-app': {
@@ -145,8 +150,7 @@ const createPreset = Effect.gen(function* () {
         type: 'react',
         language: 'typescript',
         git,
-        linting: 'antfu-eslint',
-        codeQuality,
+        ...workspaceBootstrap,
         ...frontend,
         router: 'react-router',
         stateManagement: 'jotai',
@@ -159,8 +163,7 @@ const createPreset = Effect.gen(function* () {
         type: 'vue',
         language: 'typescript',
         git,
-        linting: 'antfu-eslint',
-        codeQuality,
+        ...workspaceBootstrap,
         ...frontend,
         router: true,
         stateManagement: true,
