@@ -1,15 +1,19 @@
 import type { StandardCommand } from '@effect/platform/Command'
 import type { TargetDir } from '@/brand/target-dir'
 import type { TemplatePath } from '@/brand/template-path'
+import type { PostGenerateCommand } from '@/core/commands'
 import type { ContributionTrace } from '@/core/ownership/model'
+import type { PlanSpec } from '@/schema/plan-spec'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
+import type { Plan } from '@/types/task'
 import type { TemplateRegistry } from '@/types/template'
 import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
+import { toPostGenerateCommandSpec } from '@/core/commands'
 import {
   contributionTrace,
   ContributionUnitKind,
@@ -25,6 +29,7 @@ import { VueTemplates } from '../template-registry/vue'
 import { CommandService } from './command'
 import { withProjectAnnotations } from './observability'
 import { OrchestratorService } from './orchestrator'
+import { toPlanSpec } from './planner'
 
 // 纯函数：直接把符合条件的模板注册到 DSL（不依赖环境）
 export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, config: ProjectConfig) {
@@ -70,7 +75,7 @@ export function generateProject(projectConfig: ProjectConfig) {
     const cli = yield* CliContext
     const orchestrator = yield* OrchestratorService
     const targetDir = makeTargetDir(`./${projectConfig.name}`)
-    yield* orchestrator.execute(targetDir, projectConfig, {
+    return yield* orchestrator.execute(targetDir, projectConfig, {
       rollbackOnFailure: cli.args.rollback ?? true,
     })
   }).pipe(
@@ -91,18 +96,52 @@ export function withWorkingDirectory(command: StandardCommand, dir: TargetDir): 
   return Command.workingDirectory(command, dir) as StandardCommand
 }
 
-export function executeAllCommandsInDir(commands: StandardCommand[], dir: TargetDir) {
+function executePostGenerateCommand(command: PostGenerateCommand, dir: TargetDir) {
   return Effect.gen(function* () {
     const commandSvc = yield* CommandService
-    for (const command of commands)
-      yield* commandSvc.execute(withWorkingDirectory(command, dir))
+    yield* commandSvc.execute(withWorkingDirectory(command.command, dir)).pipe(
+      Effect.annotateLogs({
+        commandOwner: command.ownership.owner,
+        commandUnit: command.ownership.unit,
+        commandPhase: command.phase,
+      }),
+      Effect.annotateSpans({
+        commandOwner: command.ownership.owner,
+        commandUnit: command.ownership.unit,
+        commandPhase: command.phase,
+      }),
+    )
   })
 }
 
-export function finishProject(config: ProjectConfig) {
+export function executeAllCommandsInDir(commands: PostGenerateCommand[], dir: TargetDir) {
+  return Effect.forEach(commands, command => executePostGenerateCommand(command, dir), {
+    concurrency: 1,
+    discard: true,
+  })
+}
+
+export function toTracedPlanSpec(plan: Plan, commands: PostGenerateCommand[]): PlanSpec {
+  const postGenerateCommands = commands.map(toPostGenerateCommandSpec)
+  return {
+    ...toPlanSpec(plan),
+    ...(postGenerateCommands.length > 0 ? { postGenerateCommands } : {}),
+  }
+}
+
+export function finishProject(config: ProjectConfig, plan: Plan) {
   return Effect.gen(function* () {
     const commands = yield* buildCommands(config)
+    const tracedPlanSpec = toTracedPlanSpec(plan, commands)
     const targetDir = makeTargetDir(`./${config.name}`)
+    yield* Effect.logDebug('Prepared traced plan spec for post-generate commands').pipe(
+      Effect.annotateLogs({
+        postGenerateCommandCount: tracedPlanSpec.postGenerateCommands?.length ?? 0,
+      }),
+      Effect.annotateSpans({
+        postGenerateCommandCount: tracedPlanSpec.postGenerateCommands?.length ?? 0,
+      }),
+    )
     yield* executeAllCommandsInDir(commands, targetDir)
     yield* Effect.logInfo('🎉 Project generated successfully!')
   }).pipe(

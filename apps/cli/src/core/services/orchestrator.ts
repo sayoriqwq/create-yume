@@ -4,6 +4,7 @@ import type { TargetDir } from '@/brand/target-dir'
 import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import type { FileIOError, PlanConflictError, TemplateError } from '@/types/error'
+import type { Plan } from '@/types/task'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Effect } from 'effect'
@@ -21,7 +22,7 @@ interface OrchestratorServiceShape {
     baseDir: TargetDir,
     config: ProjectConfig,
     options?: { readonly rollbackOnFailure?: boolean },
-  ) => Effect.Effect<void, FileIOError | PlanConflictError | TemplateError>
+  ) => Effect.Effect<Plan, FileIOError | PlanConflictError | TemplateError>
 }
 
 export class OrchestratorService extends Effect.Service<OrchestratorService>()(
@@ -62,6 +63,7 @@ export class OrchestratorService extends Effect.Service<OrchestratorService>()(
           // 4. 生成计划并应用
           const plan = yield* planner.build(program)
           yield* planner.apply(plan, baseDir, config, options)
+          return plan
         }).pipe(
           Effect.withSpan('orchestrator.execute'),
           withProjectAnnotations(config, 'orchestrator.execute', baseDir),

@@ -6,8 +6,9 @@ import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
+import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { makeCommandMockLayer } from '../../../tests/support/mock-layers'
-import { collectPartialEntries, executeAllCommandsInDir, withWorkingDirectory } from './compose'
+import { collectPartialEntries, executeAllCommandsInDir, toTracedPlanSpec, withWorkingDirectory } from './compose'
 
 describe('collectPartialEntries', () => {
   const partialRoot = makeTemplatePath('/tmp/create-yume/templates/partials')
@@ -98,8 +99,16 @@ describe('command working directory helpers', () => {
 
   it('executes every command with the provided working directory', async () => {
     const commands = [
-      Command.make('pnpm', 'install') as StandardCommand,
-      Command.make('git', 'status') as StandardCommand,
+      {
+        command: Command.make('pnpm', 'install') as StandardCommand,
+        phase: 'after-plan-apply' as const,
+        ownership: contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand),
+      },
+      {
+        command: Command.make('git', 'status') as StandardCommand,
+        phase: 'after-plan-apply' as const,
+        ownership: contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand),
+      },
     ]
     const targetDir = makeTargetDir('/tmp/create-yume-execute-dir')
     const executed: Array<{ command: string, cwd?: string }> = []
@@ -126,5 +135,32 @@ describe('command working directory helpers', () => {
       { command: 'pnpm install', cwd: targetDir },
       { command: 'git status', cwd: targetDir },
     ])
+  })
+
+  it('attaches post-generate commands into the final traced plan spec', () => {
+    const ownership = contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand)
+
+    const tracedPlanSpec = toTracedPlanSpec(
+      { tasks: [] },
+      [
+        {
+          command: Command.make('pnpm', 'install') as StandardCommand,
+          phase: 'after-plan-apply',
+          ownership,
+        },
+      ],
+    )
+
+    expect(tracedPlanSpec).toEqual({
+      tasks: [],
+      postGenerateCommands: [
+        {
+          command: 'pnpm',
+          args: ['install'],
+          phase: 'after-plan-apply',
+          ownership,
+        },
+      ],
+    })
   })
 })

@@ -116,8 +116,8 @@ const main = Effect.gen(function* () {
 
   const projectConfig = yield* collectQuestions
   yield* showConfigSummary(projectConfig)
-  yield* generateProject(projectConfig)
-  yield* finishProject(projectConfig)
+  const plan = yield* generateProject(projectConfig)
+  yield* finishProject(projectConfig, plan)
 })
 
 const program = main.pipe(

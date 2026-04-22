@@ -98,6 +98,21 @@ export const TextTaskSpecSchema = Schema.Struct({
   title: 'TextTaskSpec',
 })
 
+export const PostGenerateCommandPhaseSchema = Schema.Literal('after-plan-apply').annotations({
+  identifier: 'PostGenerateCommandPhase',
+  title: 'PostGenerateCommandPhase',
+})
+
+export const PostGenerateCommandSpecSchema = Schema.Struct({
+  command: Schema.String,
+  args: Schema.Array(Schema.String),
+  phase: PostGenerateCommandPhaseSchema,
+  ownership: ContributionTraceSchema,
+}).annotations({
+  identifier: 'PostGenerateCommandSpec',
+  title: 'PostGenerateCommandSpec',
+})
+
 export const PlanTaskSpecSchema = Schema.Union(
   RenderTaskSpecSchema,
   CopyTaskSpecSchema,
@@ -110,6 +125,7 @@ export const PlanTaskSpecSchema = Schema.Union(
 
 export const PlanSpecSchema = Schema.Struct({
   tasks: Schema.Array(PlanTaskSpecSchema),
+  postGenerateCommands: Schema.optionalWith(Schema.Array(PostGenerateCommandSpecSchema), { exact: true }),
 }).annotations({
   identifier: 'PlanSpec',
   title: 'PlanSpec',
@@ -122,6 +138,8 @@ export type RenderTaskSpec = Schema.Schema.Type<typeof RenderTaskSpecSchema>
 export type CopyTaskSpec = Schema.Schema.Type<typeof CopyTaskSpecSchema>
 export type JsonTaskSpec = Schema.Schema.Type<typeof JsonTaskSpecSchema>
 export type TextTaskSpec = Schema.Schema.Type<typeof TextTaskSpecSchema>
+export type PostGenerateCommandPhaseSpec = Schema.Schema.Type<typeof PostGenerateCommandPhaseSchema>
+export type PostGenerateCommandSpec = Schema.Schema.Type<typeof PostGenerateCommandSpecSchema>
 export type PlanTaskSpec = Schema.Schema.Type<typeof PlanTaskSpecSchema>
 export type PlanSpec = Schema.Schema.Type<typeof PlanSpecSchema>
 
