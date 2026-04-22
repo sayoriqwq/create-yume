@@ -3,6 +3,7 @@ import type { TemplateRegistry } from '@/types/template'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, ReactScaffoldOwner } from '@/core/ownership/model'
 import { ReactRouterAboutTemplate, ReactRouterIndexTemplate } from '../owners/router'
+import { ReactCounterStoreTemplate } from '../owners/state-management'
 import { commonTemplates } from './frontend-app'
 
 const reactFragmentRender = contributionTrace(ReactScaffoldOwner, ContributionUnitKind.FragmentRender)
@@ -32,12 +33,7 @@ export const ReactTemplates: TemplateRegistry<ReactProjectConfig> = {
     ownership: reactFragmentRender,
   },
 
-  'CounterStore.ts': {
-    template: makeTemplatePath('fragments/react/Counter.ts.hbs'),
-    target: config => `src/stores/counter.${config.language === 'typescript' ? 'ts' : 'js'}`,
-    condition: config => config.stateManagement !== 'none',
-    ownership: reactFragmentRender,
-  },
+  'CounterStore.ts': ReactCounterStoreTemplate,
 
   'main.tsx': {
     template: makeTemplatePath('fragments/react/main.tsx.hbs'),

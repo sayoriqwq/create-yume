@@ -3,6 +3,7 @@ import type { TemplateRegistry } from '@/types/template'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, VueScaffoldOwner } from '@/core/ownership/model'
 import { VueRouterAboutTemplate, VueRouterIndexTemplate } from '../owners/router'
+import { VueCounterStoreTemplate } from '../owners/state-management'
 import { commonTemplates } from './frontend-app'
 
 const vueFragmentRender = contributionTrace(VueScaffoldOwner, ContributionUnitKind.FragmentRender)
@@ -41,10 +42,5 @@ export const VueTemplates: TemplateRegistry<VueProjectConfig> = {
 
   'router-about.vue': VueRouterAboutTemplate,
 
-  'counter-store.ts': {
-    template: makeTemplatePath('fragments/vue/counter-store.ts.hbs'),
-    target: config => `src/stores/counter.${config.language === 'typescript' ? 'ts' : 'js'}`,
-    condition: config => config.stateManagement,
-    ownership: vueFragmentRender,
-  },
+  'counter-store.ts': VueCounterStoreTemplate,
 }

@@ -85,9 +85,10 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
           "reducer": "modify",
         },
         {
-          "reducer": "modify",
-        },
-        {
+          "ownership": {
+            "owner": "state-management",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
         {
@@ -256,7 +257,7 @@ exports[`planner snapshots > builds a deterministic plan for react custom 1`] = 
     {
       "kind": "render",
       "ownership": {
-        "owner": "react-scaffold",
+        "owner": "state-management",
         "unit": "fragment-render",
       },
       "path": "src/stores/counter.ts",
@@ -369,9 +370,10 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
           "reducer": "modify",
         },
         {
-          "reducer": "modify",
-        },
-        {
+          "ownership": {
+            "owner": "state-management",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
         {
@@ -540,7 +542,7 @@ exports[`planner snapshots > builds a deterministic plan for react preset 1`] = 
     {
       "kind": "render",
       "ownership": {
-        "owner": "react-scaffold",
+        "owner": "state-management",
         "unit": "fragment-render",
       },
       "path": "src/stores/counter.ts",
@@ -650,6 +652,10 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
           "reducer": "modify",
         },
         {
+          "ownership": {
+            "owner": "state-management",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
         {
@@ -836,7 +842,7 @@ exports[`planner snapshots > builds a deterministic plan for vue custom 1`] = `
     {
       "kind": "render",
       "ownership": {
-        "owner": "vue-scaffold",
+        "owner": "state-management",
         "unit": "fragment-render",
       },
       "path": "src/stores/counter.ts",
@@ -928,6 +934,10 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
           "reducer": "modify",
         },
         {
+          "ownership": {
+            "owner": "state-management",
+            "unit": "json-text-mutation",
+          },
           "reducer": "modify",
         },
         {
@@ -1114,7 +1124,7 @@ exports[`planner snapshots > builds a deterministic plan for vue preset 1`] = `
     {
       "kind": "render",
       "ownership": {
-        "owner": "vue-scaffold",
+        "owner": "state-management",
         "unit": "fragment-render",
       },
       "path": "src/stores/counter.ts",

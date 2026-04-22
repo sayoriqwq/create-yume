@@ -2,6 +2,7 @@ import type { ProjectConfig } from '@/types/config'
 import type { ComposeDSL } from '@/types/dsl'
 import { makePackageName } from '@/brand/package-name'
 import { applyReactRouterPackageJson, applyVueRouterPackageJson } from '@/core/owners/router'
+import { applyReactStateManagementPackageJson, applyVueStateManagementPackageJson } from '@/core/owners/state-management'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { deps, devDeps, scripts, when } from '@/utils/file-helper'
 import { isFrontendProject, isReactProject, isVueProject } from '@/utils/type-guard'
@@ -49,7 +50,7 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
         .modify(when(config.language === 'typescript', devDeps({ '@vue/tsconfig': '^0.9.1' })))
         .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-vue': '^6.0.6', '@vue/compiler-sfc': '^3.5.32' })))
         .modify(deps({ vue: '^3.5.32' }))
-        .modify(when(config.stateManagement, deps({ pinia: '^3.0.4' })))
+      applyVueStateManagementPackageJson(entry, config)
       applyVueRouterPackageJson(entry, config)
     }
     else if (isReactProject(config)) {
@@ -58,8 +59,7 @@ export function buildPackageJson(dsl: ComposeDSL, config: ProjectConfig) {
         .modify(when(config.buildTool === 'vite', deps({ '@vitejs/plugin-react': '^6.0.1' })))
         .modify(when(config.linting === 'antfu-eslint', devDeps({ '@eslint-react/eslint-plugin': '^3.0.0', 'eslint-plugin-react-hooks': '^7.1.1', 'eslint-plugin-react-refresh': '^0.5.2' })))
         .modify(when(config.language === 'typescript', devDeps({ '@types/react': '^19.2.14', '@types/react-dom': '^19.2.3' })))
-        .modify(when(config.stateManagement === 'zustand', deps({ zustand: '^5.0.12' })))
-        .modify(when(config.stateManagement === 'jotai', deps({ jotai: '^2.19.1' })))
+      applyReactStateManagementPackageJson(entry, config)
       applyReactRouterPackageJson(entry, config)
     }
 
