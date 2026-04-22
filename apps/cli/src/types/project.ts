@@ -6,5 +6,3 @@ export type BaseFrontendAppType = import('effect').Schema.Schema.Type<typeof imp
 export type BuildTool = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').BuildToolSchema>
 export type CSSPreprocessor = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSPreprocessorSchema>
 export type CSSFramework = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').CSSFrameworkSchema>
-export type StateManagement = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').StateManagementSchema>
-export type Router = import('effect').Schema.Schema.Type<typeof import('@/schema/project-config').RouterSchema>

@@ -1,8 +1,8 @@
-import type { BaseFrontendAppConfig } from '@/types/config'
+import type { SharedFrontendAppConfig } from '@/types/config'
 import type { TemplateRegistry } from '@/types/template'
 import { makeTemplatePath } from '@/brand/template-path'
 
-export const commonTemplates: TemplateRegistry<BaseFrontendAppConfig> = {
+export const commonTemplates: TemplateRegistry<SharedFrontendAppConfig> = {
   'index.html': {
     template: makeTemplatePath('fragments/common/index.html.hbs'),
     target: 'index.html',

@@ -20,13 +20,11 @@ p { margin: 8px 0; }
 .btn:hover { background: #f0f0f0; }
 .btn.btn-sm { font-size: 14px; }
 
-{{#unless (eq @config.router 'none')}}
 /* ==== Router (adds navigation & about page) ==== */
 .nav { display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap; }
 .nav-link { text-decoration: none; color: inherit; padding: 4px 8px; border-radius: 4px; }
 .nav-link:hover { background: #f3f3f3; }
 .router-link-active { font-weight: 600; text-decoration: underline; }
 .about { padding: 16px 0; }
-{{/unless}}
 
 {{/if}}

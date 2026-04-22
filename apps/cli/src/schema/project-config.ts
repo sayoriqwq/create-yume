@@ -51,16 +51,6 @@ export const CodeQualitySchema = Schema.Literal('lint-staged', 'commitlint').ann
   title: 'CodeQuality',
 })
 
-export const RouterSchema = Schema.Union(ReactRouterSchema, Schema.Boolean).annotations({
-  identifier: 'Router',
-  title: 'Router',
-})
-
-export const StateManagementSchema = Schema.Union(ReactStateManagementSchema, Schema.Boolean).annotations({
-  identifier: 'StateManagement',
-  title: 'StateManagement',
-})
-
 const baseProjectConfigFields = {
   name: ProjectNameSchema,
   language: LanguageSchema,
@@ -69,12 +59,10 @@ const baseProjectConfigFields = {
   codeQuality: Schema.Array(CodeQualitySchema),
 }
 
-const baseFrontendAppConfigFields = {
+const sharedFrontendAppConfigFields = {
   ...baseProjectConfigFields,
   type: BaseFrontendAppTypeSchema,
   buildTool: BuildToolSchema,
-  router: RouterSchema,
-  stateManagement: StateManagementSchema,
   cssPreprocessor: CSSPreprocessorSchema,
   cssFramework: CSSFrameworkSchema,
 }
@@ -84,13 +72,13 @@ export const BaseProjectConfigSchema = Schema.Struct(baseProjectConfigFields).an
   title: 'BaseProjectConfig',
 })
 
-export const BaseFrontendAppConfigSchema = Schema.Struct(baseFrontendAppConfigFields).annotations({
-  identifier: 'BaseFrontendAppConfig',
-  title: 'BaseFrontendAppConfig',
+export const SharedFrontendAppConfigSchema = Schema.Struct(sharedFrontendAppConfigFields).annotations({
+  identifier: 'SharedFrontendAppConfig',
+  title: 'SharedFrontendAppConfig',
 })
 
 export const VueProjectConfigSchema = Schema.Struct({
-  ...baseFrontendAppConfigFields,
+  ...sharedFrontendAppConfigFields,
   type: Schema.Literal('vue'),
   router: Schema.Boolean,
   stateManagement: Schema.Boolean,
@@ -100,7 +88,7 @@ export const VueProjectConfigSchema = Schema.Struct({
 })
 
 export const ReactProjectConfigSchema = Schema.Struct({
-  ...baseFrontendAppConfigFields,
+  ...sharedFrontendAppConfigFields,
   type: Schema.Literal('react'),
   router: ReactRouterSchema,
   stateManagement: ReactStateManagementSchema,
@@ -127,20 +115,20 @@ export type ReactRouter = Schema.Schema.Type<typeof ReactRouterSchema>
 export type Language = Schema.Schema.Type<typeof LanguageSchema>
 export type Linting = Schema.Schema.Type<typeof LintingSchema>
 export type CodeQuality = Schema.Schema.Type<typeof CodeQualitySchema>
-export type Router = Schema.Schema.Type<typeof RouterSchema>
-export type StateManagement = Schema.Schema.Type<typeof StateManagementSchema>
 export type BaseProjectConfig = Schema.Schema.Type<typeof BaseProjectConfigSchema>
-export type BaseFrontendAppConfig = Schema.Schema.Type<typeof BaseFrontendAppConfigSchema>
+export type SharedFrontendAppConfig = Schema.Schema.Type<typeof SharedFrontendAppConfigSchema>
 export type VueProjectConfig = Schema.Schema.Type<typeof VueProjectConfigSchema>
 export type ReactProjectConfig = Schema.Schema.Type<typeof ReactProjectConfigSchema>
 export type ProjectConfig = Schema.Schema.Type<typeof ProjectConfigSchema>
 
 export const decodeBaseProjectConfig = Schema.decodeUnknown(BaseProjectConfigSchema, { errors: 'all' })
+export const decodeSharedFrontendAppConfig = Schema.decodeUnknown(SharedFrontendAppConfigSchema, { errors: 'all' })
 export const decodeVueProjectConfig = Schema.decodeUnknown(VueProjectConfigSchema, { errors: 'all' })
 export const decodeReactProjectConfig = Schema.decodeUnknown(ReactProjectConfigSchema, { errors: 'all' })
 export const decodeProjectConfig = Schema.decodeUnknown(ProjectConfigSchema, { errors: 'all' })
 
 export const formatBaseProjectConfigError = ParseResult.TreeFormatter.formatErrorSync
+export const formatSharedFrontendAppConfigError = ParseResult.TreeFormatter.formatErrorSync
 export const formatVueProjectConfigError = ParseResult.TreeFormatter.formatErrorSync
 export const formatReactProjectConfigError = ParseResult.TreeFormatter.formatErrorSync
 export const formatProjectConfigError = ParseResult.TreeFormatter.formatErrorSync

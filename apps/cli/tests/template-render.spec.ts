@@ -88,6 +88,14 @@ describe('template render snapshots', () => {
       vueCustomProjectConfig,
     ],
     [
+      'react shared style without router-specific config branching',
+      'fragments/common/css/style.css.hbs',
+      {
+        ...reactCustomProjectConfig,
+        router: 'none',
+      },
+    ],
+    [
       'eslint config for react',
       'fragments/common/linter/eslint.config.mjs.hbs',
       reactPresetProjectConfig,
