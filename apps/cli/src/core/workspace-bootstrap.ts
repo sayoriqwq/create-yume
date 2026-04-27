@@ -27,14 +27,20 @@ interface WorkspaceBootstrapCommandSpec {
   readonly args: readonly string[]
 }
 
+interface WorkspaceBootstrapHookSpec {
+  readonly path: string
+  readonly content: string
+  readonly executable: boolean
+}
+
 type WorkspaceBootstrapQuestionPolicy = Pick<ProjectConfig, 'git' | 'linting'>
 type WorkspaceBootstrapPackagePolicy = Pick<ProjectConfig, 'git' | 'linting' | 'codeQuality'>
 type WorkspaceBootstrapCommandPolicy = Pick<ProjectConfig, 'git' | 'codeQuality'>
 type InstallPolicyResolution = boolean | 'prompt'
 
 const defaultWorkspaceBootstrapCodeQuality = ['lint-staged', 'commitlint'] as const satisfies readonly CodeQuality[]
-const lintStagedHook = 'pnpm lint-staged'
-const commitLintHook = 'pnpm exec commitlint --edit "$1"'
+const lintStagedHook = 'pnpm lint-staged\n'
+const commitLintHook = 'pnpm exec commitlint --edit "$1"\n'
 
 export const workspaceBootstrapPackageJsonMutation = contributionTrace(
   WorkspaceBootstrapOwner,
@@ -100,6 +106,42 @@ export function applyWorkspaceBootstrapPackageJson(
     .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })), workspaceBootstrapPackageJsonMutation)
 }
 
+export function getWorkspaceBootstrapHookSpecs(config: WorkspaceBootstrapCommandPolicy): WorkspaceBootstrapHookSpec[] {
+  if (config.codeQuality.length === 0) {
+    return []
+  }
+
+  const hooks: WorkspaceBootstrapHookSpec[] = []
+
+  if (config.codeQuality.includes('lint-staged')) {
+    hooks.push({
+      path: '.husky/pre-commit',
+      content: lintStagedHook,
+      executable: false,
+    })
+  }
+
+  if (config.codeQuality.includes('commitlint')) {
+    hooks.push({
+      path: '.husky/commit-msg',
+      content: commitLintHook,
+      executable: true,
+    })
+  }
+
+  return hooks
+}
+
+function renderHuskyHookCommandSpec(hook: WorkspaceBootstrapHookSpec): WorkspaceBootstrapCommandSpec {
+  const script = [
+    'const fs = require("node:fs");',
+    `fs.writeFileSync(${JSON.stringify(hook.path)}, ${JSON.stringify(hook.content)});`,
+    ...(hook.executable ? [`fs.chmodSync(${JSON.stringify(hook.path)}, 0o755);`] : []),
+  ].join('')
+
+  return { command: 'node', args: ['-e', script] }
+}
+
 export function getWorkspaceBootstrapCommandSpecs(
   config: WorkspaceBootstrapCommandPolicy,
   installDeps: boolean,
@@ -120,19 +162,7 @@ export function getWorkspaceBootstrapCommandSpecs(
     }
 
     commands.push({ command: 'pnpm', args: ['exec', 'husky', 'init'] })
-    if (config.codeQuality.includes('lint-staged')) {
-      commands.push({
-        command: 'sh',
-        args: ['-c', `echo '${lintStagedHook}' > .husky/pre-commit`],
-      })
-    }
-
-    if (config.codeQuality.includes('commitlint')) {
-      commands.push({
-        command: 'sh',
-        args: ['-c', `echo '${commitLintHook}' > .husky/commit-msg && chmod +x .husky/commit-msg`],
-      })
-    }
+    commands.push(...getWorkspaceBootstrapHookSpecs(config).map(renderHuskyHookCommandSpec))
   }
 
   return commands

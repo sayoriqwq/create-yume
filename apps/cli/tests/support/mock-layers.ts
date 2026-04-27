@@ -46,6 +46,7 @@ export function makeTemplateEngineMockLayer(
   return Layer.succeed(TemplateEngineService, TemplateEngineService.make({
     registerHelpers: () => Effect.void,
     registerPartials: (_dir: TemplatePath, _namespace: string) => Effect.void,
+    prepare: (_config: ProjectConfig, _partialRoot: TemplatePath) => Effect.void,
     compile: (_templatePath: TemplatePath, _config: ProjectConfig) =>
       Effect.succeed(template) as Effect.Effect<Handlebars.TemplateDelegate, TemplateError | FileIOError>,
     render: (_templatePath: TemplatePath, _data: unknown, _config: ProjectConfig) =>

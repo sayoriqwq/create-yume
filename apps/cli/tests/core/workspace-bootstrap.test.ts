@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   applyWorkspaceBootstrapPackageJson,
   getWorkspaceBootstrapCommandSpecs,
+  getWorkspaceBootstrapHookSpecs,
   getWorkspaceBootstrapPresetDefaults,
   resolveWorkspaceBootstrapInstallPolicy,
   shouldAskWorkspaceBootstrapCodeQuality,
@@ -56,6 +57,20 @@ function applyWorkspacePackageMutations(config: Parameters<typeof applyWorkspace
   }
 
   return { draft, reducers }
+}
+
+function huskyHookCommand(path: string, content: string, executable: boolean) {
+  return {
+    command: 'node',
+    args: [
+      '-e',
+      [
+        'const fs = require("node:fs");',
+        `fs.writeFileSync(${JSON.stringify(path)}, ${JSON.stringify(content)});`,
+        ...(executable ? [`fs.chmodSync(${JSON.stringify(path)}, 0o755);`] : []),
+      ].join(''),
+    ],
+  }
 }
 
 describe('workspace/bootstrap contract', () => {
@@ -148,21 +163,44 @@ describe('workspace/bootstrap contract', () => {
     )
   })
 
+  it('keeps Husky hook writes structured instead of hidden in shell redirection', () => {
+    expect(getWorkspaceBootstrapHookSpecs(reactPresetProjectConfig)).toEqual([
+      {
+        path: '.husky/pre-commit',
+        content: 'pnpm lint-staged\n',
+        executable: false,
+      },
+      {
+        path: '.husky/commit-msg',
+        content: 'pnpm exec commitlint --edit "$1"\n',
+        executable: true,
+      },
+    ])
+
+    expect(
+      getWorkspaceBootstrapCommandSpecs(reactPresetProjectConfig, true)
+        .filter(spec => spec.command === 'sh')
+        .map(spec => spec.args.join(' ')),
+    ).not.toEqual(expect.arrayContaining([
+      expect.stringContaining('> .husky/'),
+    ]))
+  })
+
   it('keeps command policy in one workspace/bootstrap contract', () => {
     expect(getWorkspaceBootstrapCommandSpecs(reactPresetProjectConfig, true)).toEqual([
       { command: 'pnpm', args: ['install'] },
       { command: 'git', args: ['init'] },
       { command: 'pnpm', args: ['exec', 'husky', 'init'] },
-      { command: 'sh', args: ['-c', 'echo \'pnpm lint-staged\' > .husky/pre-commit'] },
-      { command: 'sh', args: ['-c', 'echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg'] },
+      huskyHookCommand('.husky/pre-commit', 'pnpm lint-staged\n', false),
+      huskyHookCommand('.husky/commit-msg', 'pnpm exec commitlint --edit "$1"\n', true),
     ])
 
     expect(getWorkspaceBootstrapCommandSpecs(reactPresetProjectConfig, false)).toEqual([
       { command: 'git', args: ['init'] },
       { command: 'pnpm', args: ['add', '-D', 'husky'] },
       { command: 'pnpm', args: ['exec', 'husky', 'init'] },
-      { command: 'sh', args: ['-c', 'echo \'pnpm lint-staged\' > .husky/pre-commit'] },
-      { command: 'sh', args: ['-c', 'echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg'] },
+      huskyHookCommand('.husky/pre-commit', 'pnpm lint-staged\n', false),
+      huskyHookCommand('.husky/commit-msg', 'pnpm exec commitlint --edit "$1"\n', true),
     ])
 
     expect(getWorkspaceBootstrapCommandSpecs({

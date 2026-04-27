@@ -6,33 +6,43 @@ import { buildCommands, toPostGenerateCommandSpec } from '../../../src/core/comm
 import { reactProjectConfig } from '../../support/fixtures'
 import { makeCommandMockLayer } from '../../support/mock-layers'
 
-describe('buildCommands', () => {
-  it('prepends pnpm install when the non-interactive CLI context requests installation', async () => {
-    const commands = await Effect.runPromise(
-      buildCommands(reactProjectConfig).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            CliContextLive({
-              args: {
-                preset: 'react-app',
-                name: makeProjectName('commands-react'),
-                install: true,
-              },
-              isInteractive: false,
-            }),
-            makeCommandMockLayer(),
-          ),
+function formatCommand(command: Awaited<ReturnType<typeof collectCommands>>[number]) {
+  return `${command.command.command} ${command.command.args.join(' ')}`
+}
+
+async function collectCommands(install: boolean) {
+  return Effect.runPromise(
+    buildCommands(reactProjectConfig).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          CliContextLive({
+            args: {
+              preset: 'react-app',
+              name: makeProjectName(install ? 'commands-react' : 'commands-react-skip-install'),
+              install,
+            },
+            isInteractive: false,
+          }),
+          makeCommandMockLayer(),
         ),
       ),
-    )
+    ),
+  )
+}
 
-    expect(commands.map(command => `${command.command.command} ${command.command.args.join(' ')}`)).toEqual([
+describe('buildCommands', () => {
+  it('prepends pnpm install when the non-interactive CLI context requests installation', async () => {
+    const commands = await collectCommands(true)
+
+    expect(commands.map(formatCommand)).toEqual([
       'pnpm install',
       'git init',
       'pnpm exec husky init',
-      'sh -c echo \'pnpm lint-staged\' > .husky/pre-commit',
-      'sh -c echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
+      expect.stringContaining('node -e const fs = require("node:fs");fs.writeFileSync(".husky/pre-commit"'),
+      expect.stringContaining('node -e const fs = require("node:fs");fs.writeFileSync(".husky/commit-msg"'),
     ])
+    expect(commands.map(formatCommand).join('\n')).not.toContain('> .husky/')
+    expect(commands.map(formatCommand).join('\n')).not.toContain('prepare-commit-msg')
 
     expect(commands.map(toPostGenerateCommandSpec)).toEqual([
       {
@@ -62,52 +72,38 @@ describe('buildCommands', () => {
           unit: 'post-generate-command',
         },
       },
-      {
-        command: 'sh',
-        args: ['-c', 'echo \'pnpm lint-staged\' > .husky/pre-commit'],
+      expect.objectContaining({
+        command: 'node',
+        args: expect.arrayContaining([expect.stringContaining('writeFileSync(".husky/pre-commit"')]),
         phase: 'after-plan-apply',
         ownership: {
           owner: 'workspace-bootstrap',
           unit: 'post-generate-command',
         },
-      },
-      {
-        command: 'sh',
-        args: ['-c', 'echo \'pnpm exec commitlint --edit \"$1\"\' > .husky/commit-msg && chmod +x .husky/commit-msg'],
+      }),
+      expect.objectContaining({
+        command: 'node',
+        args: expect.arrayContaining([expect.stringContaining('writeFileSync(".husky/commit-msg"')]),
         phase: 'after-plan-apply',
         ownership: {
           owner: 'workspace-bootstrap',
           unit: 'post-generate-command',
         },
-      },
+      }),
     ])
   })
 
   it('keeps install fallback and husky bootstrap policy explainable when install is skipped', async () => {
-    const commands = await Effect.runPromise(
-      buildCommands(reactProjectConfig).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            CliContextLive({
-              args: {
-                preset: 'react-app',
-                name: makeProjectName('commands-react-skip-install'),
-                install: false,
-              },
-              isInteractive: false,
-            }),
-            makeCommandMockLayer(),
-          ),
-        ),
-      ),
-    )
+    const commands = await collectCommands(false)
 
-    expect(commands.map(command => `${command.command.command} ${command.command.args.join(' ')}`)).toEqual([
+    expect(commands.map(formatCommand)).toEqual([
       'git init',
       'pnpm add -D husky',
       'pnpm exec husky init',
-      'sh -c echo \'pnpm lint-staged\' > .husky/pre-commit',
-      'sh -c echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
+      expect.stringContaining('node -e const fs = require("node:fs");fs.writeFileSync(".husky/pre-commit"'),
+      expect.stringContaining('node -e const fs = require("node:fs");fs.writeFileSync(".husky/commit-msg"'),
     ])
+    expect(commands.map(formatCommand).join('\n')).not.toContain('> .husky/')
+    expect(commands.map(formatCommand).join('\n')).not.toContain('prepare-commit-msg')
   })
 })

@@ -1,14 +1,44 @@
 import type { TemplatePath } from '@/brand/template-path'
 import type { FileIOError } from '@/core/errors'
+import type { ContributionTrace } from '@/core/ownership/model'
 import type { ProjectConfig } from '@/schema/project-config'
 import * as path from 'node:path'
 import { Effect } from 'effect'
 import Handlebars from 'handlebars'
+import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig as AppConfigService } from '@/config/app-config'
 import { TemplateError } from '@/core/errors'
+import {
+  contributionTrace,
+  ContributionUnitKind,
+  FrontendScaffoldOwner,
+  ReactScaffoldOwner,
+  VueScaffoldOwner,
+} from '@/core/ownership/model'
+import { isReactProject, isVueProject } from '@/utils/type-guard'
 import { FsService } from '~/fs'
 import { withProjectAnnotations } from './observability'
 import { registerTemplateHelpers } from './template-helpers'
+
+export interface TemplatePartialEntry {
+  readonly dir: TemplatePath
+  readonly namespace: string
+  readonly ownership: ContributionTrace
+}
+
+function partialNamespace(owner: typeof ReactScaffoldOwner | typeof VueScaffoldOwner | typeof FrontendScaffoldOwner) {
+  return contributionTrace(owner, ContributionUnitKind.PartialNamespace)
+}
+
+export function collectTemplatePartialEntries(config: ProjectConfig, partialRoot: TemplatePath) {
+  const entries: TemplatePartialEntry[] = []
+  if (isVueProject(config))
+    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'vue')), namespace: 'vue', ownership: partialNamespace(VueScaffoldOwner) })
+  if (isReactProject(config))
+    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'react')), namespace: 'react', ownership: partialNamespace(ReactScaffoldOwner) })
+  entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'global')), namespace: 'global', ownership: partialNamespace(FrontendScaffoldOwner) })
+  return entries
+}
 
 // 1. 注册 helpers、partials
 // 2. 注册模板
@@ -17,6 +47,7 @@ import { registerTemplateHelpers } from './template-helpers'
 interface TemplateEngineServiceShape {
   readonly registerHelpers: () => Effect.Effect<void, never>
   readonly registerPartials: (dir: TemplatePath, namespace: string) => Effect.Effect<void, FileIOError>
+  readonly prepare: (config: ProjectConfig, partialRoot: TemplatePath) => Effect.Effect<void, FileIOError>
   readonly compile: (
     templatePath: TemplatePath,
     config: ProjectConfig,
@@ -77,6 +108,16 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
         )
       })
 
+      const prepare = (config: ProjectConfig, partialRoot: TemplatePath) => Effect.gen(function* () {
+        yield* registerHelpers()
+        const entries = collectTemplatePartialEntries(config, partialRoot)
+        yield* Effect.forEach(
+          entries,
+          entry => registerPartials(entry.dir, entry.namespace),
+          { concurrency: 1, discard: true },
+        )
+      })
+
       const compile = (path: TemplatePath, config: ProjectConfig) =>
         Effect.gen(function* () {
           const source = yield* fs.readFileString(path)
@@ -106,6 +147,7 @@ export class TemplateEngineService extends Effect.Service<TemplateEngineService>
       return {
         registerHelpers,
         registerPartials,
+        prepare,
         compile,
         render,
       } satisfies TemplateEngineServiceShape

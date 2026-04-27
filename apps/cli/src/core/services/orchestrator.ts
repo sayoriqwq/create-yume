@@ -13,7 +13,7 @@ import { PlanService } from '~/planner'
 import { TemplateEngineService } from '~/template-engine'
 import { buildPackageJson } from '../modifier/package-json'
 import { buildRootSvg } from '../template-registry/root-svg'
-import { buildTemplates, collectPartialEntries } from './compose'
+import { buildTemplates } from './compose'
 import { withProjectAnnotations } from './observability'
 
 interface OrchestratorServiceShape {
@@ -37,16 +37,10 @@ export class OrchestratorService extends Effect.Service<OrchestratorService>()(
 
       const execute: OrchestratorServiceShape['execute'] = (baseDir, config, options) =>
         Effect.gen(function* () {
-        // 1. 注册 helpers
-          yield* templateEngine.registerHelpers()
+          // 1. 准备模板引擎（helpers + 框架/global partials）
+          yield* templateEngine.prepare(config, partialRoot)
 
-          // 2. 注册 partials（按框架命名空间 + 全局）
-          const partialEntries = collectPartialEntries(config, partialRoot)
-          for (const p of partialEntries) {
-            yield* templateEngine.registerPartials(p.dir, p.namespace)
-          }
-
-          // 3. 组合 DSL（纯同步，不能产生 Effect）
+          // 2. 组合 DSL（纯同步，不能产生 Effect）
           const program = (dsl: ComposeDSL) => {
             if (!isFrontendProject(config))
               return

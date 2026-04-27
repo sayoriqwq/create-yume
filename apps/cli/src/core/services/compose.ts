@@ -2,7 +2,6 @@ import type { StandardCommand } from '@effect/platform/Command'
 import type { PostGenerateCommand } from '../commands'
 import type { TargetDir } from '@/brand/target-dir'
 import type { TemplatePath } from '@/brand/template-path'
-import type { ContributionTrace } from '@/core/ownership/model'
 import type { ComposeDSL, Plan } from '@/core/services/planner'
 import type { ProjectConfig } from '@/schema/project-config'
 import type { TemplateRegistry } from '@/schema/template-registry'
@@ -11,13 +10,6 @@ import { Command } from '@effect/platform'
 import { Effect } from 'effect'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
-import {
-  contributionTrace,
-  ContributionUnitKind,
-  FrontendScaffoldOwner,
-  ReactScaffoldOwner,
-  VueScaffoldOwner,
-} from '@/core/ownership/model'
 import { isReactProject, isVueProject } from '@/utils/type-guard'
 import { CliContext } from '../cli-context'
 import { buildCommands } from '../commands'
@@ -27,6 +19,7 @@ import { CommandService } from './command'
 import { withProjectAnnotations } from './observability'
 import { OrchestratorService } from './orchestrator'
 import { toPlanSpec } from './planner'
+import { collectTemplatePartialEntries } from './template-engine'
 
 // 纯函数：直接把符合条件的模板注册到 DSL（不依赖环境）
 export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, config: ProjectConfig) {
@@ -45,26 +38,8 @@ export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, conf
     register(ReactTemplates)
 }
 
-// 返回需要注册的 partial 目录（供调用方自行调用 templateEngine.registerPartials）
-export interface PartialEntry {
-  readonly dir: TemplatePath
-  readonly namespace: string
-  readonly ownership: ContributionTrace
-}
-
-function partialNamespace(owner: typeof ReactScaffoldOwner | typeof VueScaffoldOwner | typeof FrontendScaffoldOwner) {
-  return contributionTrace(owner, ContributionUnitKind.PartialNamespace)
-}
-
-export function collectPartialEntries(config: ProjectConfig, partialRoot: TemplatePath) {
-  const entries: PartialEntry[] = []
-  if (isVueProject(config))
-    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'vue')), namespace: 'vue', ownership: partialNamespace(VueScaffoldOwner) })
-  if (isReactProject(config))
-    entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'react')), namespace: 'react', ownership: partialNamespace(ReactScaffoldOwner) })
-  entries.push({ dir: makeTemplatePath(path.join(partialRoot, 'global')), namespace: 'global', ownership: partialNamespace(FrontendScaffoldOwner) })
-  return entries
-}
+// 兼容别名：partial 选择逻辑由 TemplateEngine 拥有，新代码应直接依赖 TemplateEngine.prepare。
+export const collectPartialEntries = collectTemplatePartialEntries
 
 export function generateProject(projectConfig: ProjectConfig) {
   return Effect.gen(function* () {

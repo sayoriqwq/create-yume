@@ -6,7 +6,6 @@ import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeTemplatePath } from '../src/brand/template-path'
 import { AppConfig } from '../src/config/app-config'
-import { collectPartialEntries } from '../src/core/services/compose'
 import { FsLive } from '../src/core/services/fs'
 import { TemplateEngineLive, TemplateEngineService } from '../src/core/services/template-engine'
 import { makeTestConfigProvider } from './support/config-provider'
@@ -34,11 +33,7 @@ function renderTemplate(templateRelativePath: string, config: ProjectConfig) {
   return Effect.runPromise(
     Effect.gen(function* () {
       const templateEngine = yield* TemplateEngineService
-      yield* templateEngine.registerHelpers()
-
-      for (const entry of collectPartialEntries(config, makeTemplatePath(partialRoot))) {
-        yield* templateEngine.registerPartials(entry.dir, entry.namespace)
-      }
+      yield* templateEngine.prepare(config, makeTemplatePath(partialRoot))
 
       return yield* templateEngine.render(
         makeTemplatePath(path.join(templateRoot, templateRelativePath)),

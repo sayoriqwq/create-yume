@@ -1,90 +1,14 @@
 import type { StandardCommand } from '@effect/platform/Command'
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
 import { makeTargetDir } from '@/brand/target-dir'
-import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
-import { collectPartialEntries, executeAllCommandsInDir, finishProject, withWorkingDirectory } from '../../../src/core/services/compose'
+import { executeAllCommandsInDir, finishProject, withWorkingDirectory } from '../../../src/core/services/compose'
 import { toPlanSpec } from '../../../src/core/services/planner'
 import { makeCommandMockLayer } from '../../support/mock-layers'
-
-describe('collectPartialEntries', () => {
-  const partialRoot = makeTemplatePath('/tmp/create-yume/templates/partials')
-
-  it('registers react partials with an explicit global namespace directory', () => {
-    const entries = collectPartialEntries({
-      type: 'react',
-      name: makeProjectName('phase2-react'),
-      language: 'typescript',
-      git: true,
-      linting: 'antfu-eslint',
-      codeQuality: ['lint-staged'],
-      buildTool: 'vite',
-      router: 'react-router',
-      stateManagement: 'zustand',
-      cssPreprocessor: 'css',
-      cssFramework: 'none',
-    }, partialRoot)
-
-    expect(entries).toEqual([
-      {
-        dir: makeTemplatePath(path.join(partialRoot, 'react')),
-        namespace: 'react',
-        ownership: {
-          owner: 'react-scaffold',
-          unit: 'partial-namespace',
-        },
-      },
-      {
-        dir: makeTemplatePath(path.join(partialRoot, 'global')),
-        namespace: 'global',
-        ownership: {
-          owner: 'frontend-scaffold',
-          unit: 'partial-namespace',
-        },
-      },
-    ])
-  })
-
-  it('registers vue partials with an explicit global namespace directory', () => {
-    const entries = collectPartialEntries({
-      type: 'vue',
-      name: makeProjectName('phase2-vue'),
-      language: 'typescript',
-      git: true,
-      linting: 'antfu-eslint',
-      codeQuality: ['commitlint'],
-      buildTool: 'vite',
-      router: true,
-      stateManagement: true,
-      cssPreprocessor: 'sass',
-      cssFramework: 'tailwind',
-    }, partialRoot)
-
-    expect(entries).toEqual([
-      {
-        dir: makeTemplatePath(path.join(partialRoot, 'vue')),
-        namespace: 'vue',
-        ownership: {
-          owner: 'vue-scaffold',
-          unit: 'partial-namespace',
-        },
-      },
-      {
-        dir: makeTemplatePath(path.join(partialRoot, 'global')),
-        namespace: 'global',
-        ownership: {
-          owner: 'frontend-scaffold',
-          unit: 'partial-namespace',
-        },
-      },
-    ])
-  })
-})
 
 describe('command working directory helpers', () => {
   it('keeps finishProject project annotations distinct from command execution annotations', () => {
