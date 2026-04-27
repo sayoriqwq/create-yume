@@ -5,10 +5,11 @@ import { Effect, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
 import { makeTargetDir } from '@/brand/target-dir'
+import { CommandError } from '@/core/errors'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { executeAllCommandsInDir, finishProject, withWorkingDirectory } from '../../../src/core/services/compose'
 import { toPlanSpec } from '../../../src/core/services/planner'
-import { makeCommandMockLayer } from '../../support/mock-layers'
+import { makeCommandMockLayer, makeFsMockLayer } from '../../support/mock-layers'
 
 describe('command working directory helpers', () => {
   it('keeps finishProject project annotations distinct from command execution annotations', () => {
@@ -54,6 +55,7 @@ describe('command working directory helpers', () => {
       executeAllCommandsInDir(commands, targetDir).pipe(
         Effect.provide(
           Layer.mergeAll(
+            makeFsMockLayer(),
             makeCommandMockLayer({
               execute: (command) => {
                 executed.push({
@@ -133,6 +135,7 @@ describe('command working directory helpers', () => {
       ).pipe(
         Effect.provide(
           Layer.mergeAll(
+            makeFsMockLayer(),
             makeCommandMockLayer({
               execute: (command) => {
                 executed.push({
@@ -150,5 +153,59 @@ describe('command working directory helpers', () => {
     expect(executed).toEqual([
       { command: 'pnpm install', cwd: targetDir },
     ])
+  })
+
+  it('rolls back the generated project when a post-generate command fails', async () => {
+    const targetDir = makeTargetDir('./post-command-failure')
+    const removes: string[] = []
+
+    const exit = await Effect.runPromiseExit(
+      finishProject(
+        {
+          type: 'react',
+          name: makeProjectName('post-command-failure'),
+          language: 'typescript',
+          git: true,
+          linting: 'antfu-eslint',
+          codeQuality: ['lint-staged'],
+          buildTool: 'vite',
+          router: 'react-router',
+          stateManagement: 'zustand',
+          cssPreprocessor: 'css',
+          cssFramework: 'none',
+        },
+        {
+          tasks: [],
+          postGenerateCommands: [
+            {
+              command: Command.make('git', 'init') as StandardCommand,
+              phase: 'after-plan-apply',
+              ownership: contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.PostGenerateCommand),
+            },
+          ],
+        },
+      ).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            makeFsMockLayer({
+              remove: path =>
+                Effect.sync(() => {
+                  removes.push(path)
+                }),
+            }),
+            makeCommandMockLayer({
+              execute: command =>
+                Effect.fail(new CommandError({
+                  command: command.command,
+                  args: [...command.args],
+                })),
+            }),
+          ),
+        ),
+      ),
+    )
+
+    expect(exit._tag).toBe('Failure')
+    expect(removes).toEqual([targetDir])
   })
 })

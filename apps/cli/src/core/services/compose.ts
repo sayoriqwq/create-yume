@@ -8,9 +8,10 @@ import type { TemplateRegistry } from '@/schema/template-registry'
 import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect } from 'effect'
-import { makeProjectTargetDir, makeTargetDir } from '@/brand/target-dir'
+import { makeProjectTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { isReactProject, isVueProject } from '@/utils/type-guard'
+import { FsService } from '~/fs'
 import { CliContext } from '../cli-context'
 import { buildCommands } from '../commands'
 import { ReactTemplates } from '../template-registry/react'
@@ -91,14 +92,31 @@ export function executeAllCommandsInDir(commands: PostGenerateCommand[], dir: Ta
   })
 }
 
-export function finishProject(config: ProjectConfig, plan: Plan) {
+function rollbackGeneratedProject(targetDir: TargetDir) {
+  return Effect.gen(function* () {
+    const fs = yield* FsService
+    yield* fs.remove(targetDir, { recursive: true, force: true }).pipe(
+      Effect.catchAll(error =>
+        Effect.logWarning(`Failed to roll back generated project ${targetDir}: ${error.message}`),
+      ),
+    )
+  })
+}
+
+export function finishProject(
+  config: ProjectConfig,
+  plan: Plan,
+  options?: { readonly rollbackOnFailure?: boolean },
+) {
+  const targetDir = makeProjectTargetDir(config.name)
+  const rollbackOnFailure = options?.rollbackOnFailure ?? true
+
   return Effect.gen(function* () {
     const tracedPlanSpec = toPlanSpec(plan)
     const postGenerateCommands = tracedPlanSpec.postGenerateCommands ?? []
     const postGenerateCommandTrace = postGenerateCommands
       .map(command => `${command.phase}:${command.ownership.owner}:${command.command} ${command.args.join(' ')}`)
       .join(' | ')
-    const targetDir = makeTargetDir(`./${config.name}`)
     yield* Effect.logDebug('Prepared traced plan spec for post-generate commands').pipe(
       Effect.annotateLogs({
         postGenerateCommandCount: postGenerateCommands.length,
@@ -112,7 +130,8 @@ export function finishProject(config: ProjectConfig, plan: Plan) {
     yield* executeAllCommandsInDir(plan.postGenerateCommands ?? [], targetDir)
     yield* Effect.logInfo('🎉 Project generated successfully!')
   }).pipe(
+    Effect.tapError(() => rollbackOnFailure ? rollbackGeneratedProject(targetDir) : Effect.void),
     Effect.withSpan('finish.project'),
-    withProjectAnnotations(config, 'finish.project', `./${config.name}`),
+    withProjectAnnotations(config, 'finish.project', targetDir),
   )
 }

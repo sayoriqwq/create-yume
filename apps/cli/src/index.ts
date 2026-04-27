@@ -117,7 +117,9 @@ const main = Effect.gen(function* () {
   const projectConfig = yield* collectQuestions
   yield* showConfigSummary(projectConfig)
   const plan = yield* generateProject(projectConfig)
-  yield* finishProject(projectConfig, plan)
+  yield* finishProject(projectConfig, plan, {
+    rollbackOnFailure: cli.args.rollback ?? true,
+  })
 })
 
 const program = main.pipe(
