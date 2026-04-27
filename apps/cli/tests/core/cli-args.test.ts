@@ -1,6 +1,6 @@
 import { Effect, Either } from 'effect'
 import { describe, expect, it } from 'vitest'
-import { parseCliArgs, parseRawCliArgs } from './cli-args'
+import { parseCliArgs, parseRawCliArgs } from '../../src/core/cli-args'
 
 describe('parseRawCliArgs', () => {
   it('normalizes aliases and negated booleans for the non-interactive preset flow', () => {

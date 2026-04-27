@@ -7,7 +7,7 @@ import { makeProjectName } from '@/brand/project-name'
 import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig } from '@/config/app-config'
 import { FsLive } from '~/fs'
-import { TemplateEngineLive, TemplateEngineService } from './template-engine'
+import { TemplateEngineLive, TemplateEngineService } from '../../../src/core/services/template-engine'
 
 describe('templateEngineService', () => {
   it('renders global partials from the explicit global namespace directory', async () => {
@@ -58,7 +58,7 @@ describe('templateEngineService', () => {
     )
 
     expect(output).toContain(`import './style.css'`)
-    expect(output).not.toContain(`import router from './router'`)
+    expect(output).not.toContain(`import router from '../../../src/core/services/router'`)
     expect(output).toContain(`createApp(App)`)
   })
 })

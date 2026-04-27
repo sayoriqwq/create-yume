@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { workspaceBootstrapQuestionContracts } from '@/core/workspace-bootstrap'
-import { askCodeQuality } from './code-quality'
-import { askGit } from './git'
-import { askLinting } from './linting'
+import { askCodeQuality } from '../../../../src/core/questions/common/code-quality'
+import { askGit } from '../../../../src/core/questions/common/git'
+import { askLinting } from '../../../../src/core/questions/common/linting'
 
 const { confirm, multiselect, select } = vi.hoisted(() => ({
   confirm: vi.fn(),

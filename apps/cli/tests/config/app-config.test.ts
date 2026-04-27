@@ -1,6 +1,6 @@
 import { ConfigProvider, Effect, Option, Redacted } from 'effect'
 import { describe, expect, it } from 'vitest'
-import { AppConfig } from './app-config'
+import { AppConfig } from '../../src/config/app-config'
 
 describe('appConfig', () => {
   it('reads runtime settings from ConfigProvider.fromMap', async () => {

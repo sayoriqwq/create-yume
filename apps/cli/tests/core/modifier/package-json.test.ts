@@ -3,7 +3,7 @@ import type { ProjectConfig } from '@/schema/project-config'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
 import { sortJsonKeys } from '@/utils/file-helper'
-import { buildPackageJson } from './package-json'
+import { buildPackageJson } from '../../../src/core/modifier/package-json'
 
 function renderPackageJson(config: ProjectConfig) {
   let readExisting = false

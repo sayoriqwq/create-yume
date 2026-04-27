@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { sharedFrontendQuestionContracts } from '@/core/template-registry/frontend-app'
-import { askBuildTool } from './build-tool'
-import { askCSSFramework } from './css-framework'
-import { askCSSPreprocessor } from './css-preprocessor'
+import { askBuildTool } from '../../../../src/core/questions/frontend/build-tool'
+import { askCSSFramework } from '../../../../src/core/questions/frontend/css-framework'
+import { askCSSPreprocessor } from '../../../../src/core/questions/frontend/css-preprocessor'
 
 const { select } = vi.hoisted(() => ({
   select: vi.fn(),

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { makeTemplatePath } from '@/brand/template-path'
-import { reactPresetProjectConfig } from '../../../tests/support/fixtures'
 import {
   assembleFrontendFamilyTemplates,
   getSharedFrontendPresetDefaults,
   sharedFrontendQuestionContracts,
   sharedFrontendTemplates,
   workspaceBootstrapTemplates,
-} from './frontend-app'
+} from '../../../src/core/template-registry/frontend-app'
+import { reactPresetProjectConfig } from '../../support/fixtures'
 
 describe('frontend scaffold-family contract', () => {
   it('keeps scaffold-family preset defaults in one shared contract', () => {
@@ -36,9 +36,9 @@ describe('frontend scaffold-family contract', () => {
   })
 
   it('consumes build-tool policy inside the scaffold-family template contract', () => {
-    const viteConfig = sharedFrontendTemplates['vite.config.ts']
-    const viteEnv = sharedFrontendTemplates['vite-env.d.ts']
-    const tsconfigNode = sharedFrontendTemplates['tsconfig.node.json']
+    const viteConfig = sharedFrontendTemplates['vite.config.ts']!
+    const viteEnv = sharedFrontendTemplates['vite-env.d.ts']!
+    const tsconfigNode = sharedFrontendTemplates['tsconfig.node.json']!
 
     expect(viteConfig.condition(reactPresetProjectConfig)).toBe(true)
     expect(viteEnv.condition(reactPresetProjectConfig)).toBe(true)

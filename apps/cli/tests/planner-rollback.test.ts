@@ -52,12 +52,12 @@ describe('planner rollback', () => {
       render: (_templatePath, data) => Effect.succeed(String(data)),
     })
 
-    const appConfigLayer = Layer.succeed(AppConfig, {
+    const appConfigLayer = Layer.succeed(AppConfig, AppConfig.make({
       logLevel: LogLevel.Debug,
       defaultConcurrency: 1,
       tracingEndpoint: Option.none(),
       debug: false,
-    })
+    }))
 
     const layer = PlanService.DefaultWithoutDependencies.pipe(
       Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),
@@ -125,12 +125,12 @@ describe('planner rollback', () => {
       render: (_templatePath, data) => Effect.succeed(String(data)),
     })
 
-    const appConfigLayer = Layer.succeed(AppConfig, {
+    const appConfigLayer = Layer.succeed(AppConfig, AppConfig.make({
       logLevel: LogLevel.Debug,
       defaultConcurrency: 1,
       tracingEndpoint: Option.none(),
       debug: false,
-    })
+    }))
 
     const layer = PlanService.DefaultWithoutDependencies.pipe(
       Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),
@@ -184,12 +184,12 @@ describe('planner rollback', () => {
       render: (_templatePath, data) => Effect.succeed(String(data)),
     })
 
-    const appConfigLayer = Layer.succeed(AppConfig, {
+    const appConfigLayer = Layer.succeed(AppConfig, AppConfig.make({
       logLevel: LogLevel.Debug,
       defaultConcurrency: 1,
       tracingEndpoint: Option.none(),
       debug: false,
-    })
+    }))
 
     const layer = PlanService.DefaultWithoutDependencies.pipe(
       Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),

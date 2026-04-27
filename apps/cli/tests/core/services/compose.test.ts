@@ -1,4 +1,5 @@
 import type { StandardCommand } from '@effect/platform/Command'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect, Layer, Option } from 'effect'
@@ -7,9 +8,9 @@ import { makeProjectName } from '@/brand/project-name'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
-import { makeCommandMockLayer } from '../../../tests/support/mock-layers'
-import { collectPartialEntries, executeAllCommandsInDir, finishProject, withWorkingDirectory } from './compose'
-import { toPlanSpec } from './planner'
+import { collectPartialEntries, executeAllCommandsInDir, finishProject, withWorkingDirectory } from '../../../src/core/services/compose'
+import { toPlanSpec } from '../../../src/core/services/planner'
+import { makeCommandMockLayer } from '../../support/mock-layers'
 
 describe('collectPartialEntries', () => {
   const partialRoot = makeTemplatePath('/tmp/create-yume/templates/partials')
@@ -86,6 +87,17 @@ describe('collectPartialEntries', () => {
 })
 
 describe('command working directory helpers', () => {
+  it('keeps finishProject project annotations distinct from command execution annotations', () => {
+    const source = readFileSync(new URL('../../../src/core/services/compose.ts', import.meta.url), 'utf8')
+
+    expect(source).toContain('Effect.withSpan(\'finish.project\')')
+    expect(source).toContain('withProjectAnnotations(config, \'finish.project\'')
+    expect(source).toContain('commandOwner: command.ownership.owner')
+    expect(source).toContain('commandUnit: command.ownership.unit')
+    expect(source).toContain('commandPhase: command.phase')
+    expect(source).not.toContain('withProjectAnnotations(config, \'command.execute\'')
+  })
+
   it('applies the target directory through Command.workingDirectory', () => {
     const command = Command.make('pnpm', 'install') as StandardCommand
     const targetDir = makeTargetDir('/tmp/create-yume-working-dir')

@@ -102,6 +102,10 @@ function decodeCollectedProjectConfig(input: unknown) {
   )
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unreachable case: ${String(value)}`)
+}
+
 export const createProject = Effect.gen(function* () {
   const projectType = yield* ask(askProjectType)
   const base = yield* askBaseCommon
@@ -132,7 +136,7 @@ export const createProject = Effect.gen(function* () {
     }
   }
 
-  return yield* Effect.dieMessage('Unsupported project type')
+  return assertNever(projectType)
 })
 
 const createPreset = Effect.gen(function* () {
@@ -170,7 +174,7 @@ const createPreset = Effect.gen(function* () {
       }
     }
     default:
-      return yield* Effect.dieMessage('Unsupported preset')
+      return assertNever(preset)
   }
 })
 
@@ -188,7 +192,7 @@ export const collectQuestions = Effect.gen(function* () {
     case 'preset':
       return yield* createPreset.pipe(Effect.flatMap(decodeCollectedProjectConfig))
     default:
-      return yield* Effect.dieMessage('Unsupported create mode')
+      return assertNever(createMode)
   }
 }).pipe(
   Effect.withSpan('questions.collect'),

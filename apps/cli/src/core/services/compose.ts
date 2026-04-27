@@ -137,6 +137,6 @@ export function finishProject(config: ProjectConfig, plan: Plan) {
     yield* Effect.logInfo('🎉 Project generated successfully!')
   }).pipe(
     Effect.withSpan('finish.project'),
-    withProjectAnnotations(config, 'command.execute', `./${config.name}`),
+    withProjectAnnotations(config, 'finish.project', `./${config.name}`),
   )
 }

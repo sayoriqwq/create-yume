@@ -1,4 +1,4 @@
-import type { Preset } from '@/schema/project-config'
+import type { Preset } from '@/schema/preset'
 import { select } from '@clack/prompts'
 
 export async function askPreset() {

@@ -1,4 +1,5 @@
-import type { BuildTool, CSSFramework, CSSPreprocessor, Preset, SharedFrontendAppConfig } from '@/schema/project-config'
+import type { Preset } from '@/schema/preset'
+import type { BuildTool, CSSFramework, CSSPreprocessor, SharedFrontendAppConfig } from '@/schema/project-config'
 import type { TemplateRegistry } from '@/schema/template-registry'
 import { makeTemplatePath } from '@/brand/template-path'
 import {

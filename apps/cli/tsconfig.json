@@ -51,6 +51,6 @@
     "verbatimModuleSyntax": true, // 保留导入导出原样，防止类型/值混用
     "skipLibCheck": true // 跳过 d.ts 检查，加速类型检查
   },
-  "include": ["src/**/*", "templates"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": ["src/**/*", "tests/**/*", "templates"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -13,7 +13,7 @@ import { TemplateEngineService } from '../../src/core/services/template-engine'
 export function makeFsMockLayer(
   overrides: Partial<typeof FsService.Service> = {},
 ) {
-  return Layer.succeed(FsService, {
+  return Layer.succeed(FsService, FsService.make({
     exists: () => Effect.succeed(false),
     readFileString: () => Effect.succeed(''),
     writeFileString: () => Effect.void,
@@ -25,17 +25,17 @@ export function makeFsMockLayer(
     remove: () => Effect.void,
     copyFile: () => Effect.void,
     ...overrides,
-  })
+  }))
 }
 
 export function makeCommandMockLayer(
   overrides: Partial<typeof CommandService.Service> = {},
 ) {
-  return Layer.succeed(CommandService, {
+  return Layer.succeed(CommandService, CommandService.make({
     make: (cmd: CommandName, ...args: string[]) => Command.make(cmd, ...args) as StandardCommand,
     execute: (_command: StandardCommand) => Effect.succeed(''),
     ...overrides,
-  })
+  }))
 }
 
 export function makeTemplateEngineMockLayer(
@@ -43,7 +43,7 @@ export function makeTemplateEngineMockLayer(
 ) {
   const template: Handlebars.TemplateDelegate = () => ''
 
-  return Layer.succeed(TemplateEngineService, {
+  return Layer.succeed(TemplateEngineService, TemplateEngineService.make({
     registerHelpers: () => Effect.void,
     registerPartials: (_dir: TemplatePath, _namespace: string) => Effect.void,
     compile: (_templatePath: TemplatePath, _config: ProjectConfig) =>
@@ -51,5 +51,5 @@ export function makeTemplateEngineMockLayer(
     render: (_templatePath: TemplatePath, _data: unknown, _config: ProjectConfig) =>
       Effect.succeed(''),
     ...overrides,
-  })
+  }))
 }

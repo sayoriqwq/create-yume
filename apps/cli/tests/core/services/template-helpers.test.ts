@@ -1,6 +1,6 @@
 import Handlebars from 'handlebars'
 import { describe, expect, it } from 'vitest'
-import { registerTemplateHelpers } from './template-helpers'
+import { registerTemplateHelpers } from '../../../src/core/services/template-helpers'
 
 function createRuntime(config: Record<string, unknown>) {
   const hb = Handlebars.create()

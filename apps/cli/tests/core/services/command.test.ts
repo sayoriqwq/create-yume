@@ -1,10 +1,11 @@
 import type { StandardCommand } from '@effect/platform/Command'
+import { Error as PlatformError } from '@effect/platform'
 import * as PlatformCommandExecutor from '@effect/platform/CommandExecutor'
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeCommandName } from '@/brand/command-name'
 import { CommandError } from '@/core/errors'
-import { CommandService } from './command'
+import { CommandService } from '../../../src/core/services/command'
 
 function makeCommandExecutorLayer(
   string: PlatformCommandExecutor.CommandExecutor['string'],
@@ -28,11 +29,12 @@ describe('command service', () => {
     const executed: Array<{ command: string, args: string[] }> = []
 
     const executorLayer = makeCommandExecutorLayer(
-      (command: StandardCommand) =>
+      command =>
         Effect.sync(() => {
+          const standardCommand = command as StandardCommand
           executed.push({
-            command: command.command,
-            args: [...command.args],
+            command: standardCommand.command,
+            args: [...standardCommand.args],
           })
           return 'mocked stdout'
         }),
@@ -61,14 +63,13 @@ describe('command service', () => {
   it('maps platform command failures into CommandError', async () => {
     const executorLayer = makeCommandExecutorLayer(
       () =>
-        Effect.fail({
-          _tag: 'SystemError',
+        Effect.fail(new PlatformError.SystemError({
           reason: 'PermissionDenied',
           module: 'Command',
           method: 'start',
           pathOrDescriptor: '/tmp/forbidden',
-          message: 'forced failure',
-        }),
+          description: 'forced failure',
+        })),
     )
     const commandLayer = CommandService.Default.pipe(Layer.provide(executorLayer))
 

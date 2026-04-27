@@ -1,10 +1,10 @@
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
-import { reactProjectConfig } from '../../../tests/support/fixtures'
-import { makeCommandMockLayer } from '../../../tests/support/mock-layers'
-import { CliContextLive } from '../cli-context'
-import { buildCommands, toPostGenerateCommandSpec } from './index'
+import { CliContextLive } from '../../../src/core/cli-context'
+import { buildCommands, toPostGenerateCommandSpec } from '../../../src/core/commands/index'
+import { reactProjectConfig } from '../../support/fixtures'
+import { makeCommandMockLayer } from '../../support/mock-layers'
 
 describe('buildCommands', () => {
   it('prepends pnpm install when the non-interactive CLI context requests installation', async () => {

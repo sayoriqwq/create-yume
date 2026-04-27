@@ -19,12 +19,12 @@ const templateRoot = makeTemplatePath('/virtual/templates')
 
 const plannerLayer = PlanService.DefaultWithoutDependencies.pipe(
   Layer.provideMerge(Layer.mergeAll(
-    Layer.succeed(AppConfig, {
+    Layer.succeed(AppConfig, AppConfig.make({
       logLevel: LogLevel.Debug,
       defaultConcurrency: 1,
       tracingEndpoint: Option.none(),
       debug: false,
-    }),
+    })),
     makeFsMockLayer(),
     makeTemplateEngineMockLayer(),
   )),
@@ -53,6 +53,35 @@ describe('planner snapshots', () => {
     const planSpec = await Effect.runPromise(buildPlanSpec(config))
 
     expect(planSpec).toMatchSnapshot()
+  })
+})
+
+describe('workspace bootstrap ownership boundaries', () => {
+  it('traces workspace-owned package mutations through reducer ownership', async () => {
+    const plan = await Effect.runPromise(buildPlanSpec(reactPresetProjectConfig))
+    const packageJsonTask = plan.tasks.find(task => task.kind === 'json' && task.path === 'package.json')
+
+    expect(packageJsonTask).toMatchObject({
+      ownership: {
+        owner: 'workspace-bootstrap',
+        unit: 'json-text-mutation',
+      },
+    })
+    expect(packageJsonTask?.kind).toBe('json')
+    if (packageJsonTask?.kind !== 'json') {
+      throw new Error('package.json task was not a json task')
+    }
+
+    expect(packageJsonTask.reducers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ownership: {
+            owner: 'workspace-bootstrap',
+            unit: 'json-text-mutation',
+          },
+        }),
+      ]),
+    )
   })
 })
 

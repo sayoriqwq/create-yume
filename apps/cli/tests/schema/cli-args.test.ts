@@ -1,6 +1,6 @@
 import { Effect, Either } from 'effect'
 import { describe, expect, it } from 'vitest'
-import { decodeCliArgs, formatCliArgsError } from './cli-args'
+import { decodeCliArgs, formatCliArgsError } from '../../src/schema/cli-args'
 
 describe('cliArgsSchema', () => {
   it('returns a structured decode failure for an invalid preset fixture', async () => {

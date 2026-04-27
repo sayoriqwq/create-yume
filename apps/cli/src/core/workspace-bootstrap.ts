@@ -1,5 +1,6 @@
 import type { JsonBuilder } from '@/core/services/planner'
 import type { CodeQuality, Linting, ProjectConfig } from '@/schema/project-config'
+import { contributionTrace, ContributionUnitKind, WorkspaceBootstrapOwner } from '@/core/ownership/model'
 import { devDeps, scripts, when } from '@/utils/file-helper'
 
 interface SelectOption<T> {
@@ -35,6 +36,11 @@ const defaultWorkspaceBootstrapCodeQuality = ['lint-staged', 'commitlint'] as co
 const prepareCommitMsgHook = '[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"'
 const lintStagedHook = 'pnpm lint-staged'
 const commitLintHook = 'pnpm exec commitlint --edit "$1"'
+
+export const workspaceBootstrapPackageJsonMutation = contributionTrace(
+  WorkspaceBootstrapOwner,
+  ContributionUnitKind.JsonTextMutation,
+)
 
 export const workspaceBootstrapQuestionContracts = {
   git: {
@@ -88,13 +94,13 @@ export function applyWorkspaceBootstrapPackageJson(
   config: WorkspaceBootstrapPackagePolicy,
 ): JsonBuilder {
   return entry
-    .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })))
-    .modify(when(config.linting === 'antfu-eslint', scripts({ 'lint': 'eslint', 'lint:fix': 'eslint --fix' })))
-    .modify(when(config.git, devDeps({ '@lobehub/commit-cli': '^2.19.0' })))
-    .modify(when(config.git, scripts({ 'commit': 'lobe-commit --hook', 'commit:config': 'lobe-commit --option' })))
-    .modify(when(config.codeQuality.length > 0, devDeps({ husky: '^9.1.7' })))
-    .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.4.0' })))
-    .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })))
+    .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.linting === 'antfu-eslint', scripts({ 'lint': 'eslint', 'lint:fix': 'eslint --fix' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.git, devDeps({ '@lobehub/commit-cli': '^2.19.0' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.git, scripts({ 'commit': 'lobe-commit --hook', 'commit:config': 'lobe-commit --option' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.codeQuality.length > 0, devDeps({ husky: '^9.1.7' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.4.0' })), workspaceBootstrapPackageJsonMutation)
+    .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })), workspaceBootstrapPackageJsonMutation)
 }
 
 export function getWorkspaceBootstrapCommandSpecs(
