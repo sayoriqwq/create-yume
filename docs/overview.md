@@ -161,4 +161,4 @@ apps/cli
 - 当前仓库只支持 React 和 Vue 两套 scaffold。
 - CLI 构建产物固定为 `apps/cli/dist/index.js`，`apps/cli/package.json` 的 `main` 与 `bin.create-yume` 也都指向它。
 - 模板引擎与 planner 属于高风险区域，修改后必须按验证矩阵做针对性验证。
-- `docs/archive/` 里的内容是历史阶段文档，不应直接当作当前实现说明。
+- 历史 planning / review / legacy workflow 文档已在仓库清理中移除；当前应以根级 README、`docs/` 中保留的稳定文档，以及 `.gsd/` 中的项目事实/决策/需求为准。
