@@ -1,4 +1,4 @@
-import { ConfigProvider, Effect, Option, Redacted } from 'effect'
+import { ConfigProvider, Effect, Exit, Option, Redacted } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { AppConfig } from '../../src/config/app-config'
 
@@ -42,5 +42,20 @@ describe('appConfig', () => {
     expect(config.defaultConcurrency).toBe(8)
     expect(config.debug).toBe(false)
     expect(Option.isNone(config.tracingEndpoint)).toBe(true)
+  })
+
+  it('rejects non-positive concurrency at the config boundary', async () => {
+    const provider = ConfigProvider.fromMap(new Map([
+      ['DEFAULT_CONCURRENCY', '0'],
+    ]))
+
+    const exit = await Effect.runPromiseExit(
+      AppConfig.pipe(
+        Effect.provide(AppConfig.Default),
+        Effect.withConfigProvider(provider),
+      ),
+    )
+
+    expect(Exit.isFailure(exit)).toBe(true)
   })
 })

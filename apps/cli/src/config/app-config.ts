@@ -11,11 +11,17 @@ interface AppConfigShape {
 }
 
 const DEFAULT_CONCURRENCY = 8
+const MAX_CONCURRENCY = 32
 
 export class AppConfig extends Effect.Service<AppConfig>()('AppConfig', {
   effect: Config.all({
     logLevel: Config.withDefault(LogLevelValues.Debug)(Config.logLevel('LOG_LEVEL')),
-    defaultConcurrency: Config.withDefault(DEFAULT_CONCURRENCY)(Config.integer('DEFAULT_CONCURRENCY')),
+    defaultConcurrency: Config.withDefault(DEFAULT_CONCURRENCY)(Config.integer('DEFAULT_CONCURRENCY')).pipe(
+      Config.validate({
+        message: `Expected DEFAULT_CONCURRENCY to be between 1 and ${MAX_CONCURRENCY}`,
+        validation: value => value >= 1 && value <= MAX_CONCURRENCY,
+      }),
+    ),
     tracingEndpoint: Config.option(Config.redacted('OTEL_EXPORTER_OTLP_ENDPOINT')),
     debug: Config.withDefault(false)(Config.boolean('DEBUG')),
   }).pipe(
