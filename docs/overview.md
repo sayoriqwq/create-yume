@@ -158,6 +158,8 @@ apps/cli
 
 ## 10. 当前边界与注意事项
 
+- Effect 是本项目的核心依赖；日常参考优先查看 `docs/effect/` 及其 `code-style/` 指南，涉及 freshness 或最新 API 核对时再 fetch 官方文档。
+
 - 当前仓库只支持 React 和 Vue 两套 scaffold。
 - CLI 构建产物固定为 `apps/cli/dist/index.js`，`apps/cli/package.json` 的 `main` 与 `bin.create-yume` 也都指向它。
 - 模板引擎与 planner 属于高风险区域，修改后必须按验证矩阵做针对性验证。
