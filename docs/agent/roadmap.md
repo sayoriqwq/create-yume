@@ -7,6 +7,7 @@
 ## 验证
 
 - [验证矩阵](./verification-matrix.md)
+- [测试组织约束](./testing.md)
 
 ## Effect
 

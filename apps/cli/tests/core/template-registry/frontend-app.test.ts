@@ -5,8 +5,8 @@ import {
   getSharedFrontendPresetDefaults,
   sharedFrontendQuestionContracts,
   sharedFrontendTemplates,
-  workspaceBootstrapTemplates,
 } from '../../../src/core/template-registry/frontend-app'
+import { workspaceBootstrapTemplates } from '../../../src/core/template-registry/workspace-bootstrap'
 import { reactPresetProjectConfig } from '../../support/fixtures'
 
 describe('frontend scaffold-family contract', () => {
@@ -22,6 +22,19 @@ describe('frontend scaffold-family contract', () => {
       cssPreprocessor: 'less',
       cssFramework: 'tailwind',
     })
+  })
+
+  it('loads workspace bootstrap templates from their own registry module', async () => {
+    const frontendRegistryModule = await import('../../../src/core/template-registry/frontend-app')
+
+    expect(frontendRegistryModule).not.toHaveProperty('workspaceBootstrapTemplates')
+    expect(Object.keys(workspaceBootstrapTemplates)).toEqual(expect.arrayContaining([
+      'eslint.config.mjs',
+      'vscode.settings.json',
+      '.gitignore',
+      'commitlint.config.ts',
+      '.lintstagedrc.json',
+    ]))
   })
 
   it('separates shared frontend templates from workspace bootstrap templates', () => {

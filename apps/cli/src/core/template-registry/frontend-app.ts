@@ -2,12 +2,11 @@ import type { Preset } from '@/schema/preset'
 import type { BuildTool, CSSFramework, CSSPreprocessor, SharedFrontendAppConfig } from '@/schema/project-config'
 import type { TemplateRegistry } from '@/schema/template-registry'
 import { makeTemplatePath } from '@/brand/template-path'
+import { contributionTrace, ContributionUnitKind, FrontendScaffoldOwner } from '@/core/ownership/model'
 import {
-  contributionTrace,
-  ContributionUnitKind,
-  FrontendScaffoldOwner,
-  WorkspaceBootstrapOwner,
-} from '@/core/ownership/model'
+  workspaceBootstrapCodeQualityTemplates,
+  workspaceBootstrapLintAndGitTemplates,
+} from './workspace-bootstrap'
 
 interface SelectOption<T> {
   readonly value: T
@@ -23,7 +22,6 @@ type SharedFrontendPolicy = Pick<SharedFrontendAppConfig, 'buildTool' | 'cssPrep
 type FrontendPreset = Extract<Preset, 'react-app' | 'vue-app'>
 
 const frontendFragmentRender = contributionTrace(FrontendScaffoldOwner, ContributionUnitKind.FragmentRender)
-const workspaceFragmentRender = contributionTrace(WorkspaceBootstrapOwner, ContributionUnitKind.FragmentRender)
 
 export const sharedFrontendQuestionContracts = {
   buildTool: {
@@ -123,43 +121,6 @@ export const sharedFrontendTemplates: TemplateRegistry<SharedFrontendAppConfig> 
   },
 }
 
-// Explicitly left in place for F2 so shared frontend policy stops leaking through one mixed bag.
-export const workspaceBootstrapTemplates: TemplateRegistry<SharedFrontendAppConfig> = {
-  'eslint.config.mjs': {
-    template: makeTemplatePath('fragments/common/linter/eslint.config.mjs.hbs'),
-    target: 'eslint.config.mjs',
-    condition: config => config.linting === 'antfu-eslint',
-    ownership: workspaceFragmentRender,
-  },
-  'vscode.settings.json': {
-    template: makeTemplatePath('fragments/common/linter/vscode.settings.json.hbs'),
-    target: '.vscode/settings.json',
-    condition: config => config.linting === 'antfu-eslint',
-    ownership: workspaceFragmentRender,
-  },
-
-  '.gitignore': {
-    template: makeTemplatePath('fragments/common/gitignore.hbs'),
-    target: '.gitignore',
-    condition: config => config.git === true,
-    ownership: workspaceFragmentRender,
-  },
-
-  'commitlint.config.ts': {
-    template: makeTemplatePath('fragments/common/code-quality/commitlint.config.ts.hbs'),
-    target: config => `commitlint.config.${config.language === 'typescript' ? 'ts' : 'js'}`,
-    condition: config => config.codeQuality.includes('commitlint'),
-    ownership: workspaceFragmentRender,
-  },
-
-  '.lintstagedrc.json': {
-    template: makeTemplatePath('fragments/common/code-quality/.lintstagedrc.json.hbs'),
-    target: '.lintstagedrc.json',
-    condition: config => config.codeQuality.includes('lint-staged'),
-    ownership: workspaceFragmentRender,
-  },
-}
-
 function pickTemplateRegistryEntries<T>(
   registry: TemplateRegistry<T>,
   keys: readonly string[],
@@ -181,17 +142,6 @@ const sharedFrontendCoreTemplates = pickTemplateRegistryEntries(sharedFrontendTe
 const sharedFrontendFinishingTemplates = pickTemplateRegistryEntries(sharedFrontendTemplates, [
   'README.md',
   'style.css',
-])
-
-const workspaceBootstrapLintAndGitTemplates = pickTemplateRegistryEntries(workspaceBootstrapTemplates, [
-  'eslint.config.mjs',
-  'vscode.settings.json',
-  '.gitignore',
-])
-
-const workspaceBootstrapCodeQualityTemplates = pickTemplateRegistryEntries(workspaceBootstrapTemplates, [
-  'commitlint.config.ts',
-  '.lintstagedrc.json',
 ])
 
 export function assembleFrontendFamilyTemplates<T extends SharedFrontendAppConfig>(
