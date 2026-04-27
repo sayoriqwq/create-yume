@@ -61,15 +61,16 @@ describe('command service', () => {
   })
 
   it('maps platform command failures into CommandError', async () => {
+    const cause = new PlatformError.SystemError({
+      reason: 'PermissionDenied',
+      module: 'Command',
+      method: 'start',
+      pathOrDescriptor: '/tmp/forbidden',
+      description: 'forced failure',
+    })
     const executorLayer = makeCommandExecutorLayer(
       () =>
-        Effect.fail(new PlatformError.SystemError({
-          reason: 'PermissionDenied',
-          module: 'Command',
-          method: 'start',
-          pathOrDescriptor: '/tmp/forbidden',
-          description: 'forced failure',
-        })),
+        Effect.fail(cause),
     )
     const commandLayer = CommandService.Default.pipe(Layer.provide(executorLayer))
 
@@ -90,6 +91,7 @@ describe('command service', () => {
       expect(failure).toMatchObject({
         command: 'git',
         args: ['status'],
+        cause,
       })
     }
   })

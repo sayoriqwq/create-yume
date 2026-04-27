@@ -24,6 +24,7 @@ export class CommandError extends Data.TaggedError('CommandError')<{
   env?: Record<string, string>
   cwd?: string
   shell?: boolean
+  cause?: unknown
 }> {}
 
 export class PlanConflictError extends Data.TaggedError('PlanConflictError')<{
@@ -56,6 +57,7 @@ export type CLIError
     | SchemaContractError
     | TemplateError
     | FileIOError
+    | CommandError
     | PlanConflictError
     | PlanTargetPathError
     | UnknownError

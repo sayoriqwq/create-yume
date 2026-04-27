@@ -29,10 +29,11 @@ export class CommandService extends Effect.Service<CommandService>()('CommandSer
           .string(command)
           .pipe(
             Effect.provideService(CommandExecutor, executor),
-            Effect.mapError(() => new CommandError({
+            Effect.mapError(error => new CommandError({
               command: command.command,
               args: [...command.args],
               ...(Option.isSome(command.cwd) ? { cwd: command.cwd.value } : {}),
+              cause: error,
             })),
           )
 
