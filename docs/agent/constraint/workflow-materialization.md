@@ -2,9 +2,9 @@
 
 ## 目的
 
-本约束用于定义 CLI workflow 中不同生成策略的使用边界。
+本约束定义 CLI workflow 中不同生成策略的使用边界。
 
-当前系统不应被理解为“Handlebars 模板渲染”和“函数式组合”两条 workflow。当前系统只有一条稳定 workflow：
+当前系统只有一条稳定 workflow：
 
 1. 收敛 `ProjectConfig`。
 2. owner 贡献 generation units。
@@ -12,21 +12,21 @@
 4. 应用 plan。
 5. 执行 post-generate command。
 
-Handlebars fragment render、JSON / text mutation、static asset copy、post-generate command 只是同一条 workflow 下的不同 materialization strategy。
+Handlebars fragment render、JSON / text mutation、static asset copy 和 post-generate command 都只是这条 workflow 下的 materialization strategy，不是多套 workflow。
 
 ## 读者与行动
 
 本文档面向修改 CLI workflow、模板注册、组合型文件生成或 capability owner 的执行者。
 
-读完后，应能判断一个生成目标应该使用哪种 materialization strategy，并知道热点文件应如何演进。
+读完后，应能判断一个生成目标应该使用哪种 materialization strategy，并知道热点文件、路径边界、preview / dry run 与 command output 应如何处理。
 
 ## 核心原则
 
 1. 单一 workflow 优先于统一渲染技术。
 2. `Plan` / `PlanSpec` 是稳定执行边界。
 3. materialization strategy 是内部实现选择，不应泄漏成调用方需要记忆的双模式。
-4. owner 应拥有自己的规则，中心 composer 只应收集和排序贡献。
-5. 对热点文件，不应为了“所有文件都走模板”而把结构化决策塞进 Handlebars。
+4. owner 应拥有自己的规则，中心 composer 只应收集、排序和提交贡献。
+5. 热点文件不应为了“所有文件都走模板”而把结构化决策塞进 Handlebars。
 
 ## Strategy 选择规则
 
@@ -36,15 +36,15 @@ Handlebars fragment render、JSON / text mutation、static asset copy、post-gen
 
 适用情况：
 
-- 文件内容整体像一个完整文件。
+- 文件内容整体像完整文件。
 - 条件分支少，并且只影响局部文本。
 - 读模板时可以直接理解输出结构。
 - owner 贡献的是“渲染一个文件”。
 
 不适用情况：
 
-- 模板中需要表达大量跨 owner 的策略判断。
-- 多个 capability 都需要修改同一个目标文件。
+- 模板需要表达大量跨 owner 策略判断。
+- 多个 capability 都需要修改同一目标文件。
 - 输出需要结构化合并、排序、去重或冲突检查。
 - 模板 helper 开始承载 package policy、dependency policy 或 workflow policy。
 
@@ -54,68 +54,95 @@ Handlebars fragment render、JSON / text mutation、static asset copy、post-gen
 
 适用情况：
 
-- 文件是结构化数据，或可被稳定地视为结构化内容。
+- 文件是结构化数据，或可被稳定视为结构化内容。
 - 多个 owner 需要向同一目标贡献片段。
 - 输出需要确定性排序、合并、去重或 snapshot。
-- 每个贡献都需要保留 ownership trace。
+- 每个 contribution 都需要保留 ownership trace。
 - 新 capability 不应该迫使中心 composer 学会该 capability 的内部规则。
 
-`package.json` 是当前最典型的 JSON mutation 目标。它不应退回 Handlebars 模板。
+`package.json` 是当前最典型的 JSON mutation 目标，不应退回 Handlebars 模板。
 
 ### Static Asset Copy
 
-当目标文件不需要配置参与，也不需要渲染时，使用 static asset copy。
-
-适用情况：
-
-- 文件内容固定。
-- 文件不需要读取 `ProjectConfig`。
-- 文件不需要 owner 间合并。
+当目标文件固定、不依赖 `ProjectConfig`、也不需要 owner 间合并时，使用 static asset copy。
 
 ### Post-Generate Command
 
-当行为必须在文件生成后由外部命令完成时，使用 post-generate command。
+当行为必须在文件生成后由外部工具完成时，使用 post-generate command。
 
 适用情况：
 
 - 行为依赖包管理器、Git、工具 CLI 或平台命令。
-- 行为不适合被表示为文件写入。
-- 命令可以被明确归属到 owner 与 phase。
+- 行为不适合表示为文件写入。
+- 命令可以明确归属到 owner 与 phase。
 
-post-generate command 不应隐藏文件生成规则。能稳定表示为 plan task 的文件产物，应优先进入 plan。
+post-generate command 不应隐藏文件生成规则。能稳定表示为 plan task 的文件产物，应优先进入 plan，共享 `PlanSpec`、rollback 和 ownership trace。外部命令只保留真正依赖外部工具执行的行为。
 
 ## 热点文件约束
 
 热点文件是指多个 owner 都天然需要贡献内容的同一目标文件。
 
-热点文件不应由大型 Handlebars 模板承载策略分支。热点文件也不应长期依赖一个越来越了解所有 owner 细节的中心函数。
+热点文件不应由大型 Handlebars 模板承载策略分支，也不应长期依赖一个越来越了解所有 owner 细节的中心函数。
 
 热点文件应按以下方向演进：
 
 1. 一个 owner 负责 base shape。
 2. 各 capability owner 暴露自己的 contribution。
-3. contribution 必须携带 ownership trace。
+3. contribution 携带 ownership trace。
 4. 中心 composer 只负责收集、排序和提交 contribution。
-5. merge、sort、dedupe、conflict policy 应下沉到 plan / mutation boundary。
+5. merge、sort、dedupe、conflict policy 下沉到 plan / mutation boundary。
 
 当前 planner 已在 plan application 前拒绝 duplicate target-path conflicts。这个契约对 fragment render 和 static asset copy 仍然有效。
 
-当未来需要支持多个 JSON / text mutation 指向同一热点文件时，应把它设计为同 path mutation 合并语义，而不是让每个 owner 回到中心聚合函数。
+当多个 JSON / text mutation 需要指向同一热点文件时，应设计 same-path mutation merge，而不是让每个 owner 回到中心聚合函数。合并后仍必须能从 `PlanSpec` 解释每个 owner 的 contribution、顺序和 reducer。
 
-## `package.json` 约束
+## 已知热点与观察点
+
+### `package.json`
 
 `package.json` 是结构化决策汇合点，不是文本模板。
 
-对 `package.json` 的新增规则应优先满足以下要求：
+新增 dependency、script、devDependency、engine 等规则时，应由对应 owner 贡献 JSON mutation，并保持 mutation 可序列化为可解释的 `PlanSpec`。如果新增 capability 时必须直接修改中心 `package.json` 聚合函数，说明 owner contribution 边界还不够深。
 
-1. dependency、script、devDependency、engine 等规则用 JSON mutation 表达。
-2. capability 相关依赖由 capability owner 贡献。
-3. workspace bootstrap 相关依赖与 script 由 workspace bootstrap owner 贡献。
-4. framework family 相关依赖由对应 scaffold-family owner 贡献。
-5. mutation 必须可序列化为可解释的 `PlanSpec`。
-6. 不应通过 Handlebars helper 编码 dependency policy。
+### TypeScript 配置
 
-如果新增 capability 时必须直接修改中心 `package.json` 聚合函数，说明 owner contribution 边界还不够深，应优先考虑抽出 contribution 接口。
+当前 TypeScript config 仍适合 fragment render，因为内容相对固定，主要由 scaffold-family owner 决定。
+
+当多个 owner 需要共同修改 compiler options、references、paths、types 等字段时，TypeScript config 应被视为新的结构化热点文件，接入 structured target contribution 与 same-path mutation merge，而不是继续把 capability-specific 条件塞进模板。
+
+## 路径与安全边界
+
+生成任务的 target path 应保持 project-relative 语义。
+
+在引入 plan preview、dry run、外部 `PlanSpec` 读取或更多生成目标前，应确保 plan build 或 plan apply 拒绝绝对 target path 与 `..` 越界 target path。模板源路径和生成目标路径应继续使用不同 brand。
+
+当前命令主要用于依赖安装、Git 初始化和工具初始化，通常不处理 secret。在引入 token、认证、远程模板、私有 registry 或外部服务前，必须先定义 command output 的 redaction 或降级策略。失败诊断应保留 command、args、cwd、exit code、owner、unit 和 phase，但不得持久化敏感 stdout / stderr。
+
+远程模板、插件化模板来源、Node 项目脚手架和已有项目增量更新仍不在当前产品范围内。若未来要进入实现，必须先更新用户侧系统架构、执行约束、验证矩阵，并重新评估 preserved core、路径边界和 command output 安全边界。
+
+## Plan Preview 与 Dry Run
+
+plan preview 和 dry run 是用户可见能力，不是新的 workflow。
+
+如果引入这些能力，应满足以下约束：
+
+1. 复用正常的 config collection 与 plan build。
+2. 以 `PlanSpec` 为唯一数据源。
+3. 展示 target path、task kind、owner、unit 和 post-generate command。
+4. dry run 不写入文件、不创建目录、不执行外部命令。
+5. 如果文件产物仍隐藏在 post-generate command 中，preview 只能展示命令，不能声称已完整展示文件内容。
+
+涉及用户可见输出时，必须同步检查用户文档。
+
+## 验证提示
+
+新增或修改生成目标时，验证应覆盖真实影响面：
+
+- 修改 fragment、template helper 或 registry 时，检查模板渲染和 planner snapshot。
+- 修改 JSON / text mutation 或热点文件时，检查 `PlanSpec` 是否能解释 owner contribution。
+- 修改 rollback、path boundary 或 plan apply 行为时，覆盖失败路径。
+- 修改依赖版本、package manifest、Vite、TypeScript、React 或 Vue 主模板时，考虑运行 generated project smoke。
+- 修改 command phase 时，验证命令顺序、失败诊断和敏感输出边界。
 
 ## 反模式
 
@@ -127,6 +154,7 @@ post-generate command 不应隐藏文件生成规则。能稳定表示为 plan t
 - 让调用方记住某个 path 到底应该走模板、mutation 还是命令。
 - 让同一设计决策同时出现在模板、package mutation 和 post-generate command 中。
 - 为了短期省事，把 owner 的私有规则泄漏到 preserved core。
+- 在 `docs/` 中长期保留执行 TODO、阶段性 backlog 或临时讨论材料。
 
 ## 检查点
 
@@ -138,6 +166,8 @@ post-generate command 不应隐藏文件生成规则。能稳定表示为 plan t
 4. 新 capability 是否只需要新增自己的 contribution，而不需要改中心 composer？
 5. 这个规则是否能在 `PlanSpec` 中被解释？
 6. 如果用 Handlebars，模板是否会变成策略表？
+7. target path 是否明确限制在 project-relative 边界内？
+8. 是否有用户可见输出需要同步用户文档？
+9. 是否有 command output 泄漏敏感信息的可能？
 
 如果答案显示目标是热点文件，应选择函数式 contribution / mutation 方向，而不是 fragment render。
-
