@@ -8,7 +8,7 @@ import type { TemplateRegistry } from '@/schema/template-registry'
 import path from 'node:path'
 import { Command } from '@effect/platform'
 import { Effect } from 'effect'
-import { makeTargetDir } from '@/brand/target-dir'
+import { makeProjectTargetDir, makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { isReactProject, isVueProject } from '@/utils/type-guard'
 import { CliContext } from '../cli-context'
@@ -42,11 +42,12 @@ export function buildTemplates(dsl: ComposeDSL, templateRoot: TemplatePath, conf
 export const collectPartialEntries = collectTemplatePartialEntries
 
 export function generateProject(projectConfig: ProjectConfig) {
+  const targetDir = makeProjectTargetDir(projectConfig.name)
+
   return Effect.gen(function* () {
     yield* Effect.logInfo('🔧 Generating your project...')
     const cli = yield* CliContext
     const orchestrator = yield* OrchestratorService
-    const targetDir = makeTargetDir(`./${projectConfig.name}`)
     const plan = yield* orchestrator.execute(targetDir, projectConfig, {
       rollbackOnFailure: cli.args.rollback ?? true,
     })
@@ -57,7 +58,7 @@ export function generateProject(projectConfig: ProjectConfig) {
     } satisfies Plan
   }).pipe(
     Effect.withSpan('generate.project'),
-    withProjectAnnotations(projectConfig, 'generate.project', `./${projectConfig.name}`),
+    withProjectAnnotations(projectConfig, 'generate.project', targetDir),
   )
 }
 
