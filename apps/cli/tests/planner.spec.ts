@@ -1,4 +1,5 @@
 import type { ProjectConfig } from '../src/schema/project-config'
+import { readFileSync } from 'node:fs'
 import { Effect, Layer, LogLevel, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeTemplatePath } from '../src/brand/template-path'
@@ -16,6 +17,9 @@ import {
 import { makeFsMockLayer, makeTemplateEngineMockLayer } from './support/mock-layers'
 
 const templateRoot = makeTemplatePath('/virtual/templates')
+const plannerSource = readFileSync(new URL('../src/core/services/planner.ts', import.meta.url), 'utf8')
+const planBuildSource = readFileSync(new URL('../src/core/services/plan/build.ts', import.meta.url), 'utf8')
+const planApplySource = readFileSync(new URL('../src/core/services/plan/apply.ts', import.meta.url), 'utf8')
 
 const plannerLayer = PlanService.DefaultWithoutDependencies.pipe(
   Layer.provideMerge(Layer.mergeAll(
@@ -42,6 +46,26 @@ function buildPlanSpec(config: ProjectConfig) {
     return toPlanSpec(plan)
   }).pipe(Effect.provide(plannerLayer))
 }
+
+describe('planner public boundary', () => {
+  it('keeps PlanService as a stable build/apply facade over internal plan modules', () => {
+    expect(plannerSource).toContain('import { applyPlan } from \'./plan/apply\'')
+    expect(plannerSource).toContain('import { buildPlan } from \'./plan/build\'')
+    expect(plannerSource).toContain('export { toPlanSpec } from \'./plan/build\'')
+    expect(plannerSource).toContain('const build: PlanServiceShape[\'build\']')
+    expect(plannerSource).toContain('const apply: PlanServiceShape[\'apply\']')
+    expect(plannerSource).toContain('buildPlan(program)')
+    expect(plannerSource).toContain('applyPlan(')
+
+    expect(plannerSource).not.toContain('function annotateOperation')
+    expect(plannerSource).not.toContain('function registerRollbackFinalizer')
+    expect(planBuildSource).toContain('function annotateOperation')
+    expect(planBuildSource).toContain('export function buildPlan')
+    expect(planBuildSource).toContain('export function toPlanSpec')
+    expect(planApplySource).toContain('function registerRollbackFinalizer')
+    expect(planApplySource).toContain('export function applyPlan')
+  })
+})
 
 describe('planner snapshots', () => {
   it.each([
