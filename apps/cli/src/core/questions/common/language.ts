@@ -1,4 +1,4 @@
-import type { Language } from '@/types/config'
+import type { Language } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 
 export async function askLanguage() {

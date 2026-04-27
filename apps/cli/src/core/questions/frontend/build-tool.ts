@@ -1,4 +1,4 @@
-import type { BuildTool } from '@/types/project'
+import type { BuildTool } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 import { sharedFrontendQuestionContracts } from '@/core/template-registry/frontend-app'
 

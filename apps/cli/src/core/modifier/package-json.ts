@@ -1,5 +1,5 @@
-import type { ProjectConfig } from '@/types/config'
-import type { ComposeDSL } from '@/types/dsl'
+import type { ComposeDSL } from '@/core/services/planner'
+import type { ProjectConfig } from '@/schema/project-config'
 import { makePackageName } from '@/brand/package-name'
 import { applyReactRouterPackageJson, applyVueRouterPackageJson } from '@/core/owners/router'
 import { applyReactStateManagementPackageJson, applyVueStateManagementPackageJson } from '@/core/owners/state-management'

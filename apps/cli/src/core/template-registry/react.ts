@@ -1,5 +1,5 @@
-import type { ReactProjectConfig } from '@/types/config'
-import type { TemplateRegistry } from '@/types/template'
+import type { ReactProjectConfig } from '@/schema/project-config'
+import type { TemplateRegistry } from '@/schema/template-registry'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, ReactScaffoldOwner } from '@/core/ownership/model'
 import { ReactRouterAboutTemplate, ReactRouterIndexTemplate } from '../owners/router'

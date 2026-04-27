@@ -1,4 +1,4 @@
-import type { CodeQuality } from '@/types/config'
+import type { CodeQuality } from '@/schema/project-config'
 import { multiselect } from '@clack/prompts'
 import { workspaceBootstrapQuestionContracts } from '@/core/workspace-bootstrap'
 

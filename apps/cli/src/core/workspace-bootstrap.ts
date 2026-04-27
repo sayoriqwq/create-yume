@@ -1,5 +1,5 @@
-import type { CodeQuality, Linting, ProjectConfig } from '@/types/config'
-import type { JsonBuilder } from '@/types/dsl'
+import type { JsonBuilder } from '@/core/services/planner'
+import type { CodeQuality, Linting, ProjectConfig } from '@/schema/project-config'
 import { devDeps, scripts, when } from '@/utils/file-helper'
 
 interface SelectOption<T> {

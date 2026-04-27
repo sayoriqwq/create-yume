@@ -1,4 +1,4 @@
-import type { ProjectType } from '@/types/project'
+import type { ProjectType } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 
 export async function askProjectType() {

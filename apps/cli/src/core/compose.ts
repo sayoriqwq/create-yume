@@ -1,4 +1,4 @@
-import type { ProjectConfig } from '../types/config'
+import type { ProjectConfig } from '../schema/project-config'
 import { intro, outro } from '@clack/prompts'
 import { Effect, pipe } from 'effect'
 

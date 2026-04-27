@@ -1,4 +1,4 @@
-import type { ProjectConfig } from '../src/types/config'
+import type { ProjectConfig } from '../src/schema/project-config'
 import { Effect, Layer, LogLevel, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeTemplatePath } from '../src/brand/template-path'

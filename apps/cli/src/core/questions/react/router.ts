@@ -1,4 +1,4 @@
-import type { ReactRouter } from '@/types/project'
+import type { ReactRouter } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 import { reactRouterOptions } from '@/core/owners/router'
 

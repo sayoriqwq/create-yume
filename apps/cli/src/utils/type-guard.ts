@@ -1,4 +1,4 @@
-import type { ProjectConfig, ReactProjectConfig, VueProjectConfig } from '@/types/config'
+import type { ProjectConfig, ReactProjectConfig, VueProjectConfig } from '@/schema/project-config'
 
 export function isVueProject(config: ProjectConfig): config is VueProjectConfig {
   return (config as VueProjectConfig).type === 'vue'

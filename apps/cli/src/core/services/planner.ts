@@ -1,27 +1,104 @@
+import type { PostGenerateCommand } from '../commands'
 import type { TargetDir } from '@/brand/target-dir'
+import type { TemplatePath } from '@/brand/template-path'
+import type { TemplateError } from '@/core/errors'
+import type { ContributionTrace } from '@/core/ownership/model'
 import type {
   JsonLiteral,
   PlanOperationSpec,
   PlanSpec,
 } from '@/schema/plan-spec'
 // 提供一个小型 DSL 来声明如何生成/编辑文件。
-import type { ProjectConfig } from '@/types/config'
-import type { ComposeDSL, JsonBuilder, TextBuilder } from '@/types/dsl'
-import type { TemplateError } from '@/types/error'
-import type { JsonTask, Plan, Task, TextTask } from '@/types/task'
+import type { ProjectConfig } from '@/schema/project-config'
 import * as path from 'node:path'
 import { Effect, Exit, Ref, Schema, Scope } from 'effect'
 import { produce } from 'immer'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
 import { AppConfig as AppConfigService } from '@/config/app-config'
-import { FileIOError, PlanConflictError } from '@/types/error'
+import { FileIOError, PlanConflictError } from '@/core/errors'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { FsService } from '~/fs'
 import { TemplateEngineService } from '~/template-engine'
 import { safeParseJson } from '../adapters/json'
 import { toPostGenerateCommandSpec } from '../commands'
 import { withProjectAnnotations } from './observability'
+
+export interface JsonBuilder {
+  readExisting: (flag?: boolean) => JsonBuilder
+  sortKeys: (flag?: boolean) => JsonBuilder
+  base: (fn: () => Record<string, unknown>) => JsonBuilder
+  merge: (
+    patch: Record<string, unknown> | ((draft: Record<string, unknown>) => Record<string, unknown>),
+    ownership?: ContributionTrace,
+  ) => JsonBuilder
+  modify: (
+    fn: (draft: Record<string, unknown>) => void,
+    ownership?: ContributionTrace,
+  ) => JsonBuilder
+  finalize: (
+    fn: (draft: Record<string, unknown>) => void,
+    ownership?: ContributionTrace,
+  ) => void
+}
+
+export interface TextBuilder {
+  readExisting: (flag?: boolean) => TextBuilder
+  base: (fn: () => string) => TextBuilder
+  transform: (
+    fn: (current: string) => string,
+    ownership?: ContributionTrace,
+  ) => TextBuilder
+}
+
+export interface ComposeDSL {
+  json: (path: string, ownership?: ContributionTrace) => JsonBuilder
+  text: (path: string, ownership?: ContributionTrace) => TextBuilder
+  copy: (src: TemplatePath, path: string, ownership?: ContributionTrace) => void
+  render: (src: TemplatePath, path: string, data?: object, ownership?: ContributionTrace) => void
+}
+
+export type GenerateTask = RenderTask | CopyTask
+export type ModifyTask = JsonTask | TextTask
+export type Task = GenerateTask | ModifyTask
+
+interface ITask {
+  kind: 'render' | 'copy' | 'json' | 'text'
+  path: string
+  ownership?: ContributionTrace
+}
+
+export interface RenderTask extends ITask {
+  kind: 'render'
+  src: string
+  data?: unknown
+}
+
+export interface CopyTask extends ITask {
+  kind: 'copy'
+  src: string
+}
+
+export interface JsonTask extends ITask {
+  kind: 'json'
+  readExisting?: boolean
+  sortKeys?: boolean
+  reducers: Array<(draft: Record<string, unknown>) => void>
+  base?: () => Record<string, unknown>
+  finalize?: (draft: Record<string, unknown>) => void
+}
+
+export interface TextTask extends ITask {
+  kind: 'text'
+  readExisting?: boolean
+  transforms: Array<(current: string) => string>
+  base?: () => string
+}
+
+export interface Plan {
+  tasks: Task[]
+  postGenerateCommands?: PostGenerateCommand[]
+}
 
 const planOperationSpecSymbol = Symbol('planOperationSpec')
 

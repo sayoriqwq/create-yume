@@ -1,11 +1,11 @@
-import type { Plan } from '../src/types/task'
+import type { Plan } from '../src/core/services/planner'
 import { Effect, Exit, Layer, LogLevel, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeTargetDir } from '../src/brand/target-dir'
 import { makeTemplatePath } from '../src/brand/template-path'
 import { AppConfig } from '../src/config/app-config'
+import { FileIOError, PlanConflictError } from '../src/core/errors'
 import { PlanService } from '../src/core/services/planner'
-import { FileIOError, PlanConflictError } from '../src/types/error'
 import { reactProjectConfig } from './support/fixtures'
 import { makeFsMockLayer, makeTemplateEngineMockLayer } from './support/mock-layers'
 

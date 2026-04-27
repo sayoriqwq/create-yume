@@ -1,10 +1,9 @@
 // 编排整个阶段
 
 import type { TargetDir } from '@/brand/target-dir'
-import type { ProjectConfig } from '@/types/config'
-import type { ComposeDSL } from '@/types/dsl'
-import type { FileIOError, PlanConflictError, TemplateError } from '@/types/error'
-import type { Plan } from '@/types/task'
+import type { FileIOError, PlanConflictError, TemplateError } from '@/core/errors'
+import type { ComposeDSL, Plan } from '@/core/services/planner'
+import type { ProjectConfig } from '@/schema/project-config'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Effect } from 'effect'

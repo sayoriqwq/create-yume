@@ -1,5 +1,5 @@
 import type { TemplatePath } from '@/brand/template-path'
-import type { ComposeDSL } from '@/types/dsl'
+import type { ComposeDSL } from '@/core/services/planner'
 import * as path from 'node:path'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, FrontendScaffoldOwner } from '@/core/ownership/model'

@@ -1,7 +1,7 @@
 import { Effect, ParseResult } from 'effect'
 import mri from 'mri'
+import { SchemaContractError } from '@/core/errors'
 import { decodeCliArgs, formatCliArgsError } from '@/schema/cli-args'
-import { SchemaContractError } from '@/types/error'
 
 export interface RawCliArgs {
   readonly _: string[]

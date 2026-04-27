@@ -1,4 +1,4 @@
-import type { ProjectConfig } from '../src/types/config'
+import type { ProjectConfig } from '../src/schema/project-config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { NodeFileSystem } from '@effect/platform-node'

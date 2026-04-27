@@ -1,5 +1,5 @@
-import type { VueProjectConfig } from '@/types/config'
-import type { TemplateRegistry } from '@/types/template'
+import type { VueProjectConfig } from '@/schema/project-config'
+import type { TemplateRegistry } from '@/schema/template-registry'
 import { makeTemplatePath } from '@/brand/template-path'
 import { contributionTrace, ContributionUnitKind, VueScaffoldOwner } from '@/core/ownership/model'
 import { VueRouterAboutTemplate, VueRouterIndexTemplate } from '../owners/router'

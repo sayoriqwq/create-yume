@@ -1,5 +1,5 @@
 import { Effect, pipe, Schema } from 'effect'
-import { FileIOError } from '@/types/error'
+import { FileIOError } from '@/core/errors'
 
 export function safeParseJson(input: string, path: string) {
   return pipe(

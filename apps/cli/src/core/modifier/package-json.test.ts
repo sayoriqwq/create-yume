@@ -1,5 +1,5 @@
-import type { ProjectConfig } from '@/types/config'
-import type { ComposeDSL, JsonBuilder } from '@/types/dsl'
+import type { ComposeDSL, JsonBuilder } from '@/core/services/planner'
+import type { ProjectConfig } from '@/schema/project-config'
 import { describe, expect, it } from 'vitest'
 import { makeProjectName } from '@/brand/project-name'
 import { sortJsonKeys } from '@/utils/file-helper'

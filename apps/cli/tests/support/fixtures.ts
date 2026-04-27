@@ -1,4 +1,4 @@
-import type { ProjectConfig, ReactProjectConfig, VueProjectConfig } from '../../src/types/config'
+import type { ProjectConfig, ReactProjectConfig, VueProjectConfig } from '../../src/schema/project-config'
 import { makeProjectName } from '../../src/brand/project-name'
 
 export const reactPresetProjectConfig = {

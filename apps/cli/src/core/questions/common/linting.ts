@@ -1,4 +1,4 @@
-import type { Linting } from '@/types/config'
+import type { Linting } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 import { workspaceBootstrapQuestionContracts } from '@/core/workspace-bootstrap'
 

@@ -1,4 +1,4 @@
-import type { CreateMode } from '@/types/config'
+import type { CreateMode } from '@/schema/project-config'
 import { select } from '@clack/prompts'
 
 export async function askCreateMode() {

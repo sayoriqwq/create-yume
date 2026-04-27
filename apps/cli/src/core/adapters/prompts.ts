@@ -1,6 +1,7 @@
-import type { QuestionFn } from '@/types/question'
 import { isCancel } from '@clack/prompts'
 import { Effect } from 'effect'
+
+export type QuestionFn<T> = () => Promise<T | symbol>
 
 // promise => Effect
 function handlePromptResult<T>(questionFn: QuestionFn<T>): Effect.Effect<T, never, never> {

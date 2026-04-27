@@ -3,7 +3,7 @@ import * as PlatformCommandExecutor from '@effect/platform/CommandExecutor'
 import { Effect, Layer } from 'effect'
 import { describe, expect, it } from 'vitest'
 import { makeCommandName } from '@/brand/command-name'
-import { CommandError } from '@/types/error'
+import { CommandError } from '@/core/errors'
 import { CommandService } from './command'
 
 function makeCommandExecutorLayer(

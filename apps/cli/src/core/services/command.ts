@@ -4,7 +4,7 @@ import type { CommandName } from '@/brand/command-name'
 import { Command } from '@effect/platform'
 import { CommandExecutor } from '@effect/platform/CommandExecutor'
 import { Effect, Option } from 'effect'
-import { CommandError } from '@/types/error'
+import { CommandError } from '@/core/errors'
 
 interface CommandServiceShape {
   readonly make: (cmd: CommandName, ...args: string[]) => StandardCommand

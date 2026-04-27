@@ -1,5 +1,6 @@
-import type { CodeQuality } from '@/types/config'
+import type { CodeQuality } from '@/schema/project-config'
 import { Effect, ParseResult } from 'effect'
+import { SchemaContractError } from '@/core/errors'
 import {
   getSharedFrontendPresetDefaults,
 } from '@/core/template-registry/frontend-app'
@@ -8,7 +9,6 @@ import {
   shouldAskWorkspaceBootstrapCodeQuality,
 } from '@/core/workspace-bootstrap'
 import { decodeProjectConfig, formatProjectConfigError } from '@/schema/project-config'
-import { SchemaContractError } from '@/types/error'
 import { FsService } from '~/fs'
 import { ask } from '../adapters/prompts'
 import { CliContext } from '../cli-context'

@@ -1,6 +1,6 @@
 import { FileSystem } from '@effect/platform'
 import { Effect, pipe } from 'effect'
-import { FileIOError } from '@/types/error'
+import { FileIOError } from '@/core/errors'
 
 // 借助平台能力，但转化为领域错误
 interface FsServiceShape {
