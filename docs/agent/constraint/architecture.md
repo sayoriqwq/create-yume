@@ -78,3 +78,7 @@
 - `FsService` 在仓库仍需要 project-local file error boundary 时是有意义的。
 - `PlanSpec` 是有价值的 serialization 与 snapshot boundary。
 - 使用 scoped cleanup 与 tracked created paths 建模 rollback 是值得保留的模式。
+
+## 相关约束
+
+- [Workflow Materialization 约束](./workflow-materialization.md)：定义 fragment render、JSON / text mutation、static asset copy 与 post-generate command 的使用边界。

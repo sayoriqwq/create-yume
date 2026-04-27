@@ -11,6 +11,7 @@
 ## 架构与实现约束
 
 - [架构与实现约束](./architecture.md)
+- [Workflow Materialization 约束](./workflow-materialization.md)
 
 ## 相关入口
 
