@@ -98,10 +98,10 @@ docs/agent/effect/  本地 Effect 参考与代码风格基线
 
 ## 提交与协作
 
+仓库使用 conventional commits，并通过 commitlint 校验提交信息。当前没有 `pnpm commit` 或 `pnpm commit:config` 辅助脚本；提交时请直接手写符合约定的提交信息。
+
 ```bash
-pnpm commit:config
-pnpm commit
-git commit
+git commit -m "docs: align project documentation"
 ```
 
 更多约定见：

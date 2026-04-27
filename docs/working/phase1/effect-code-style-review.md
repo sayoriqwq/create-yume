@@ -3,7 +3,6 @@
 ## 审核来源
 
 - 本地入口：`docs/agent/effect/roadmap.md`。
-- 代码风格基线：`docs/agent/effect/code-style/*.md`。
 - 参考语料：`docs/agent/effect/llms.txt`、`docs/agent/effect/llms-small.txt`。
 - 审核对象：`apps/cli/src/` 中 Effect、Schema、Service、Config、Scope、Testing、Observability 的使用方式。
 
@@ -11,7 +10,7 @@
 
 当前 Effect 使用整体健康：运行时执行集中在入口，service boundary 清楚，配置使用 `Config.*`，外部输入主要通过 Schema 解码，rollback 使用 scoped finalizer，测试中已有 `TestClock` 示例。它不是“把 Promise 包一层 Effect”的浅迁移，而是已经把错误、依赖、配置和资源生命周期纳入 Effect 模型。
 
-需要修正的点主要是风格一致性与边界收紧：封闭 union 分支不应使用 `Effect.dieMessage` 兜底；部分 brand 在 service 接口处退回了 raw string；observability 的 span / taskKind 有一处命名不一致；post-generate command 仍把结构化文件修改藏进 shell 字符串。
+本次复核时，早期指出的几个小范围偏移已经收敛：封闭 union 分支已使用 `never` 穷尽性辅助函数兜底，`finishProject` 的 span / taskKind 已保持一致，Husky hook 写入也已从 shell redirection 改为结构化 hook spec + `node -e` 写入命令。当前仍值得持续关注的是 brand 边界和 post-generate hook 写入是否需要进一步纳入 plan task / rollback 语义。
 
 ## 基线逐项评审
 
@@ -21,70 +20,51 @@
 
 证据：
 
-- `apps/cli/src/index.ts:123` 构建 `program`。
-- `apps/cli/src/index.ts:128` 使用 `NodeRuntime.runMain(program)` 运行主 Effect。
-- `apps/cli/src/index.ts:94` 对 CLI args decode 使用 `Effect.runSync(Effect.either(...))`。
+- `apps/cli/src/index.ts` 构建主 `program` 并使用 `NodeRuntime.runMain(program)` 运行。
+- CLI args decode 在进入主流程前通过 `parseCliArgs(...)` 与 Schema 边界完成。
+- `--help` / `--version` 是外层 CLI 快路径，直接输出并退出。
 
 判断：
 
 - 主程序执行停留在最外层边界，符合 `runMain` 基线。
-- `parseCliArgs` 是同步 schema decode，`runSync` 可接受。
-- `--help` / `--version` 分支在 `apps/cli/src/index.ts:84` / `:90` 直接 `console.log` + `process.exit`，属于外层 CLI 快路径，当前可以接受，但它形成了 Effect runtime 与直接 Node IO 两套入口风格。
-
-建议：
-
-- 若未来需要统一 tracing/logging/exit code，可把 help/version 也收进一个 `main` 分支，由 `NodeRuntime.runMain` 统一处理。
-- 现在不必为风格纯度重构入口。
+- `parseCliArgs` 是同步 schema decode，当前边界可接受。
+- help / version 快路径形成 Effect runtime 与直接 Node IO 两套入口风格，但当前范围内不值得为风格纯度重构。
 
 ### 2. Effect 组合风格
 
-状态：多数符合。
+状态：符合。
 
 证据：
 
-- `apps/cli/src/core/questions/compose.ts` 大量使用 `Effect.gen` 表达顺序化交互流程。
-- `apps/cli/src/core/services/planner.ts:505` 起使用 `Effect.scoped(Effect.gen(...))` 表达计划应用流程。
-- `apps/cli/src/core/services/template-engine.ts:54` 起使用 `Effect.gen` 表达 partial 注册。
+- `apps/cli/src/core/questions/compose.ts` 使用 `Effect.gen` 表达顺序化交互流程。
+- `apps/cli/src/core/services/plan/apply.ts` 使用 `Effect.scoped(Effect.gen(...))` 表达计划应用与 rollback 生命周期。
+- `apps/cli/src/core/services/template-engine.ts` 使用 `Effect.gen` 表达 helper / partial 准备与模板渲染。
 
 判断：
 
 - 有局部变量、分支、循环的 effectful 逻辑基本都使用 `Effect.gen`，符合组合基线。
 - 简单 pipeline 如 schema decode 与 error map 也保持可读。
-
-建议：
-
 - 不需要为了函数式风格把清楚的 `Effect.gen` 改成 point-free pipeline。
-- `PlanService` 内部可以拆文件，但不应牺牲当前顺序控制流的可读性。
 
 ### 3. 分支与穷尽性
 
-状态：需要修正。
+状态：已修正。
 
 证据：
 
-- `apps/cli/src/core/questions/compose.ts:135` 使用 `Effect.dieMessage('Unsupported project type')`。
-- `apps/cli/src/core/questions/compose.ts:173` 使用 `Effect.dieMessage('Unsupported preset')`。
-- `apps/cli/src/core/questions/compose.ts:191` 使用 `Effect.dieMessage('Unsupported create mode')`。
-- `apps/cli/src/schema/project-config.ts:100` `ProjectConfigSchema` 是 `VueProjectConfigSchema | ReactProjectConfigSchema` 的封闭 union。
+- `apps/cli/src/core/questions/compose.ts` 定义 `assertNever(value: never)`。
+- `projectType`、`preset`、`createMode` 的分支都在已知 literal union 后回落到 `assertNever(...)`。
+- `apps/cli/src/schema/project-config.ts` 中 `ProjectConfigSchema` 仍是 `VueProjectConfigSchema | ReactProjectConfigSchema` 的封闭 union。
 - `apps/cli/src/schema/preset.ts` 中 preset 与 create mode 也是 literal union。
 
 判断：
 
-- Effect 基线要求封闭集合优先使用编译期穷尽性，不要依赖 runtime defect 或“不可能发生”的 default 分支。
-- 这里的 `dieMessage` 是 defect channel，不适合表达已知 literal union 的分支完整性。
+- 当前实现已经把“新增 case 必须处理”的知识交回 TypeScript 编译期。
+- 非法外部输入仍由 `decodeProjectConfig` / `decodeCliArgs` 在边界处失败，不需要进入业务分支后再 defect。
 
 建议：
 
-- 对 `projectType`、`preset`、`createMode` 使用显式 `never` exhaustiveness：
-
-```ts
-function absurd(value: never): never {
-  throw new Error(`Unreachable case: ${String(value)}`)
-}
-```
-
-- 或使用 `Match.exhaustive`，但只有当它提升可读性时再引入。
-- 非法外部输入应由 `decodeProjectConfig` / `decodeCliArgs` 失败，不应进入业务分支后 defect。
+- 后续新增 scaffold type、preset 或 create mode 时，先更新 schema，再让编译器暴露所有未穷尽分支。
 
 ### 4. Brand 边界
 
@@ -92,20 +72,19 @@ function absurd(value: never): never {
 
 证据：
 
-- `apps/cli/src/brand/project-name.ts`、`target-dir.ts`、`template-path.ts`、`command-name.ts`、`package-name.ts` 使用 `Schema.brand`。
-- `apps/cli/src/core/services/compose.ts:73` 从 `projectConfig.name` 构造 `TargetDir`。
-- `apps/cli/src/core/services/fs.ts:6` 起 `FsServiceShape` 仍以 raw `string` 表达所有 path。
-- `apps/cli/src/core/services/template-engine.ts:19` / `:21` 对 template path 使用 `TemplatePath`，但 namespace 仍是 raw `string`。
+- `apps/cli/src/brand/` 下为 project name、target dir、template path、command name、package name 建立了 brand。
+- `PlanService.apply`、`TemplateEngineService.render`、`CommandService.make` 等语义边界已经使用对应 brand。
+- `FsService` 作为通用文件服务仍以 raw `string` 表达 path。
 
 判断：
 
 - 对项目名、目标目录、模板路径、命令名的 brand 化是正确方向。
-- `FsService` 作为通用文件服务继续接收 raw string 有现实合理性，但它也意味着部分 path category error 无法被类型系统阻止。
+- `FsService` 需要服务多类路径，继续接收 raw string 有现实合理性。
 
 建议：
 
 - 不要把 `FsService` 立即改成只接受 brand；它需要服务多类路径。
-- 优先在更高层保持 brand：`TemplateEngineService`、`PlanService.apply`、`CommandService.make` 这些语义边界已经适合保留 brand。
+- 优先在更高层保持 brand。
 - 如果发现真实混用错误，再引入更细的 `GeneratedPath` / `ProjectRelativePath`，不要为类型洁癖预先扩张 brand。
 
 ### 5. Service 与 Layer 边界
@@ -114,22 +93,13 @@ function absurd(value: never): never {
 
 证据：
 
-- `apps/cli/src/config/app-config.ts:15` 定义 `AppConfig` service。
-- `apps/cli/src/core/services/fs.ts:25` 定义 `FsService`。
-- `apps/cli/src/core/services/command.ts:14` 定义 `CommandService`。
-- `apps/cli/src/core/services/template-engine.ts:31` 定义 `TemplateEngineService`。
-- `apps/cli/src/core/services/planner.ts:184` 定义 `PlanService`。
-- `apps/cli/src/core/services/orchestrator.ts:28` 定义 `OrchestratorService`。
+- `AppConfig`、`FsService`、`CommandService`、`TemplateEngineService`、`PlanService`、`OrchestratorService` 都以 service/layer 边界组织。
+- `CliContext` 使用 context tag 承载本次 CLI 调用的动态输入，而不是伪装成稳定应用 service。
 
 判断：
 
 - 这些 service 都代表可复用能力和明确实现边界。
-- `CliContext` 使用 `Context.GenericTag` 而不是 `Effect.Service`，符合“动态 context-like 值不要伪装成稳定应用 service”的基线。
-
-建议：
-
-- 保持当前 service 粒度。
-- 若后续拆 `PlanService` 内部文件，不要拆成更多 public service；先保持 public layer graph 稳定。
+- 当前 public layer graph 已经足够清晰，不建议继续拆成更多 public service。
 
 ### 6. Config
 
@@ -137,10 +107,9 @@ function absurd(value: never): never {
 
 证据：
 
-- `apps/cli/src/config/app-config.ts:16` 使用 `Config.all`。
-- `apps/cli/src/config/app-config.ts:17` / `:18` / `:20` 使用默认值。
-- `apps/cli/src/config/app-config.ts:19` 对 `OTEL_EXPORTER_OTLP_ENDPOINT` 使用 `Config.redacted`。
-- 扫描结果显示 `apps/cli/src` 中没有直接 `process.env` 访问。
+- `apps/cli/src/config/app-config.ts` 使用 `Config.all` 聚合运行时配置。
+- `OTEL_EXPORTER_OTLP_ENDPOINT` 通过 redacted config 读取。
+- `apps/cli/src` 中没有把业务配置散落成临时 `process.env` 读取。
 
 判断：
 
@@ -157,11 +126,11 @@ function absurd(value: never): never {
 
 证据：
 
-- `apps/cli/src/schema/cli-args.ts:22` 解码 CLI args。
-- `apps/cli/src/schema/project-config.ts:124` 起导出 project config 解码器。
-- `apps/cli/src/schema/plan-spec.ts:146` 导出 `decodePlanSpec`。
-- `apps/cli/src/core/questions/compose.ts:96` 对收集到的 config 做 decode。
-- `apps/cli/src/core/adapters/json.ts` 对 JSON parse 做 Effect + Schema 边界。
+- `schema/cli-args.ts` 解码 CLI args。
+- `schema/project-config.ts` 导出 project config schema 与解码器。
+- `schema/plan-spec.ts` 导出可序列化 `PlanSpec` 与解码器。
+- `core/questions/compose.ts` 对交互或 preset 收集到的 config 做 decode。
+- `core/adapters/json.ts` 对 JSON parse 做 Effect + Schema 边界。
 
 判断：
 
@@ -179,10 +148,9 @@ function absurd(value: never): never {
 
 证据：
 
-- `apps/cli/src/core/services/planner.ts:392` 定义 `registerRollbackFinalizer`。
-- `apps/cli/src/core/services/planner.ts:409` 使用 `Scope.addFinalizerExit`。
-- `apps/cli/src/core/services/planner.ts:505` 使用 `Effect.scoped(...)` 包裹 `apply`。
-- `apps/cli/src/core/services/planner.ts:366` / `:382` cleanup 失败时记录 warning，不遮蔽原始失败。
+- `apps/cli/src/core/services/plan/apply.ts` 定义 rollback finalizer。
+- plan apply 使用 `Effect.scoped(...)` 与 `Scope.addFinalizerExit` 管理失败清理。
+- cleanup 失败时记录 warning，不遮蔽原始失败。
 
 判断：
 
@@ -201,8 +169,8 @@ function absurd(value: never): never {
 证据：
 
 - `apps/cli/tests/test-clock.test.ts` 使用 `TestClock` 控制时间。
-- 多数 service tests 使用 `Layer.succeed` mock service，而不是依赖真实环境。
-- 扫描结果显示 `apps/cli/src` 中没有 `setTimeout` / sleep 式业务等待。
+- 多数 service tests 使用 Layer/mock 提供依赖，而不是依赖真实环境。
+- planner、template render、rollback、workspace bootstrap 都已有针对性测试或 snapshot。
 
 判断：
 
@@ -215,33 +183,31 @@ function absurd(value: never): never {
 
 ### 10. Observability
 
-状态：基本符合，有一处命名不一致。
+状态：符合。
 
 证据：
 
-- 扫描结果显示 `apps/cli/src` 中有 8 个 `Effect.withSpan`。
-- `apps/cli/src/core/services/observability.ts:23` 将 project annotations 统一封装。
-- `apps/cli/src/core/services/compose.ts:139` 使用 span `finish.project`。
-- `apps/cli/src/core/services/compose.ts:140` 却调用 `withProjectAnnotations(config, 'command.execute', ...)`。
-- `apps/cli/src/core/services/command.ts:43` command execution 使用 span `command.execute`，并记录 command / args / cwd。
+- 阶段级逻辑使用 `Effect.withSpan`。
+- `apps/cli/src/core/services/observability.ts` 将 project annotations 统一封装。
+- `finishProject` 使用 span `finish.project`，并以同名 task kind 调用 `withProjectAnnotations`。
+- `executePostGenerateCommand` 在 command 级别补充 command owner、contribution unit 与 phase annotation。
+- `CommandService` 对 command execution 使用 span `command.execute`，并记录 command / args / cwd。
 
 判断：
 
-- 阶段级 spans 命名总体一致：`questions.collect`、`generate.project`、`orchestrator.execute`、`plan.build`、`plan.apply`、`template.render`、`command.execute`。
-- `finishProject` 的 span 是 `finish.project`，annotation 的 taskKind 却是 `command.execute`，会让日志和 trace 查询出现语义错位。
+- 阶段级 spans 命名总体一致：`questions.collect`、`generate.project`、`orchestrator.execute`、`plan.build`、`plan.apply`、`template.render`、`finish.project`、`command.execute`。
+- 阶段 annotation 与叶子 command annotation 已分离，不再把 finish 阶段误标为 command execution。
 
 建议：
 
-- 将 `finishProject` 的 annotation taskKind 改为 `finish.project`。
-- 保留 command 级 annotation 在 `executePostGenerateCommand` 内部，避免阶段 annotation 与叶子 command annotation 混淆。
 - 注意 `CommandService` 当前 log debug 会记录完整 command output；虽然当前命令不处理 secrets，但后续若引入 token 环境或外部 auth，要避免输出敏感内容。
 
 ## 优先级建议
 
-1. **修正封闭 union 的 `Effect.dieMessage` 兜底。** 这是最明确的 Effect 风格偏离。
-2. **修正 `finishProject` 的 observability taskKind。** 改动极小，能提升 trace 可读性。
-3. **保持 Config / Schema / Service / Scope 当前方向。** 这些是当前实现质量较高的区域。
-4. **逐步结构化 post-generate hook 写入。** 这既是 Effect cleanup/observability 改进，也是设计哲学上的信息隐藏改进。
+1. **保持 Config / Schema / Service / Scope 当前方向。** 这些是当前实现质量较高的区域。
+2. **继续用编译期穷尽性守住封闭 union。** 新增分支时不要退回 defect channel。
+3. **评估是否把 post-generate hook 写入继续收进 plan task。** 当前已经摆脱 shell redirection，但 hook 文件仍发生在 plan apply 之后，尚未共享 plan rollback。
+4. **保持 `finish.project` 与 command 级 observability 分离。** 阶段 span 与叶子 command span 不应混淆。
 
 ## 非问题 / 不建议调整
 
