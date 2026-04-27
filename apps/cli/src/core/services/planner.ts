@@ -1,6 +1,6 @@
 import type { ComposeDSL, Plan } from './plan/build'
 import type { TargetDir } from '@/brand/target-dir'
-import type { FileIOError, PlanConflictError, TemplateError } from '@/core/errors'
+import type { FileIOError, PlanConflictError, PlanTargetPathError, TemplateError } from '@/core/errors'
 import type { ProjectConfig } from '@/schema/project-config'
 import { Effect } from 'effect'
 import { AppConfig as AppConfigService } from '@/config/app-config'
@@ -36,7 +36,7 @@ interface PlanServiceShape {
     baseDir: TargetDir,
     config: ProjectConfig,
     options?: { readonly rollbackOnFailure?: boolean },
-  ) => Effect.Effect<void, FileIOError | PlanConflictError | TemplateError>
+  ) => Effect.Effect<void, FileIOError | PlanConflictError | PlanTargetPathError | TemplateError>
 }
 
 export class PlanService extends Effect.Service<PlanService>()('PlanService', {

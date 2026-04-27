@@ -1,7 +1,7 @@
 // 编排整个阶段
 
 import type { TargetDir } from '@/brand/target-dir'
-import type { FileIOError, PlanConflictError, TemplateError } from '@/core/errors'
+import type { FileIOError, PlanConflictError, PlanTargetPathError, TemplateError } from '@/core/errors'
 import type { ComposeDSL, Plan } from '@/core/services/planner'
 import type { ProjectConfig } from '@/schema/project-config'
 import * as path from 'node:path'
@@ -21,7 +21,7 @@ interface OrchestratorServiceShape {
     baseDir: TargetDir,
     config: ProjectConfig,
     options?: { readonly rollbackOnFailure?: boolean },
-  ) => Effect.Effect<Plan, FileIOError | PlanConflictError | TemplateError>
+  ) => Effect.Effect<Plan, FileIOError | PlanConflictError | PlanTargetPathError | TemplateError>
 }
 
 export class OrchestratorService extends Effect.Service<OrchestratorService>()(

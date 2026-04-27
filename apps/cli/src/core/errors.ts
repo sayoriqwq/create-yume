@@ -32,6 +32,12 @@ export class PlanConflictError extends Data.TaggedError('PlanConflictError')<{
   message: string
 }> {}
 
+export class PlanTargetPathError extends Data.TaggedError('PlanTargetPathError')<{
+  path: string
+  baseDir: string
+  message: string
+}> {}
+
 export class SchemaContractError extends Data.TaggedError('SchemaContractError')<{
   schema: string
   message: string
@@ -51,4 +57,5 @@ export type CLIError
     | TemplateError
     | FileIOError
     | PlanConflictError
+    | PlanTargetPathError
     | UnknownError

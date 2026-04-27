@@ -8,7 +8,7 @@ import { Effect, Exit, Ref, Schema, Scope } from 'effect'
 import { produce } from 'immer'
 import { makeTargetDir } from '@/brand/target-dir'
 import { makeTemplatePath } from '@/brand/template-path'
-import { FileIOError, PlanConflictError } from '@/core/errors'
+import { FileIOError, PlanConflictError, PlanTargetPathError } from '@/core/errors'
 import { sortJsonKeys } from '@/utils/file-helper'
 import { safeParseJson } from '../../adapters/json'
 import { withProjectAnnotations } from '../observability'
@@ -51,20 +51,64 @@ export interface PlanApplyOptions {
   readonly rollbackOnFailure?: boolean
 }
 
-function findDuplicateTargetPath(tasks: Task[]) {
+interface ResolvedTaskTarget {
+  readonly task: Task
+  readonly absPath: string
+  readonly canonicalPath: string
+}
+
+function isWithinDirectory(baseDir: string, targetPath: string) {
+  const relative = path.relative(baseDir, targetPath)
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+}
+
+function resolveTaskTargetPath(baseDir: TargetDir, task: Task) {
+  const resolvedBaseDir = path.resolve(baseDir)
+
+  if (path.isAbsolute(task.path) || path.win32.isAbsolute(task.path)) {
+    return Effect.fail(new PlanTargetPathError({
+      path: task.path,
+      baseDir: resolvedBaseDir,
+      message: `Plan target path "${task.path}" must be relative to "${resolvedBaseDir}"`,
+    }))
+  }
+
+  const absPath = path.resolve(resolvedBaseDir, task.path)
+  if (!isWithinDirectory(resolvedBaseDir, absPath)) {
+    return Effect.fail(new PlanTargetPathError({
+      path: task.path,
+      baseDir: resolvedBaseDir,
+      message: `Plan target path "${task.path}" escapes target directory "${resolvedBaseDir}"`,
+    }))
+  }
+
+  return Effect.succeed({
+    task,
+    absPath,
+    canonicalPath: path.relative(resolvedBaseDir, absPath) || '.',
+  })
+}
+
+function resolveTaskTargets(baseDir: TargetDir, tasks: Task[]) {
+  return Effect.forEach(tasks, task => resolveTaskTargetPath(baseDir, task), {
+    concurrency: 1,
+  })
+}
+
+function findDuplicateTargetPath(targets: ResolvedTaskTarget[]) {
   const taskKindsByPath = new Map<string, Task['kind'][]>()
 
-  for (const task of tasks) {
-    const taskKinds = taskKindsByPath.get(task.path)
+  for (const target of targets) {
+    const taskKinds = taskKindsByPath.get(target.absPath)
     if (taskKinds) {
-      taskKinds.push(task.kind)
+      taskKinds.push(target.task.kind)
       return {
-        path: task.path,
+        path: target.canonicalPath,
         taskKinds,
       }
     }
 
-    taskKindsByPath.set(task.path, [task.kind])
+    taskKindsByPath.set(target.absPath, [target.task.kind])
   }
 
   return undefined
@@ -185,13 +229,13 @@ function registerRollbackFinalizer(fs: PlanApplyFs, writtenPaths: Ref.Ref<Target
   })
 }
 
-function runTask(deps: PlanApplyDependencies, task: Task, baseDir: TargetDir, config: ProjectConfig, writtenPaths: Ref.Ref<TargetDir[]>, createdDirs: Ref.Ref<TargetDir[]>) {
+function runTask(deps: PlanApplyDependencies, target: ResolvedTaskTarget, baseDir: TargetDir, config: ProjectConfig, writtenPaths: Ref.Ref<TargetDir[]>, createdDirs: Ref.Ref<TargetDir[]>) {
   return Effect.gen(function* () {
     const { fs, templates } = deps
+    const { task, absPath: abs } = target
 
     switch (task.kind) {
       case 'copy': {
-        const abs = path.resolve(baseDir, task.path)
         if (yield* fs.exists(abs)) {
           return
         }
@@ -202,7 +246,6 @@ function runTask(deps: PlanApplyDependencies, task: Task, baseDir: TargetDir, co
       }
       case 'render': {
         const content = yield* templates.render(makeTemplatePath(task.src), task.data, config)
-        const abs = path.resolve(baseDir, task.path)
         const existed = yield* fs.exists(abs)
         yield* writeText(fs, baseDir, abs, content, createdDirs)
         if (!existed)
@@ -210,7 +253,6 @@ function runTask(deps: PlanApplyDependencies, task: Task, baseDir: TargetDir, co
         return
       }
       case 'json': {
-        const abs = path.resolve(baseDir, task.path)
         const existed = yield* fs.exists(abs)
         let draft: Record<string, unknown> = {}
         if (task.readExisting && (yield* fs.exists(abs))) {
@@ -243,7 +285,6 @@ function runTask(deps: PlanApplyDependencies, task: Task, baseDir: TargetDir, co
         return
       }
       case 'text': {
-        const abs = path.resolve(baseDir, task.path)
         const existed = yield* fs.exists(abs)
         let current = ''
         const shouldRead = task.readExisting !== false
@@ -260,7 +301,7 @@ function runTask(deps: PlanApplyDependencies, task: Task, baseDir: TargetDir, co
           yield* trackCreatedFile(writtenPaths, abs)
       }
     }
-  }).pipe(withProjectAnnotations(config, `plan.task.${task.kind}`, task.path))
+  }).pipe(withProjectAnnotations(config, `plan.task.${target.task.kind}`, target.task.path))
 }
 
 export function applyPlan(
@@ -271,7 +312,8 @@ export function applyPlan(
   options?: PlanApplyOptions,
 ) {
   return Effect.scoped(Effect.gen(function* () {
-    const conflict = findDuplicateTargetPath(tasks)
+    const targets = yield* resolveTaskTargets(baseDir, tasks)
+    const conflict = findDuplicateTargetPath(targets)
     if (conflict) {
       return yield* new PlanConflictError({
         path: conflict.path,
@@ -289,18 +331,18 @@ export function applyPlan(
       options?.rollbackOnFailure ?? true,
     )
 
-    const generate = tasks.filter(t => t.kind === 'copy' || t.kind === 'render')
-    const modify = tasks.filter(t => t.kind === 'json' || t.kind === 'text')
+    const generate = targets.filter(({ task }) => task.kind === 'copy' || task.kind === 'render')
+    const modify = targets.filter(({ task }) => task.kind === 'json' || task.kind === 'text')
 
     yield* Effect.forEach(
       generate,
-      t => runTask(deps, t, baseDir, config, writtenPaths, createdDirs),
+      target => runTask(deps, target, baseDir, config, writtenPaths, createdDirs),
       { concurrency: deps.appConfig.defaultConcurrency },
     )
 
     yield* Effect.forEach(
       modify,
-      t => runTask(deps, t, baseDir, config, writtenPaths, createdDirs),
+      target => runTask(deps, target, baseDir, config, writtenPaths, createdDirs),
       { concurrency: deps.appConfig.defaultConcurrency },
     )
   }))

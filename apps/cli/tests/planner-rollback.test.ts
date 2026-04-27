@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { makeTargetDir } from '../src/brand/target-dir'
 import { makeTemplatePath } from '../src/brand/template-path'
 import { AppConfig } from '../src/config/app-config'
-import { FileIOError, PlanConflictError } from '../src/core/errors'
+import { FileIOError, PlanConflictError, PlanTargetPathError } from '../src/core/errors'
 import { PlanService } from '../src/core/services/planner'
 import { reactProjectConfig } from './support/fixtures'
 import { makeFsMockLayer, makeTemplateEngineMockLayer } from './support/mock-layers'
@@ -219,6 +219,133 @@ describe('planner rollback', () => {
       expect(exit.cause.error).toMatchObject({
         path: 'nested/shared.txt',
         taskKinds: ['render', 'copy'],
+      })
+    }
+  })
+
+  it('rejects duplicate target paths after canonical normalization', async () => {
+    const writes: string[] = []
+    const directories: string[] = []
+    const removes: string[] = []
+    const baseDir = makeTargetDir('/tmp/create-yume-canonical-duplicate')
+
+    const fsLayer = makeFsMockLayer({
+      makeDirectory: path =>
+        Effect.sync(() => {
+          directories.push(path)
+        }),
+      writeFileString: (path, content) =>
+        Effect.sync(() => {
+          writes.push(`${path}:${content}`)
+        }),
+      remove: path =>
+        Effect.sync(() => {
+          removes.push(path)
+        }),
+    })
+
+    const templateLayer = makeTemplateEngineMockLayer({
+      render: (_templatePath, data) => Effect.succeed(String(data)),
+    })
+
+    const appConfigLayer = Layer.succeed(AppConfig, AppConfig.make({
+      logLevel: LogLevel.Debug,
+      defaultConcurrency: 1,
+      tracingEndpoint: Option.none(),
+      debug: false,
+    }))
+
+    const layer = PlanService.DefaultWithoutDependencies.pipe(
+      Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),
+    )
+
+    const plan: Plan = {
+      tasks: [
+        { kind: 'render', src: makeTemplatePath('/tmp/first.hbs'), path: 'src/../shared.txt', data: 'first' },
+        { kind: 'copy', src: makeTemplatePath('/tmp/second.hbs'), path: 'shared.txt' },
+      ],
+    }
+
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const planner = yield* PlanService
+        yield* planner.apply(plan, baseDir, reactProjectConfig)
+      }).pipe(Effect.provide(layer)),
+    )
+
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect(writes).toEqual([])
+    expect(directories).toEqual([])
+    expect(removes).toEqual([])
+
+    if (Exit.isFailure(exit) && exit.cause._tag === 'Fail') {
+      expect(exit.cause.error).toBeInstanceOf(PlanConflictError)
+      expect(exit.cause.error).toMatchObject({
+        path: 'shared.txt',
+        taskKinds: ['render', 'copy'],
+      })
+    }
+  })
+
+  it('rejects target paths that escape the project directory', async () => {
+    const writes: string[] = []
+    const directories: string[] = []
+    const removes: string[] = []
+    const baseDir = makeTargetDir('/tmp/create-yume-path-boundary')
+
+    const fsLayer = makeFsMockLayer({
+      makeDirectory: path =>
+        Effect.sync(() => {
+          directories.push(path)
+        }),
+      writeFileString: (path, content) =>
+        Effect.sync(() => {
+          writes.push(`${path}:${content}`)
+        }),
+      remove: path =>
+        Effect.sync(() => {
+          removes.push(path)
+        }),
+    })
+
+    const templateLayer = makeTemplateEngineMockLayer({
+      render: (_templatePath, data) => Effect.succeed(String(data)),
+    })
+
+    const appConfigLayer = Layer.succeed(AppConfig, AppConfig.make({
+      logLevel: LogLevel.Debug,
+      defaultConcurrency: 1,
+      tracingEndpoint: Option.none(),
+      debug: false,
+    }))
+
+    const layer = PlanService.DefaultWithoutDependencies.pipe(
+      Layer.provideMerge(Layer.mergeAll(appConfigLayer, fsLayer, templateLayer)),
+    )
+
+    const plan: Plan = {
+      tasks: [
+        { kind: 'render', src: makeTemplatePath('/tmp/escape.hbs'), path: '../outside.txt', data: 'escape' },
+      ],
+    }
+
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const planner = yield* PlanService
+        yield* planner.apply(plan, baseDir, reactProjectConfig)
+      }).pipe(Effect.provide(layer)),
+    )
+
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect(writes).toEqual([])
+    expect(directories).toEqual([])
+    expect(removes).toEqual([])
+
+    if (Exit.isFailure(exit) && exit.cause._tag === 'Fail') {
+      expect(exit.cause.error).toBeInstanceOf(PlanTargetPathError)
+      expect(exit.cause.error).toMatchObject({
+        path: '../outside.txt',
+        baseDir,
       })
     }
   })
