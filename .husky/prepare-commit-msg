@@ -1,1 +1,0 @@
-[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"

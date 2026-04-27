@@ -93,12 +93,12 @@ describe('buildPackageJson', () => {
       '@antfu/eslint-config': '^8.2.0',
       '@commitlint/cli': '^20.5.0',
       '@commitlint/config-conventional': '^20.5.0',
-      '@lobehub/commit-cli': '^2.19.0',
       'eslint': '^10.2.1',
       'husky': '^9.1.7',
       'lint-staged': '^16.4.0',
       'typescript': '^6.0.3',
     })
+    expect(packageJson.devDependencies).not.toHaveProperty('@lobehub/commit-cli')
   })
 
   it('writes latest frontend tooling versions when vite and tailwind are enabled', () => {

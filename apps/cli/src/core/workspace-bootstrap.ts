@@ -33,7 +33,6 @@ type WorkspaceBootstrapCommandPolicy = Pick<ProjectConfig, 'git' | 'codeQuality'
 type InstallPolicyResolution = boolean | 'prompt'
 
 const defaultWorkspaceBootstrapCodeQuality = ['lint-staged', 'commitlint'] as const satisfies readonly CodeQuality[]
-const prepareCommitMsgHook = '[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"'
 const lintStagedHook = 'pnpm lint-staged'
 const commitLintHook = 'pnpm exec commitlint --edit "$1"'
 
@@ -96,8 +95,6 @@ export function applyWorkspaceBootstrapPackageJson(
   return entry
     .modify(when(config.linting === 'antfu-eslint', devDeps({ '@antfu/eslint-config': '^8.2.0', 'eslint': '^10.2.1' })), workspaceBootstrapPackageJsonMutation)
     .modify(when(config.linting === 'antfu-eslint', scripts({ 'lint': 'eslint', 'lint:fix': 'eslint --fix' })), workspaceBootstrapPackageJsonMutation)
-    .modify(when(config.git, devDeps({ '@lobehub/commit-cli': '^2.19.0' })), workspaceBootstrapPackageJsonMutation)
-    .modify(when(config.git, scripts({ 'commit': 'lobe-commit --hook', 'commit:config': 'lobe-commit --option' })), workspaceBootstrapPackageJsonMutation)
     .modify(when(config.codeQuality.length > 0, devDeps({ husky: '^9.1.7' })), workspaceBootstrapPackageJsonMutation)
     .modify(when(config.codeQuality.includes('lint-staged'), devDeps({ 'lint-staged': '^16.4.0' })), workspaceBootstrapPackageJsonMutation)
     .modify(when(config.codeQuality.includes('commitlint'), devDeps({ '@commitlint/cli': '^20.5.0', '@commitlint/config-conventional': '^20.5.0' })), workspaceBootstrapPackageJsonMutation)
@@ -123,11 +120,6 @@ export function getWorkspaceBootstrapCommandSpecs(
     }
 
     commands.push({ command: 'pnpm', args: ['exec', 'husky', 'init'] })
-    commands.push({
-      command: 'sh',
-      args: ['-c', `echo '${prepareCommitMsgHook}' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg`],
-    })
-
     if (config.codeQuality.includes('lint-staged')) {
       commands.push({
         command: 'sh',

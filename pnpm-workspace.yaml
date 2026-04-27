@@ -34,7 +34,6 @@ catalog:
   '@effect/rpc': ^0.75.0
   '@effect/sql': ^0.51.0
   '@effect/workflow': ^0.18.0
-  '@lobehub/commit-cli': ^2.19.0
   '@opentelemetry/exporter-trace-otlp-http': ^0.204.0
   '@opentelemetry/sdk-trace-base': ^2.1.0
   '@opentelemetry/sdk-trace-node': ^2.1.0

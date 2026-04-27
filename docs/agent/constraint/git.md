@@ -3,8 +3,8 @@
 ## 提交信息
 
 1. 使用 conventional commits。
-2. 优先使用 lobe-commit 工作流编写提交信息。
-3. 首选命令是 `pnpm commit`。
+2. 使用标准 commitlint conventional 配置校验提交信息；不使用 lobe-commit 生成提交信息。
+3. 提交信息可手写，格式示例：`feat: add workspace bootstrap hooks`。
 
 ## 提交前验证
 

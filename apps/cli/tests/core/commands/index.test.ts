@@ -30,7 +30,6 @@ describe('buildCommands', () => {
       'pnpm install',
       'git init',
       'pnpm exec husky init',
-      'sh -c echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg',
       'sh -c echo \'pnpm lint-staged\' > .husky/pre-commit',
       'sh -c echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
     ])
@@ -57,15 +56,6 @@ describe('buildCommands', () => {
       {
         command: 'pnpm',
         args: ['exec', 'husky', 'init'],
-        phase: 'after-plan-apply',
-        ownership: {
-          owner: 'workspace-bootstrap',
-          unit: 'post-generate-command',
-        },
-      },
-      {
-        command: 'sh',
-        args: ['-c', 'echo \'[ -n \"$2\" ] || pnpm exec lobe-commit --hook \"$1\"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg'],
         phase: 'after-plan-apply',
         ownership: {
           owner: 'workspace-bootstrap',
@@ -116,7 +106,6 @@ describe('buildCommands', () => {
       'git init',
       'pnpm add -D husky',
       'pnpm exec husky init',
-      'sh -c echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg',
       'sh -c echo \'pnpm lint-staged\' > .husky/pre-commit',
       'sh -c echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg',
     ])

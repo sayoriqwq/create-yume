@@ -117,20 +117,19 @@ describe('workspace/bootstrap contract', () => {
       '@antfu/eslint-config': '^8.2.0',
       '@commitlint/cli': '^20.5.0',
       '@commitlint/config-conventional': '^20.5.0',
-      '@lobehub/commit-cli': '^2.19.0',
       'eslint': '^10.2.1',
       'husky': '^9.1.7',
       'lint-staged': '^16.4.0',
     })
     expect(draft.scripts).toMatchObject({
-      'commit': 'lobe-commit --hook',
-      'commit:config': 'lobe-commit --option',
       'lint': 'eslint',
       'lint:fix': 'eslint --fix',
     })
-    expect(reducers).toHaveLength(7)
+    expect(draft.scripts).not.toHaveProperty('commit')
+    expect(draft.scripts).not.toHaveProperty('commit:config')
+    expect(reducers).toHaveLength(5)
     expect(reducers.map(reducer => reducer.ownership)).toEqual(
-      Array.from({ length: 7 }).fill(workspaceBootstrapPackageJsonMutation),
+      Array.from({ length: 5 }).fill(workspaceBootstrapPackageJsonMutation),
     )
   })
 
@@ -143,9 +142,9 @@ describe('workspace/bootstrap contract', () => {
 
     expect(draft.devDependencies).toEqual({})
     expect(draft.scripts).toEqual({})
-    expect(reducers).toHaveLength(7)
+    expect(reducers).toHaveLength(5)
     expect(reducers.map(reducer => reducer.ownership)).toEqual(
-      Array.from({ length: 7 }).fill(workspaceBootstrapPackageJsonMutation),
+      Array.from({ length: 5 }).fill(workspaceBootstrapPackageJsonMutation),
     )
   })
 
@@ -154,7 +153,6 @@ describe('workspace/bootstrap contract', () => {
       { command: 'pnpm', args: ['install'] },
       { command: 'git', args: ['init'] },
       { command: 'pnpm', args: ['exec', 'husky', 'init'] },
-      { command: 'sh', args: ['-c', 'echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg'] },
       { command: 'sh', args: ['-c', 'echo \'pnpm lint-staged\' > .husky/pre-commit'] },
       { command: 'sh', args: ['-c', 'echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg'] },
     ])
@@ -163,7 +161,6 @@ describe('workspace/bootstrap contract', () => {
       { command: 'git', args: ['init'] },
       { command: 'pnpm', args: ['add', '-D', 'husky'] },
       { command: 'pnpm', args: ['exec', 'husky', 'init'] },
-      { command: 'sh', args: ['-c', 'echo \'[ -n "$2" ] || pnpm exec lobe-commit --hook "$1"\' > .husky/prepare-commit-msg && chmod +x .husky/prepare-commit-msg'] },
       { command: 'sh', args: ['-c', 'echo \'pnpm lint-staged\' > .husky/pre-commit'] },
       { command: 'sh', args: ['-c', 'echo \'pnpm exec commitlint --edit "$1"\' > .husky/commit-msg && chmod +x .husky/commit-msg'] },
     ])
