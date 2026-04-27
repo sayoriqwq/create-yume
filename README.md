@@ -1,8 +1,31 @@
-# Create Yume CLI
+# Create Yume
 
-> 用于创建 React 与 Vue 项目的现代前端脚手架。
+> 一个专注于 React 与 Vue 的现代前端脚手架，用 Effect 驱动交互、模板编排与生成流程。
 
-Create Yume 是一个面向前端项目初始化的 CLI。
+Create Yume 用来把“新建项目”这件事做得更稳一点。
+
+它当前不追求覆盖所有框架、所有模板来源、所有工程玩法，而是把范围收紧在两件事上：
+
+- 生成 React 项目
+- 生成 Vue 项目
+
+在这个范围内，它更关心三个问题：
+
+- 交互配置是否清楚
+- 模板生成是否可组合、可验证
+- 脚手架自身的实现边界是否稳定
+
+## 为什么是这个仓库
+
+这个仓库不只是一个能跑的 CLI。
+
+它也是一个正在持续打磨的脚手架代码库：
+
+- 用 Effect 组织命令执行、配置收集和错误边界
+- 用模板注册与计划生成来描述“生成什么”
+- 用明确的文档分层来区分用户说明与实现约束
+
+如果你关心的不只是“怎么生成项目”，还包括“脚手架本身如何组织得更清楚”，这个仓库就是围绕这件事展开的。
 
 ## 当前支持范围
 
@@ -47,9 +70,10 @@ pnpm link
 create-yume
 ```
 
-## 常用仓库命令
+## 常用命令
 
 ```bash
+pnpm build
 pnpm outdated
 pnpm deps
 pnpm deps:latest
@@ -63,13 +87,27 @@ pnpm verify
 - [系统总架构](./docs/user/system-architecture.md)
 - [执行文档路线图](./docs/agent/roadmap.md)
 
-## 提交流程
+## 仓库内有什么
+
+```text
+apps/cli/      CLI 本体、问题流、模板注册与生成逻辑
+docs/user/     面向使用者与贡献者的说明文档
+docs/agent/    面向实现与维护工作的约束文档
+docs/agent/effect/  本地 Effect 参考与代码风格基线
+```
+
+## 提交与协作
 
 ```bash
 pnpm commit:config
 pnpm commit
 git commit
 ```
+
+更多约定见：
+
+- [提交与协作说明](./docs/user/contributing.md)
+- [pnpm Monorepo 约定](./docs/user/pnpm-monorepo.md)
 
 ## 致谢
 
