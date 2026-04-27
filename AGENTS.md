@@ -1,53 +1,69 @@
-# Create Yume Agent Contract
+# Create Yume 执行约束文档
 
-This repository currently supports `react` and `vue` project scaffolds only.
+当前仓库只支持 `react` 与 `vue` 项目脚手架。
 
-## Unsupported Scope
+## 文档入口
 
-- Node project scaffold flow
-- Remote templates
-- Plugin system / pluggable template sources
-- Incremental CLI updates against an existing project
+请按下面顺序进入约束与说明文档：
 
-## Allowed Modification Areas
+- 根级引导文档：`./roadmap.md`
+- 用户文档引导：`./docs/user/roadmap.md`
+- 执行文档引导：`./docs/agent/roadmap.md`
+- 执行约束引导：`./docs/agent/constraint/roadmap.md`
+- Effect 参考引导：`./docs/agent/effect/roadmap.md`
+- 面向用户的系统总架构：`./docs/user/system-architecture.md`
 
-- `apps/cli/src/`
-- `apps/cli/templates/`
-- `docs/`
+## 顶层规则
 
-Repo-level metadata needed to keep those areas working, such as root verification config, may be updated when the task explicitly calls for it.
+1. 所有用于指向其他文档的引导文档，统一命名为 `roadmap.md`。
+2. 根 `README.md` 是用户入口，不是执行操作手册。
+3. 当你需要执行约束、验证规则或实现边界时，不要只看主约束文档，先进入 `docs/agent/constraint/roadmap.md`。
+4. 当你需要项目导览或贡献者入口时，从 `docs/user/roadmap.md` 开始。
 
-## High-Risk Areas
+## 范围事实
 
-These files affect plan generation or render behavior across the CLI and require targeted verification:
+- 当前仅支持 `react` 与 `vue` 项目脚手架。
+- 不支持 Node 项目脚手架流程、远程模板、插件系统 / 可插拔模板来源，以及对已有项目做增量式更新。
+- 主要允许修改区域：`apps/cli/src/`、`apps/cli/templates/`、`docs/`。
+- CLI 构建产物为 `apps/cli/dist/index.js`。
 
-- `apps/cli/src/core/services/planner.ts`
-- `apps/cli/src/core/services/template-engine.ts`
-- `apps/cli/src/core/modifier/package-json.ts`
+## 约束分层
 
-## CLI Entry Convention
+### 文档约束
 
-- Build artifact: `apps/cli/dist/index.js`
-- Package entry fields: `apps/cli/package.json` `main` and `bin.create-yume` must both point to `dist/index.js`
-- Keep README examples and smoke commands aligned with that filename
+见：`./docs/agent/constraint/docs.md`
 
-## Template And Registry Convention
+包含内容：
 
-- Templates live under `apps/cli/templates/`
-- Renderable fragments live under `apps/cli/templates/fragments/**`
-- Handlebars partials live under `apps/cli/templates/partials/**`
-- Template registry modules live under `apps/cli/src/core/template-registry/*.ts`
-- Registry entries reference template paths relative to the template root, for example `fragments/react/App.tsx.hbs`
+- 文档命名与入口规则
+- 用户文档 / 执行文档分流规则
+- 简体中文与术语保留规则
+- 修改代码时同步更新文档的约束
+- `docs/` 与 `.gsd/` 的职责边界
 
-## Minimum Verification
+### 提交与 Git 约束
 
-- Use [docs/verification-matrix.md](./docs/verification-matrix.md) to pick the minimum verification set for the files you changed
-- Mixed code/docs changes: `pnpm verify`
-- Code-only baseline: `pnpm verify:code`
-- Docs-only changes: human review only; no automated docs linter in this repo
+见：`./docs/agent/constraint/git.md`
 
-## Commit Messages
+包含内容：
 
-- Use conventional commits
-- Use the lobe-commit workflow for authoring commit messages
-- Preferred command: `pnpm commit`
+- conventional commits
+- lobe-commit 工作流
+- 提交前验证基线
+- 提交粒度与同步约束
+
+### 架构与实现约束
+
+见：`./docs/agent/constraint/architecture.md`
+
+包含内容：
+
+- 产品边界
+- 稳定执行核心
+- ownership-oriented architecture 方向
+- 深模块判断
+- 已闭合的边界现实
+
+## 验证入口
+
+最低验证选择见：`./docs/agent/verification-matrix.md`
