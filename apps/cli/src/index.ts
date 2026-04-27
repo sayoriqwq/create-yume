@@ -24,7 +24,7 @@ const HELP_TEXT = `Usage:
 
 Options:
   --preset <preset>     Project preset: react-app | vue-app
-  --name <project>      Target project name
+  --name <project>      Target project name (letters, numbers, hyphens, underscores)
   --yes                 Replace an existing target directory without prompting
   --install             Run pnpm install after generation
   --no-install          Skip pnpm install after generation

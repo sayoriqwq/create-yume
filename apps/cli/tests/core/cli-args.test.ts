@@ -45,4 +45,22 @@ describe('parseCliArgs', () => {
       expect(result.left.message).toContain('react-app')
     }
   })
+
+  it('rejects project names that would escape the target directory boundary', async () => {
+    const result = await Effect.runPromise(
+      Effect.either(parseCliArgs([
+        '--preset',
+        'react-app',
+        '--name',
+        '../outside',
+      ])),
+    )
+
+    expect(Either.isLeft(result)).toBe(true)
+    if (Either.isLeft(result)) {
+      expect(result.left._tag).toBe('SchemaContractError')
+      expect(result.left.message).toContain('CliArgs')
+      expect(result.left.message).toContain('name')
+    }
+  })
 })

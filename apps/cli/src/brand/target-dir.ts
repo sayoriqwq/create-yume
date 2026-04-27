@@ -1,3 +1,4 @@
+import type { ProjectName } from './project-name'
 import { ParseResult, Schema } from 'effect'
 
 export const TargetDirSchema = Schema.String.pipe(
@@ -15,3 +16,5 @@ export const decodeTargetDir = Schema.decodeUnknown(TargetDirSchema, { errors: '
 export const formatTargetDirError = ParseResult.TreeFormatter.formatErrorSync
 
 export const makeTargetDir = (value: string): TargetDir => TargetDirSchema.make(value)
+
+export const makeProjectTargetDir = (name: ProjectName): TargetDir => makeTargetDir(`./${name}`)

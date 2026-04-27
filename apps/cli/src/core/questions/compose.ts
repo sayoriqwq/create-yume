@@ -1,5 +1,7 @@
 import type { CodeQuality } from '@/schema/project-config'
 import { Effect, ParseResult } from 'effect'
+import { decodeProjectName, formatProjectNameError } from '@/brand/project-name'
+import { makeProjectTargetDir } from '@/brand/target-dir'
 import { SchemaContractError } from '@/core/errors'
 import {
   getSharedFrontendPresetDefaults,
@@ -29,14 +31,24 @@ import { askReactStateManagement } from './react/state-management'
 import { askVueRouter } from './vue/router'
 import { askVueStateManagement } from './vue/state-management'
 
+function decodePromptedProjectName(input: string) {
+  return decodeProjectName(input).pipe(
+    Effect.mapError(error => new SchemaContractError({
+      schema: 'ProjectName',
+      message: formatProjectNameError(error),
+      issueCount: ParseResult.ArrayFormatter.formatErrorSync(error).length,
+    })),
+  )
+}
+
 const askProjectNameSafe = Effect.gen(function* () {
   const fs = yield* FsService
   const cli = yield* CliContext
   const preferredName = cli.args.name
 
   while (true) {
-    const name = preferredName ?? (yield* ask(askProjectName))
-    const targetDir = `./${name}`
+    const name = preferredName ?? (yield* decodePromptedProjectName(yield* ask(askProjectName)))
+    const targetDir = makeProjectTargetDir(name)
 
     const exists = yield* fs.exists(targetDir)
     if (!exists) {
