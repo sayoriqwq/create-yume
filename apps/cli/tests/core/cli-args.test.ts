@@ -5,7 +5,7 @@ import { parseCliArgs, parseRawCliArgs } from '../../src/core/cli-args'
 describe('parseRawCliArgs', () => {
   it('normalizes aliases and negated booleans for the non-interactive preset flow', () => {
     expect(parseRawCliArgs([
-      '--pre',
+      '--preset',
       'react-full',
       '--name',
       'demo-app',
@@ -23,13 +23,27 @@ describe('parseRawCliArgs', () => {
       rollback: false,
     })
   })
+
+  it('normalizes the short preset alias', () => {
+    expect(parseRawCliArgs([
+      '--p',
+      'vue-full',
+      '--name',
+      'demo-app',
+    ])).toEqual({
+      _: [],
+      preset: 'vue-full',
+      name: 'demo-app',
+      rollback: true,
+    })
+  })
 })
 
 describe('parseCliArgs', () => {
   it('surfaces schema contract failures for unsupported preset values', async () => {
     const result = await Effect.runPromise(
       Effect.either(parseCliArgs([
-        '--pre',
+        '--preset',
         'solid-app',
         '--name',
         'demo-app',
@@ -47,7 +61,7 @@ describe('parseCliArgs', () => {
   it('rejects removed yes aliases instead of silently accepting them', async () => {
     const result = await Effect.runPromise(
       Effect.either(parseCliArgs([
-        '--pre',
+        '--preset',
         'react-full',
         '--name',
         'demo-app',
@@ -59,13 +73,14 @@ describe('parseCliArgs', () => {
     if (Either.isLeft(result)) {
       expect(result.left._tag).toBe('SchemaContractError')
       expect(result.left.message).toContain('--yes/-y has been removed')
+      expect(result.left.message).toContain('--preset or --p')
     }
   })
 
   it('rejects project names that would escape the target directory boundary', async () => {
     const result = await Effect.runPromise(
       Effect.either(parseCliArgs([
-        '--pre',
+        '--p',
         'react-full',
         '--name',
         '../outside',

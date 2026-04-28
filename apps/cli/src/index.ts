@@ -19,13 +19,13 @@ import { finishProject, generateProject } from './core/services/compose'
 import { PlanLive } from './core/services/planner'
 
 const HELP_TEXT = `Usage:
-  create-yume --pre react-minimal --name my-app [--install | --no-install] [--git | --no-git]
-  create-yume --pre react-full --name my-app [--install | --no-install] [--git | --no-git]
-  create-yume --pre vue-minimal --name my-app [--install | --no-install] [--git | --no-git]
-  create-yume --pre vue-full --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --preset react-minimal --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --preset react-full --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --preset vue-minimal --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --preset vue-full --name my-app [--install | --no-install] [--git | --no-git]
 
 Options:
-  --pre <preset>        Project preset combination: react-minimal | react-full | vue-minimal | vue-full
+  --preset, --p <preset> Project preset combination: react-minimal | react-full | vue-minimal | vue-full
   --name <project>      Target project name (letters, numbers, hyphens, underscores)
   --install             Run pnpm install after generation
   --no-install          Skip pnpm install after generation

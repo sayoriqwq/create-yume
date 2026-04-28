@@ -5,7 +5,6 @@ import { decodeCliArgs, formatCliArgsError } from '@/schema/cli-args'
 
 export interface RawCliArgs {
   readonly _: string[]
-  readonly pre?: string | string[]
   readonly preset?: string | string[]
   readonly name?: string | string[]
   readonly install?: boolean
@@ -27,6 +26,7 @@ export function parseRawCliArgs(argv: string[]): RawCliArgs {
   const parsed = mri(argv, {
     alias: {
       h: 'help',
+      p: 'preset',
       v: 'version',
     },
     boolean: ['install', 'git', 'help', 'version', 'rollback'],
@@ -37,9 +37,7 @@ export function parseRawCliArgs(argv: string[]): RawCliArgs {
 
   const rawArgs: MutableRawCliArgs = { _: parsed._ }
 
-  if (parsed.pre !== undefined)
-    rawArgs.preset = parsed.pre
-  else if (parsed.preset !== undefined)
+  if (parsed.preset !== undefined)
     rawArgs.preset = parsed.preset
   if (parsed.name !== undefined)
     rawArgs.name = parsed.name
@@ -61,7 +59,7 @@ export function parseCliArgs(argv: string[]) {
   if (hasRemovedYesArg(argv)) {
     return Effect.fail(new SchemaContractError({
       schema: 'CliArgs',
-      message: 'CliArgs: --yes/-y has been removed. Use --pre to choose an explicit preset combination.',
+      message: 'CliArgs: --yes/-y has been removed. Use --preset or --p to choose an explicit preset combination.',
       issueCount: 1,
     }))
   }

@@ -45,7 +45,7 @@ async function runSmokeCase(rootDir: string, testCase: SmokeCase) {
     'node',
     [
       cliDistPath,
-      '--pre',
+      '--preset',
       testCase.preset,
       '--name',
       testCase.projectName,

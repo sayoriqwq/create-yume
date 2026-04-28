@@ -97,7 +97,7 @@ async function runLinkedSmokeCase(testCase: LinkedSmokeCase, globalBin: string) 
   await run(
     'create-yume',
     [
-      '--pre',
+      '--preset',
       testCase.preset,
       '--name',
       testCase.projectName,
