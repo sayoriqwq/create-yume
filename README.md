@@ -78,6 +78,7 @@ pnpm outdated
 pnpm deps
 pnpm deps:latest
 pnpm verify
+pnpm smoke:examples
 ```
 
 ## 文档入口

@@ -12,6 +12,7 @@
 1. 单元或契约测试使用 `*.test.ts`。
 2. 面向 planner、template render 等输出快照的测试可以使用 `*.spec.ts`。
 3. smoke 脚本使用描述性文件名，例如 `generated-projects.smoke.ts`，并由专门脚本调用。
+4. 需要验证真实 CLI bin、全局 link 或 monorepo 内示例生成时，使用 `linked-examples.smoke.ts`，生成物固定放在 `apps/examples/.generated/`。
 
 ## 路径组织
 
@@ -41,4 +42,10 @@ pnpm lint
 
 ```bash
 pnpm verify
+```
+
+涉及 CLI 发布入口、bin link、模板依赖安装或生成项目可运行性时，额外运行：
+
+```bash
+pnpm smoke:examples
 ```
