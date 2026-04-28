@@ -17,7 +17,7 @@ async function collectCommands(install: boolean) {
         Layer.mergeAll(
           CliContextLive({
             args: {
-              preset: 'react-app',
+              preset: 'react-full',
               name: makeProjectName(install ? 'commands-react' : 'commands-react-skip-install'),
               install,
             },

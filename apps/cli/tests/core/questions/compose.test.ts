@@ -18,7 +18,7 @@ describe('collectQuestions', () => {
 
   it('builds a preset project config from CliContext without invoking interactive prompts', async () => {
     const projectName = makeProjectName('non-interactive-react')
-    const sharedFrontendDefaults = getSharedFrontendPresetDefaults('react-app')
+    const sharedFrontendDefaults = getSharedFrontendPresetDefaults('react-full')
     const workspaceBootstrapDefaults = getWorkspaceBootstrapPresetDefaults(false)
 
     const projectConfig = await Effect.runPromise(
@@ -27,7 +27,7 @@ describe('collectQuestions', () => {
           Layer.mergeAll(
             CliContextLive({
               args: {
-                preset: 'react-app',
+                preset: 'react-full',
                 name: projectName,
                 git: false,
                 install: true,

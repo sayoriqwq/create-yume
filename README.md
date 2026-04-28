@@ -57,10 +57,10 @@ pnpm build
 node apps/cli/dist/index.js
 
 # 非交互 preset 模式
-node apps/cli/dist/index.js --preset react-app --name my-app --yes --install
+node apps/cli/dist/index.js --pre react-full --name my-app --install
 
 # 失败时保留现场，方便排错
-node apps/cli/dist/index.js --preset vue-app --name my-app --yes --no-rollback
+node apps/cli/dist/index.js --pre vue-full --name my-app --no-rollback
 ```
 
 ### 可选：建立全局链接

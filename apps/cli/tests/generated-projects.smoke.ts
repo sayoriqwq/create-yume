@@ -7,7 +7,7 @@ import { execa } from 'execa'
 
 interface SmokeCase {
   readonly label: string
-  readonly preset: 'react-app' | 'vue-app'
+  readonly preset: 'react-minimal' | 'react-full' | 'vue-minimal' | 'vue-full'
   readonly projectName: string
 }
 
@@ -16,14 +16,24 @@ const cliDistPath = path.resolve(testsDir, '../dist/index.js')
 
 const smokeCases: readonly SmokeCase[] = [
   {
-    label: 'react preset',
-    preset: 'react-app',
-    projectName: 'smoke-react-app',
+    label: 'react minimal preset',
+    preset: 'react-minimal',
+    projectName: 'smoke-react-minimal',
   },
   {
-    label: 'vue preset',
-    preset: 'vue-app',
-    projectName: 'smoke-vue-app',
+    label: 'react full preset',
+    preset: 'react-full',
+    projectName: 'smoke-react-full',
+  },
+  {
+    label: 'vue minimal preset',
+    preset: 'vue-minimal',
+    projectName: 'smoke-vue-minimal',
+  },
+  {
+    label: 'vue full preset',
+    preset: 'vue-full',
+    projectName: 'smoke-vue-full',
   },
 ]
 
@@ -35,11 +45,10 @@ async function runSmokeCase(rootDir: string, testCase: SmokeCase) {
     'node',
     [
       cliDistPath,
-      '--preset',
+      '--pre',
       testCase.preset,
       '--name',
       testCase.projectName,
-      '--yes',
       '--no-install',
       '--no-git',
     ],

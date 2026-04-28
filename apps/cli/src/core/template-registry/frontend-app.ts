@@ -19,7 +19,7 @@ interface FrontendLeafQuestionContract<T> {
 }
 
 type SharedFrontendPolicy = Pick<SharedFrontendAppConfig, 'buildTool' | 'cssPreprocessor' | 'cssFramework'>
-type FrontendPreset = Extract<Preset, 'react-app' | 'vue-app'>
+type FrontendPreset = Preset
 
 const frontendFragmentRender = contributionTrace(FrontendScaffoldOwner, ContributionUnitKind.FragmentRender)
 
@@ -49,12 +49,22 @@ export const sharedFrontendQuestionContracts = {
 } as const
 
 const sharedFrontendPresetDefaults: Record<FrontendPreset, SharedFrontendPolicy> = {
-  'react-app': {
+  'react-minimal': {
+    buildTool: 'vite',
+    cssPreprocessor: 'less',
+    cssFramework: 'none',
+  },
+  'react-full': {
     buildTool: 'vite',
     cssPreprocessor: 'less',
     cssFramework: 'tailwind',
   },
-  'vue-app': {
+  'vue-minimal': {
+    buildTool: 'vite',
+    cssPreprocessor: 'less',
+    cssFramework: 'none',
+  },
+  'vue-full': {
     buildTool: 'vite',
     cssPreprocessor: 'less',
     cssFramework: 'tailwind',

@@ -9,7 +9,6 @@ describe('cliArgsSchema', () => {
         decodeCliArgs({
           preset: 'solid-app',
           name: 'demo-app',
-          yes: true,
         }),
       ),
     )
@@ -19,7 +18,7 @@ describe('cliArgsSchema', () => {
       const formatted = formatCliArgsError(result.left)
       expect(formatted).toContain('CliArgs')
       expect(formatted).toContain('preset')
-      expect(formatted).toContain('react-app')
+      expect(formatted).toContain('react-minimal')
     }
   })
 })

@@ -1,6 +1,6 @@
 import { ParseResult, Schema } from 'effect'
 
-export const PresetSchema = Schema.Literal('react-app', 'vue-app').annotations({
+export const PresetSchema = Schema.Literal('react-minimal', 'react-full', 'vue-minimal', 'vue-full').annotations({
   identifier: 'Preset',
   title: 'Preset',
 })

@@ -15,6 +15,20 @@ export const reactPresetProjectConfig = {
   cssFramework: 'tailwind',
 } satisfies ReactProjectConfig
 
+export const reactMinimalPresetProjectConfig = {
+  name: makeProjectName('react-minimal-fixture'),
+  type: 'react',
+  language: 'typescript',
+  git: false,
+  linting: 'none',
+  codeQuality: [],
+  buildTool: 'vite',
+  router: 'none',
+  stateManagement: 'none',
+  cssPreprocessor: 'less',
+  cssFramework: 'none',
+} satisfies ReactProjectConfig
+
 export const vuePresetProjectConfig = {
   name: makeProjectName('vue-fixture'),
   type: 'vue',
@@ -27,6 +41,20 @@ export const vuePresetProjectConfig = {
   stateManagement: true,
   cssPreprocessor: 'less',
   cssFramework: 'tailwind',
+} satisfies VueProjectConfig
+
+export const vueMinimalPresetProjectConfig = {
+  name: makeProjectName('vue-minimal-fixture'),
+  type: 'vue',
+  language: 'typescript',
+  git: false,
+  linting: 'none',
+  codeQuality: [],
+  buildTool: 'vite',
+  router: false,
+  stateManagement: false,
+  cssPreprocessor: 'less',
+  cssFramework: 'none',
 } satisfies VueProjectConfig
 
 export const reactCustomProjectConfig = {
@@ -62,7 +90,9 @@ export const vueProjectConfig = vuePresetProjectConfig
 
 export const projectConfigs: readonly ProjectConfig[] = [
   reactPresetProjectConfig,
+  reactMinimalPresetProjectConfig,
   vuePresetProjectConfig,
+  vueMinimalPresetProjectConfig,
   reactCustomProjectConfig,
   vueCustomProjectConfig,
 ]

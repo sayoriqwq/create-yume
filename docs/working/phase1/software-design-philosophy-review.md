@@ -67,7 +67,7 @@
 
 - `core/questions/compose.ts` 使用 `assertNever(value: never)` 处理理论上的不可达分支。
 - Project type 仍只支持 `react` 与 `vue`。
-- Preset 仍只支持 `react-app` 与 `vue-app`。
+- Preset 仍只支持 React / Vue 的封闭组合集合。
 
 判断：
 

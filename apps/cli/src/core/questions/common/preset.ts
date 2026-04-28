@@ -3,10 +3,12 @@ import { select } from '@clack/prompts'
 
 export async function askPreset() {
   return await select<Preset>({
-    message: 'choose a preset:',
+    message: 'Choose a preset combination:',
     options: [
-      { value: 'react-app', label: 'React App' },
-      { value: 'vue-app', label: 'Vue App' },
+      { value: 'react-minimal', label: 'React Minimal - Vite, TypeScript, Less' },
+      { value: 'react-full', label: 'React Full - Vite, TypeScript, Less, Tailwind, React Router, Jotai, Git, ESLint' },
+      { value: 'vue-minimal', label: 'Vue Minimal - Vite, TypeScript, Less' },
+      { value: 'vue-full', label: 'Vue Full - Vite, TypeScript, Less, Tailwind, Vue Router, Pinia, Git, ESLint' },
     ],
   })
 }

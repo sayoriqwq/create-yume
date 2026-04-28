@@ -5,9 +5,9 @@ import { decodeCliArgs, formatCliArgsError } from '@/schema/cli-args'
 
 export interface RawCliArgs {
   readonly _: string[]
+  readonly pre?: string | string[]
   readonly preset?: string | string[]
   readonly name?: string | string[]
-  readonly yes?: boolean
   readonly install?: boolean
   readonly git?: boolean
   readonly help?: boolean
@@ -19,13 +19,17 @@ type MutableRawCliArgs = {
   -readonly [Key in keyof RawCliArgs]: RawCliArgs[Key]
 }
 
+function hasRemovedYesArg(argv: string[]) {
+  return argv.some(arg => arg === '-y' || arg === '--y' || arg === '--yes' || arg.startsWith('--yes='))
+}
+
 export function parseRawCliArgs(argv: string[]): RawCliArgs {
   const parsed = mri(argv, {
     alias: {
       h: 'help',
       v: 'version',
     },
-    boolean: ['yes', 'install', 'git', 'help', 'version', 'rollback'],
+    boolean: ['install', 'git', 'help', 'version', 'rollback'],
     default: {
       rollback: true,
     },
@@ -33,12 +37,12 @@ export function parseRawCliArgs(argv: string[]): RawCliArgs {
 
   const rawArgs: MutableRawCliArgs = { _: parsed._ }
 
-  if (parsed.preset !== undefined)
+  if (parsed.pre !== undefined)
+    rawArgs.preset = parsed.pre
+  else if (parsed.preset !== undefined)
     rawArgs.preset = parsed.preset
   if (parsed.name !== undefined)
     rawArgs.name = parsed.name
-  if (parsed.yes !== undefined)
-    rawArgs.yes = parsed.yes
   if (parsed.install !== undefined)
     rawArgs.install = parsed.install
   if (parsed.git !== undefined)
@@ -54,6 +58,14 @@ export function parseRawCliArgs(argv: string[]): RawCliArgs {
 }
 
 export function parseCliArgs(argv: string[]) {
+  if (hasRemovedYesArg(argv)) {
+    return Effect.fail(new SchemaContractError({
+      schema: 'CliArgs',
+      message: 'CliArgs: --yes/-y has been removed. Use --pre to choose an explicit preset combination.',
+      issueCount: 1,
+    }))
+  }
+
   return decodeCliArgs(parseRawCliArgs(argv)).pipe(
     Effect.mapError(error => new SchemaContractError({
       schema: 'CliArgs',

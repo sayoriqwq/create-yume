@@ -11,13 +11,25 @@ import { reactPresetProjectConfig } from '../../support/fixtures'
 
 describe('frontend scaffold-family contract', () => {
   it('keeps scaffold-family preset defaults in one shared contract', () => {
-    expect(getSharedFrontendPresetDefaults('react-app')).toEqual({
+    expect(getSharedFrontendPresetDefaults('react-minimal')).toEqual({
+      buildTool: 'vite',
+      cssPreprocessor: 'less',
+      cssFramework: 'none',
+    })
+
+    expect(getSharedFrontendPresetDefaults('react-full')).toEqual({
       buildTool: 'vite',
       cssPreprocessor: 'less',
       cssFramework: 'tailwind',
     })
 
-    expect(getSharedFrontendPresetDefaults('vue-app')).toEqual({
+    expect(getSharedFrontendPresetDefaults('vue-minimal')).toEqual({
+      buildTool: 'vite',
+      cssPreprocessor: 'less',
+      cssFramework: 'none',
+    })
+
+    expect(getSharedFrontendPresetDefaults('vue-full')).toEqual({
       buildTool: 'vite',
       cssPreprocessor: 'less',
       cssFramework: 'tailwind',

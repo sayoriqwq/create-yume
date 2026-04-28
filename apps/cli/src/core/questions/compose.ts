@@ -55,15 +55,10 @@ const askProjectNameSafe = Effect.gen(function* () {
       return name
     }
 
-    if (cli.args.yes) {
-      yield* fs.remove(targetDir, { recursive: true, force: true })
-      return name
-    }
-
     if (preferredName && !cli.isInteractive) {
       return yield* new SchemaContractError({
         schema: 'CliArgs',
-        message: `Target directory "${targetDir}" already exists. Re-run with --yes to replace it.`,
+        message: `Target directory "${targetDir}" already exists. Remove it first or choose another --name.`,
       })
     }
 
@@ -159,8 +154,22 @@ const createPreset = Effect.gen(function* () {
   const workspaceBootstrap = getWorkspaceBootstrapPresetDefaults(git)
 
   switch (preset) {
-    case 'react-app': {
-      const frontend = getSharedFrontendPresetDefaults('react-app')
+    case 'react-minimal': {
+      const frontend = getSharedFrontendPresetDefaults('react-minimal')
+      return {
+        name,
+        type: 'react',
+        language: 'typescript',
+        git: cli.args.git ?? false,
+        linting: 'none',
+        codeQuality: [],
+        ...frontend,
+        router: 'none',
+        stateManagement: 'none',
+      }
+    }
+    case 'react-full': {
+      const frontend = getSharedFrontendPresetDefaults('react-full')
       return {
         name,
         type: 'react',
@@ -172,8 +181,22 @@ const createPreset = Effect.gen(function* () {
         stateManagement: 'jotai',
       }
     }
-    case 'vue-app': {
-      const frontend = getSharedFrontendPresetDefaults('vue-app')
+    case 'vue-minimal': {
+      const frontend = getSharedFrontendPresetDefaults('vue-minimal')
+      return {
+        name,
+        type: 'vue',
+        language: 'typescript',
+        git: cli.args.git ?? false,
+        linting: 'none',
+        codeQuality: [],
+        ...frontend,
+        router: false,
+        stateManagement: false,
+      }
+    }
+    case 'vue-full': {
+      const frontend = getSharedFrontendPresetDefaults('vue-full')
       return {
         name,
         type: 'vue',

@@ -19,13 +19,14 @@ import { finishProject, generateProject } from './core/services/compose'
 import { PlanLive } from './core/services/planner'
 
 const HELP_TEXT = `Usage:
-  create-yume --preset react-app --name my-app [--yes] [--install | --no-install] [--git | --no-git]
-  create-yume --preset vue-app --name my-app [--yes] [--install | --no-install] [--git | --no-git]
+  create-yume --pre react-minimal --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --pre react-full --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --pre vue-minimal --name my-app [--install | --no-install] [--git | --no-git]
+  create-yume --pre vue-full --name my-app [--install | --no-install] [--git | --no-git]
 
 Options:
-  --preset <preset>     Project preset: react-app | vue-app
+  --pre <preset>        Project preset combination: react-minimal | react-full | vue-minimal | vue-full
   --name <project>      Target project name (letters, numbers, hyphens, underscores)
-  --yes                 Replace an existing target directory without prompting
   --install             Run pnpm install after generation
   --no-install          Skip pnpm install after generation
   --git                 Force Git initialization on

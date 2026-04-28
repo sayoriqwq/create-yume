@@ -6,7 +6,6 @@ export const CliArgsSchema = Schema.Struct({
   _: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   preset: Schema.optionalWith(PresetSchema, { exact: true }),
   name: Schema.optionalWith(ProjectNameSchema, { exact: true }),
-  yes: Schema.optionalWith(Schema.Boolean, { exact: true }),
   install: Schema.optionalWith(Schema.Boolean, { exact: true }),
   git: Schema.optionalWith(Schema.Boolean, { exact: true }),
   help: Schema.optionalWith(Schema.Boolean, { exact: true }),
